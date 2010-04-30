@@ -1,0 +1,208 @@
+<html>
+  <head>
+    <title>Test templates</title>
+    <script src="../js/yajet.js"></script>
+  </head>
+  <body>
+
+    <pre id="target" style="border: 1px solid #999"></pre>
+
+    <textarea id="source" style="width: 100%; height: 10em">
+
+<!-- define our wrapper -->
+$(BLOCK table(cols)
+  <table>
+    <thead>
+      <tr>
+        $(MAP (label => cols) <td>$label</td> $)
+      </tr>
+    </thead>
+    <tbody>
+      $(CONTENT)
+    </tbody>
+  </table> $)
+
+<!-- and here's how we use it -->
+$(WRAP table([ "Name", "Phone", "Email" ])
+  <tr> <td>Foo</td> <td>123-1234</td> <td>foo@foo.com</td> </tr>
+  <tr> <td>Bar</td> <td>1234-123</td> <td>bar@bar.com</td> </tr>
+$)
+
+      $(BLOCK wrapper()
+        <wrapper>$(CONTENT)</wrapper>
+      $)
+
+      $(REPEAT (5 => i)
+        $(WRAP (wrapper)
+          <b>Wrapped $i time</b>
+        $)$)
+
+$(BLOCK heading() <h1>$(CONTENT)</h1> $)
+$(WITH ({ count: 0 })
+  $(BLOCK numbered_heading(text)
+    $(WRAP heading() ${++count}. $text $) $) $)
+
+$( numbered_heading("Foo") )
+$( numbered_heading("Bar") )
+
+      <div>${ display_sum(10, 20) }</div>
+
+      $(BLOCK display_sum(a, b)
+        <p>$a + $b = ${a + b}</p>
+      $)
+
+      $(WITH (this)
+
+      ${/* boring comment that is scratched from the output */}
+      ${<!-- another one -->}
+
+      Literal $$.
+
+      <!-- closure :-p -->
+      $(WITH ({ c : 0 })$-
+        $(BLOCK counter()$-
+          <b>Counter is: ${++c}</b>$-
+        $)$)
+
+      ${ counter() } -- should show 1
+      ${ counter() } -- should show 2
+      ${ counter() } -- should show 3
+
+$(VAR (counter2))
+$(LET ((value => 0))
+  $( counter2 = _counter /* export it */ )
+  $(BLOCK _counter()
+    <p>Counter is ${ ++value }</p> $) $)
+
+$(REPEAT (5)
+  $( counter2() ) -- now it works.
+$)
+
+      $(REPEAT (5 => i) Take $i! $)
+
+      $(REPEAT ( (function /*heavy_computation*/() { return 5 })() => i )
+        Foo $i $)
+
+      $(LOOP (2..4 => i) Now $i! $)
+
+      $(WITH ({ foo: "ba\"r" })
+        <p>Foo is $foo</p>
+      $)
+
+      $(MAP ([ 1, 2, 3, 4 ])
+        <p>We have $_</p>$-
+      $)
+
+      $(IF (false)
+        You should not see this
+      $(ELSIF (false))
+        This neither
+      $(ELSE)
+        You SHOULD see this
+      $)
+
+      <!-- literal javascript -->
+      $(
+        var my_var = "foo";
+        var your_var = "bar";
+        // do whatever you want here.
+      )
+
+      $(VAR ((v_foo => 10)
+             v_bar
+             (v_baz => 20)))
+
+      ${v_foo}, ${v_bar}, ${v_baz}
+
+      <!-- Should we have (COND ...) as well?  I guess not.. -->
+
+      $(MAP ([{ foo: "bar" }, /* comment,:}*/ { foo: "test" }])
+        <p>We have: $foo (and my_var is “$my_var”)</p>
+      $)
+
+      <p>${
+        // whatever(.
+        (function(arg){
+          return foo.bar.baz(1, 2, "(3") + arg.test;
+          /* foo ]] */
+        })({ test: "foo)" })
+      }</p>
+
+      $(IF (foo.list)
+        <ul>
+          $(MAP (index => element IN foo.list)
+          <li>${index + 1}. ${element}</li>
+          $)
+        </ul>
+      $)
+
+      <p>
+        Inline maphash
+      </p>
+
+      $(MAPHASH (key, val => {
+                                key1 : "val1",
+                                key2 : "val2",
+                                key3 : "val3"
+                             })
+        <p>${key} : ${val}</p>
+      $)
+
+      $(LET ((v1 => "<foo>")
+             (v2 => "<bar>"))
+        <p>$v1, $v2|html</p>
+        $(LET ((v1 => "shadow"))
+          <p><b>New v1: $v1</b></p>
+        $)
+        <p>Back: $v1</p>
+      $)
+
+      $(FUNCTION this_is_a_function(a, b)
+        <p>Got arguments: <b>$a</b> and <b>$b</b></p>
+      $)
+
+      ${ this_is_a_function("foo", "bar") }
+
+      <!-- ugly LET -->
+      $(LET ((foo => (function(){
+                       return (function(){
+                         return "foo(bar[baz";
+                       })();
+                     })()))
+        GOT: $foo
+      $)
+
+      $)
+    </textarea>
+
+    <script>//<![CDATA[
+var jst = new YAJET({ syntax_char: "$" });
+try {
+
+console.time("compile");
+var template = jst.compile(document.getElementById("source").value);
+console.timeEnd("compile");
+
+console.time("run");
+var output = template({
+    test: "test var",
+    foo: {
+       bar: {
+          baz: function(a, b, c) {
+              return a + b + c;
+          }
+       },
+       list: [ "a", "b", "c", "d", "e" ]
+    }
+});
+
+document.getElementById("target").innerHTML = jst.filter("html", String(output + "\n\n\n" + template.orig.toString()));
+console.timeEnd("run");
+
+} catch(ex) {
+console.log(ex);
+}
+
+    //]]></script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<script>//<![CDATA[ -*- espresso -*-
+
+var ITERATIONS = 3000000;
+
+function do_with() {
+        // if you uncomment this it's a lot faster:
+        // var ITERATIONS = 3000000;
+        var scope = { i: 0 };
+        with(scope) {
+                // but if you uncomment this it's even faster:
+                // var ITERATIONS = 3000000;
+
+                // and if you put 3000000 instead of ITERATIONS on the
+                // next line it's EVEN faster.
+                for (i = 0; i < ITERATIONS; ++i);
+        }
+};
+
+// what does this mean?  We pay a HUGE penalty for ANY variable access
+// when inside an WITH block.  In many cases it's still fast enough,
+// but when speed is critical, DON'T use "with".
+
+function do_var() {
+        var i;
+        for (i = 0; i < ITERATIONS; ++i);
+};
+
+function do_func() {
+        (function(){
+                var i;
+                for (i = 0; i < ITERATIONS; ++i);
+        })();
+};
+
+function time_it(name, f) {
+        console.time(name);
+        for (var i = 0; i < 1; ++i) {
+                f();
+        }
+        console.timeEnd(name);
+};
+
+time_it("with", do_with);
+time_it("var", do_var);
+time_it("func", do_func);
+
+//]]></script>

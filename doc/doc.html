@@ -1,0 +1,1255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+               "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+lang="en" xml:lang="en">
+<head>
+<title>YAJET &ndash; JavaScript template engine</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta name="generator" content="Org-mode"/>
+<meta name="generated" content="2010-04-30 16:04:17 CEST"/>
+<meta name="author" content="Mihai Bazon"/>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  html { font-family: Times, serif; font-size: 12pt; }
+  .title  { text-align: center; }
+  .todo   { color: red; }
+  .done   { color: green; }
+  .tag    { background-color:lightblue; font-weight:normal }
+  .target { }
+  .timestamp { color: grey }
+  .timestamp-kwd { color: CadetBlue }
+  p.verse { margin-left: 3% }
+  pre {
+	border: 1pt solid #AEBDCC;
+	background-color: #F3F5F7;
+	padding: 5pt;
+	font-family: courier, monospace;
+        font-size: 90%;
+        overflow:auto;
+  }
+  table { border-collapse: collapse; }
+  td, th { vertical-align: top; }
+  dt { font-weight: bold; }
+  div.figure { padding: 0.5em; }
+  div.figure p { text-align: center; }
+  .linenr { font-size:smaller }
+  .code-highlighted {background-color:#ffff00;}
+  .org-info-js_info-navigation { border-style:none; }
+  #org-info-js_console-label { font-size:10px; font-weight:bold;
+                               white-space:nowrap; }
+  .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
+                                 font-weight:bold; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="docstyle.css" />
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*/-->
+</script>
+</head><body>
+<h1 class="title">YAJET &ndash; JavaScript template engine</h1>
+
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1 Yet Another JavaScript Template Engine </a></li>
+<li><a href="#sec-2">2 Features </a></li>
+<li><a href="#sec-3">3 Usage </a></li>
+<li><a href="#sec-4">4 Syntax </a>
+<ul>
+<li><a href="#sec-4.1">4.1 Simple interpolation (the <code>$foo</code> construct) </a></li>
+<li><a href="#sec-4.2">4.2 JavaScript expressions (the <code>${exp}</code> construct) </a>
+<ul>
+<li><a href="#sec-4.2.1">4.2.1 Filters </a></li>
+</ul>
+</li>
+<li><a href="#sec-4.3">4.3 Processing instructions </a>
+<ul>
+<li><a href="#sec-4.3.1">4.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &ndash; conditional execution </a></li>
+<li><a href="#sec-4.3.2">4.3.2 <code>REPEAT</code> / <code>LOOP</code> &ndash; to repeat stuff </a></li>
+<li><a href="#sec-4.3.3">4.3.3 <code>MAP</code> / <code>FOREACH</code> &ndash; iterate an array </a></li>
+<li><a href="#sec-4.3.4">4.3.4 <code>MAPHASH</code> &ndash; iterate an object (hash) </a></li>
+<li><a href="#sec-4.3.5">4.3.5 <code>LET</code> and <code>VAR</code> &ndash; define variables </a></li>
+<li><a href="#sec-4.3.6">4.3.6 <code>WITH</code> &ndash; modify the scope chain </a></li>
+<li><a href="#sec-4.3.7">4.3.7 <code>BLOCK</code> and <code>FUNCTION</code> &ndash; define reusable template blocks </a></li>
+<li><a href="#sec-4.3.8">4.3.8 <code>WRAP</code>, <code>CONTENT</code> &ndash; call a wrapper with an additional block of text </a></li>
+</ul></li>
+</ul>
+</li>
+<li><a href="#sec-5">5 Name </a></li>
+<li><a href="#sec-6">6 Known issues and limitations </a>
+<ul>
+<li><a href="#sec-6.1">6.1 Literal RegExp-s in JavaScript expressions </a></li>
+<li><a href="#sec-6.2">6.2 Filters don't take additional arguments </a></li>
+<li><a href="#sec-6.3">6.3 Error reporting less than ideal </a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">1 Yet Another JavaScript Template Engine </h2>
+<div id="text-1">
+
+
+<p>
+A “template engine” is a tool able to transform some text into another, by
+interpreting/replacing various patterns in the source text.  YAJET is such a
+tool designed for client-side (JavaScript, in-browser) transformation.
+</p>
+<p>
+YAJET is a compiler, in the sense that it transforms your template into
+runnable JavaScript code; after compiling a template you get a function
+which you can call with an argument that contains data required to fill your
+template, and it returns it rendered.
+</p>
+<p>
+YAJET is appropriate for any kind of text templates &ndash; it was not designed
+specifically for HTML, although that's mostly what we use it for.  It shares
+some conceptual similarities with the venerable <a href="http://template-toolkit.org/">Template::Toolkit</a> and some
+syntactic ones with Lisp.  I decided to write it because I couldn't find
+other tools to match my taste.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">2 Features </h2>
+<div id="text-2">
+
+
+<p>
+Other than the boring variable replacement, YAJET supports the following
+(and I will explain them later in this document):
+</p>
+<ul>
+<li>
+conditionals (<code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code>, <code>ELSIF</code>).  <code>WHEN</code> is a
+synonym to <code>IF</code>, and <code>UNLESS</code> is, of course, the complete opposite.
+<code>ELSE</code> and <code>ELSIF</code> are supported both in <code>IF/WHEN</code> and in <code>UNLESS</code> blocks,
+but using <code>ELSE</code> in an <code>UNLESS</code> block makes the code look a bit werid.
+
+</li>
+<li>
+repetitive constructs (<code>REPEAT</code> / <code>LOOP</code>).  They allow you to repeat a
+part of the template a few times. <code>LOOP</code> is a synonym to <code>REPEAT</code>.
+
+</li>
+<li>
+iterating array or hashes (<code>MAP</code> and <code>MAPHASH</code>) &ndash; <code>MAP</code> to traverse a
+list and <code>MAPHASH</code> to iterate an object (hash table).
+
+</li>
+<li>
+all loops can be controlled by <code>BREAK</code> or <code>CONTINUE</code>.
+
+</li>
+<li>
+variable definition (<code>LET</code>, <code>VAR</code> and <code>WITH</code>).  <code>LET</code> and <code>WITH</code> introduce
+new lexical scopes.
+
+</li>
+<li>
+block definitions (<code>BLOCK</code> and <code>FUNCTION</code>).  Useful to define a template
+block that can be called as a function.  <code>BLOCK</code> will feed its output into
+the main output stream, while <code>FUNCTION</code> will return it.  Both are
+closures within their lexical context.
+
+</li>
+<li>
+block wrappers can be called using <code>WRAP</code>.
+
+</li>
+<li>
+simple filters a la Template::Toolkit (i.e. <code>$foo|html</code> will HTML-escape
+the value of foo).
+
+</li>
+<li>
+the documentation is bigger than the code.
+
+</li>
+</ul>
+</div>
+
+</div>
+
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">3 Usage </h2>
+<div id="text-3">
+
+
+<p>
+You need to load <a href="./js/yajet.js">yajet.js</a>, and to create an instance like this:
+</p>
+
+
+
+<pre class="example">
+var yajet = new YAJET({
+    syntax_char : "$",
+    with_scope  : false
+    filters     : {
+        foo: function(val) { ... },
+        bar: function(val) { ... }
+    }
+});
+</pre>
+
+
+
+
+<p>
+All arguments are optional.  Then to compile a template, you do this:
+</p>
+
+
+
+<pre class="example">
+var func = yajet.compile("You said: $this.foo $this.bar");
+</pre>
+
+
+
+
+<p>
+and to execute it:
+</p>
+
+
+
+<pre class="example">
+alert( func({ foo: "hello", bar: "world!" }) );
+</pre>
+
+
+
+
+<p>
+The function created by “yajet.compile” receives one argument, and that
+argument is available in your templates via the JavaScript <code>this</code> keyword.
+This is the default behavior, because I think it's the best one in general,
+but if you don't like to use the <code>this.</code> prefix to access the members you
+can pass <code>with_scope: true</code> in the constructor.  It wraps the generated
+function in a <code>with(this) { ... }</code> block, so the above would become:
+</p>
+
+
+
+<pre class="example">
+var yajet = new YAJET({ with_scope: true });
+var func = yajet.compile("You said: $foo $bar");
+// and call it the same:
+alert( func({ foo: "hello", bar: "world!" }) );
+</pre>
+
+
+
+
+<p>
+It's more convenient, but it's slower (more than 10 times slower in many
+cases).  How much slower depends on how big is your template and how many
+variables there are.  If you want a performance benchmark with and without
+the <code>with</code> statement, <a href="./test/with.html">see this file</a> (Firebug is required for timing the
+operations; watch the Firebug console).
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">4 Syntax </h2>
+<div id="text-4">
+
+
+<p>
+YAJET parses the template as text, leaving it unchanged, until an occurrence
+of a special character (let's name it the “reader char”).  By default this
+character is $, but you can change it in the constructor.  What follows in
+this document will assume that $ is the reader character.  A few types of
+constructs are recognized:
+</p>
+<ul>
+<li>
+<code>$$</code> &ndash; inserts a literal $ character.
+
+</li>
+<li>
+<code>$foo</code> &ndash; inserts the value of the variable foo.
+
+</li>
+<li>
+<code>${ foo.bar.baz() }</code> &ndash; evaluates the given JavaScript expression and
+inserts the return value, if any.
+
+</li>
+<li>
+<code>$(INSTRUCTION ... $)</code> &ndash; processes the contents according to some rules
+which are particular for INSTRUCTION
+
+</li>
+<li>
+<code>$( ... )</code> &ndash; inserts literal JavaScript code (must not be ill-formed!).
+
+</li>
+</ul>
+
+</div>
+
+<div id="outline-container-4.1" class="outline-3">
+<h3 id="sec-4.1">4.1 Simple interpolation (the <code>$foo</code> construct) </h3>
+<div id="text-4.1">
+
+
+<p>
+To insert a variable you can say <code>$foo</code>, <code>$foo.bar</code>, etc.  This case is
+quite simple.  The parser will stop at a character which isn't a letter, a
+digit, an underscore or a dollar sign.  Additionally it supports filtering
+the values with a convenient syntax: <code>$foo|html</code>.
+</p>
+<p>
+Filters are functions that take one argument and should return the modified
+value.  You can easily define your own filters (but later on this).  Filters
+can be combined, for example: <code>$foo|upcase|html</code> will first make foo
+uppercase, then apply the html filter to the upcased string.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4.2" class="outline-3">
+<h3 id="sec-4.2">4.2 JavaScript expressions (the <code>${exp}</code> construct) </h3>
+<div id="text-4.2">
+
+
+<p>
+This is similar to the “simple interpolation” case, but it allows for more
+complicated expressions.  For example <code>${a+b}</code> will insert the sum of a and
+b.  Your expression can be arbitrarily complex, and the parser is smart
+enough to read it, provided that it is valid JavaScript code (you need to be
+<b>careful about literal RegExp-s</b> though, for now; I'll fix this in a later
+release; more on this in <a href="#sec-4.2">Known issues</a>).
+</p>
+<p>
+So, an example of a perfectly valid call is:
+</p>
+
+
+
+<pre class="example">
+${
+   // Comments are allowed and can even contain the closing bracket: }
+   // it's ignored, since it is in a comment.
+   (function(arg){
+     return arg.a + arg.b + arg.text;
+   })({
+     a: 5,
+     b: 10,
+     text: "(foo}"
+   })
+}
+</pre>
+
+
+
+
+<p>
+The <code>${exp}</code> construct will evaluate the expression <code>foo</code> at run-time and
+will insert its value into the rendered template only if it's not <code>null</code>.
+</p>
+
+</div>
+
+<div id="outline-container-4.2.1" class="outline-4">
+<h4 id="sec-4.2.1">4.2.1 Filters </h4>
+<div id="text-4.2.1">
+
+
+<p>
+As already noted, the <code>$foo</code> construct allows filtering the value through
+some function using a convenient syntax like <code>$foo|html</code>.  At the time of
+this writing the filters available by default are:
+</p>
+<ul>
+<li>
+<code>html</code>
+</li>
+<li>
+<code>upcase</code>
+</li>
+<li>
+<code>downcase</code>
+
+</li>
+</ul>
+
+<p>It's easy to define custom filters when you construct the YAJET object:
+</p>
+
+
+
+<pre class="example">
+var yajet = new YAJET({
+    filters: {
+        md5: function(value) {
+            return md5_hex_of(value); // return the modified value
+        }
+    }
+});
+</pre>
+
+
+
+
+<p>
+&hellip; and in your template: <code>$password|md5</code>.
+</p>
+<p>
+There is also a syntax that allows for filters within the <code>${exp}</code>
+construct.  But since we parse valid JavaScript code, and since the pipe is
+a valid JavaScript character (“bitwise or”), we have to use something
+different.  The idea was, thus, that such expressions will be parsed as a
+list; the first element of the list is the expression itself, and any
+additional elements are filters.  For example:
+</p>
+
+
+
+<pre class="example">
+${ this.getLabel(), upcase, html }
+</pre>
+
+
+
+
+<p>
+will convert into something like this (that's only pseudo-code):
+</p>
+
+
+
+<pre class="example">
+output_string(
+  apply_html_filter(
+    apply_upcase_filter(
+      this.getLabel()
+    )
+  )
+)
+</pre>
+
+
+
+
+<p>
+Since the comma doesn't look very nice for this particular case, the “list
+reader” also allows a few aliases.  Syntactic sugar, baby!  You can also
+use:
+</p>
+<ul>
+<li>
+<code>“=&gt;”</code>
+</li>
+<li>
+<code>“;”</code>
+</li>
+<li>
+<code>“..”</code>
+</li>
+<li>
+<code>“;”</code>
+
+</li>
+</ul>
+
+<p>So the above example can also be written like this:
+</p>
+
+
+
+<pre class="example">
+${ this.getLabel() =&gt; upcase =&gt; html }
+${ this.getLabel() =&gt; upcase, html }
+${ this.getLabel() .. upcase; html }
+</pre>
+
+
+
+
+<p>
+Whitespace is ignored.
+</p>
+<p>
+These special separators only work for the “list reader” which is used in
+the <code>${exp}</code>-like constructs.  Also, note that filters are only interpreted
+in the top-level elements of this list, so for instance the following won't
+apply the "html" filter to “foo”: <code>${ something(foo, html) }</code>.  It will just
+call, instead, the function <code>something</code>, passing the variables <code>foo</code> and
+<code>html</code>, which is expected behavior.
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4.3" class="outline-3">
+<h3 id="sec-4.3">4.3 Processing instructions </h3>
+<div id="text-4.3">
+
+
+<p>
+So far we are able to introduce arbitrary JavaScript variables and
+expressions in the template.  However that's hardly enough.  First off, the
+expressions must be well-formed, so there is no way to start a JavaScript
+block somewhere and end it some place else.  The following is invalid for
+obvious reasons:
+</p>
+
+
+
+<pre class="example">
+${ if (link != null) { }
+  &lt;a href="$link|html"&gt;$link&lt;/a&gt;
+${ } }
+</pre>
+
+
+
+
+<p>
+I emphasize that the lack of support for partial expressions is a <i>feature</i>,
+not a limitation.  This will never be “fixed”.  To support constructs like
+the above but without encouraging poorly written templates that start a
+block on line 10 and end it on line 1000, we have a few special processing
+instructions.  Let's call these the <code>$(BAR ... $)</code> construct.  To start
+with, here is how you would write the above code:
+</p>
+
+
+
+<pre class="example">
+$(WHEN (link != null)
+  &lt;a href="$link|html"&gt;$link&lt;/a&gt;
+$)
+</pre>
+
+
+
+
+<p>
+Note that you still can start a block on one line and end it on another, but
+the style is a bit different.  Instead of inserting arbitrary code
+unconditionally, we simply end a known construct.  The condition that you
+pass to WHEN must be fully valid JavaScript (you cannot pass a partial
+expression there) and, if your editor does a good job about matching parens,
+then you can quickly see where the block begins/ends by moving the cursor to
+the parens.  I prefer this style.
+</p>
+<p>
+Note that the processing instructions are not case-sensitive.  I prefer to
+use UPPERCASE for them so that they stand out visually.
+</p>
+<p>
+The <code>$(BAR ... $)</code> construct has the following properties:
+</p>
+<ul>
+<li>
+it starts with <code>$(</code> (so it's a normal paren, not a bracket).
+</li>
+<li>
+it has a special instruction.
+</li>
+<li>
+depending on the instruction, certain arguments may follow.
+</li>
+<li>
+it may contain a block of text between the arguments and the <code>$)</code>
+terminator.
+</li>
+<li>
+it <i>should</i> end with <code>$)</code>.
+
+</li>
+</ul>
+
+<p>The block of text is parsed normally, so it's interpreted as plain text
+until <code>$</code> (the reader char) is encountered, then what follows the reader
+char is processed by the rules I described in this document.  Despite all
+this, the parser is not recursive. :-)
+</p>
+<p>
+Following I will describe the processing instructions which are available at
+this time.  I think the set of them is quite comprehensive and allows you to
+express any kind of template in a simple and consistent manner.
+</p>
+
+</div>
+
+<div id="outline-container-4.3.1" class="outline-4">
+<h4 id="sec-4.3.1">4.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &ndash; conditional execution </h4>
+<div id="text-4.3.1">
+
+
+<p>
+<code>IF</code> and <code>WHEN</code> are synonyms, while <code>UNLESS</code> is the antonym.  <code>WHEN</code> seems more
+appropriate for cases where you don't have an <code>ELSE</code> clause.  They support one
+argument which must be a condition enclosed in parens.  Examples:
+</p>
+
+
+
+<pre class="example">
+$(WHEN (user_id == null)
+  &lt;a href="..."&gt;Please login&lt;/a&gt; $)
+
+$(UNLESS (user_id != null)
+  &lt;a href="..."&gt;Please login&lt;/a&gt; $)
+
+$(IF (a &lt; b)
+  &lt;p&gt;A is smaller&lt;/p&gt;
+$(ELSIF (a &gt; b))
+  &lt;p&gt;B is smaller&lt;/p&gt;
+$(ELSE)
+  &lt;p&gt;A and B are equal&lt;/p&gt; $)
+</pre>
+
+
+
+
+<p>
+Note that you can use <code>ELSE</code> or <code>ELSIF</code> inside <code>UNLESS</code> or <code>WHEN</code> blocks
+too, although I would not advise to use this style:
+</p>
+
+
+
+<pre class="example">
+$(UNLESS (a == b)
+  they are different
+$(ELSE)
+  they are equal $)
+</pre>
+
+
+
+
+<p>
+You should also note that <code>ELSE</code> and <code>ELSIF</code> are not actually parsed like
+other instructions.  They don't take a block of text, and thus they don't
+need to end with <code>$)</code>.  Whether to do it this way was hard to decide, but
+since <code>ELSE</code> and <code>ELSIF</code> normally <i>continue</i> an IF block, instead of ending
+it, it seems to make sense this way.  The same applies to <code>$(BREAK)</code> and
+<code>$(CONTINUE)</code> directives.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4.3.2" class="outline-4">
+<h4 id="sec-4.3.2">4.3.2 <code>REPEAT</code> / <code>LOOP</code> &ndash; to repeat stuff </h4>
+<div id="text-4.3.2">
+
+
+<p>
+To repeat a part of the template you can use <code>REPEAT</code> or <code>LOOP</code> (they are
+synonyms).  For example, the following outputs “foo” 3 times: <code>$(REPEAT (3) foo $)</code>.  In various cases you might need to know the current iteration too,
+so you can pass a variable name for it:
+</p>
+
+
+
+<pre class="example">
+$(REPEAT (5, i)
+  Item $i $)
+</pre>
+
+
+
+
+<p>
+The variable <code>i</code> takes values from 1 to 5 (inclusively) and the output will
+be “Item 1 Item 2 ” etc.  In some cases you might want to specify an
+interval (so that you start from something different than zero), so the
+following is allowed:
+</p>
+
+
+
+<pre class="example">
+$(LOOP (5 .. 10 =&gt; i)
+  &lt;a href="/page$i"&gt;Page $i&lt;/a&gt; $)
+</pre>
+
+
+
+
+<p>
+<code>LOOP</code> seems to be nicer in this case, but the result is exactly the same if
+you use <code>REPEAT</code> too.  Also note that the arguments are parsed using the
+“list reader”, so you can use syntactic sugar to separate them (although a
+simple comma would do).
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4.3.3" class="outline-4">
+<h4 id="sec-4.3.3">4.3.3 <code>MAP</code> / <code>FOREACH</code> &ndash; iterate an array </h4>
+<div id="text-4.3.3">
+
+
+<p>
+Again, <code>MAP</code> and <code>FOREACH</code> are synonyms.  You can use them to do something
+for each element of an array.  For example the following outputs links
+contained in an array:
+</p>
+
+
+
+<pre class="example">
+$(MAP (link =&gt; links)
+  &lt;a href="$link.address|html"
+     title="$link.tooltip|html"&gt;$link.text|html&lt;/a&gt; $)
+</pre>
+
+
+
+
+<p>
+That's assuming that <code>links</code> is an array of objects, each containing
+<code>address</code>, <code>tooltip</code> and <code>text</code>.  You could also use a literal object (the
+parser is smart enough for this):
+</p>
+
+
+
+<pre class="example">
+$(MAP (link =&gt; [ { address : "http://www.google.com/",
+                   tooltip : "Search engine",
+                   text    : "Google" },
+
+                 { address : "http://www.ymacs.org/",
+                   tooltip : "AJAX code editor",
+                   text    : "Ymacs" }
+               ])
+  &lt;a href="$link.address|html"
+     title="$link.tooltip|html"&gt;$link.text|html&lt;/a&gt; $)
+</pre>
+
+
+
+
+<p>
+Sometimes you also need to know the current step of the iteration.  For
+example if you want to output some links that are separated with a pipe, you
+need to know not to output the pipe before the first, or after the last
+link.  We could write it like this:
+</p>
+
+
+
+<pre class="example">
+$(MAP (i, link =&gt; links)
+  $(WHEN (i &gt; 0) | $)
+  &lt;a href="$link.address|html"
+     title="$link.tooltip|html"&gt;$link.text|html&lt;/a&gt; $)
+</pre>
+
+
+
+
+<p>
+or
+</p>
+
+
+
+<pre class="example">
+$(MAP (i, link =&gt; links)
+  ${ i &gt; 0 ? "|" : "" }
+  &lt;a href="$link.address|html"
+     title="$link.tooltip|html"&gt;$link.text|html&lt;/a&gt; $)
+</pre>
+
+
+
+
+<p>
+A special case of <code>MAP</code> / <code>FOREACH</code> allows you to pass only the array, and
+no key or index variables.  In this case the special variable <code>$_</code> (which I
+will call the Perlism) gets assigned to the current element, and <i>more</i>, the
+loop body is lexically scoped to each element using a JavaScript <code>with</code>
+block (I know, your mom told you not to play the <code>with</code> statement, but mine
+didn't<sup><a class="footref" name="fnr.1" href="#fn.1">1</a></sup> :-p).
+</p>
+<p>
+So using this style the first example would become:
+</p>
+
+
+
+<pre class="example">
+$(MAP (links)
+  &lt;a href="$address|html" title="$tooltip|html"&gt;$text|html&lt;/a&gt; $)
+</pre>
+
+
+
+
+<p>
+<code>address</code>, <code>tooltip</code> and <code>text</code> access the specific property of each
+element.
+</p>
+<p>
+Just a last example showing the Perlism:
+</p>
+
+
+
+<pre class="example">
+$(FOREACH ([ "foo", "bar", "baz" ]) &lt;b&gt;$_&lt;/b&gt; $)
+</pre>
+
+
+
+
+<p>
+will output “&lt;b&gt;foo&lt;/b&gt; &lt;b&gt;bar&lt;/b&gt; &lt;b&gt;baz&lt;/b&gt;”.  The <code>$_</code> variable is bound
+to each element.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4.3.4" class="outline-4">
+<h4 id="sec-4.3.4">4.3.4 <code>MAPHASH</code> &ndash; iterate an object (hash) </h4>
+<div id="text-4.3.4">
+
+
+<p>
+<code>MAPHASH</code> is <code>MAP</code>'s analogue for hashes.  It iterates over all properties
+of an object, binding a variable for the key and another for the value.  You
+must specify names for these variables.  Example, assuming that <code>users</code> is a
+hash that maps user IDs to some user objects (each of them having a
+<code>getName()</code> method):
+</p>
+
+
+
+<pre class="example">
+$(MAPHASH (uid, obj =&gt; users)
+  User &lt;b&gt;$uid&lt;/b&gt; has name &lt;b&gt;${ obj.getName() }&lt;/b&gt;&lt;br /&gt; $)
+</pre>
+
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-4.3.5" class="outline-4">
+<h4 id="sec-4.3.5">4.3.5 <code>LET</code> and <code>VAR</code> &ndash; define variables </h4>
+<div id="text-4.3.5">
+
+
+<p>
+You can define new variables with <code>LET</code> and <code>VAR</code>.  They are not equivalent:
+<code>LET</code> introduces a new lexical scope, so the variables that you define are
+only available in its block of text.  <code>VAR</code> on the other hand introduces
+variables that you can use anywhere in your template.  Note that they are
+<i>not global variables</i>&ndash;they are still local to the template function.
+</p>
+<p>
+<code>VAR</code> does not accept a block of text, so it ends directly with a closing
+paren.  Example:
+</p>
+
+
+
+<pre class="example">
+$(VAR ((a =&gt; 10) (b =&gt; 20)))
+$a + $b = ${ a + b }
+</pre>
+
+
+
+
+<p>
+If variables with the same name were previously defined, they are replaced
+with the new ones.
+</p>
+<p>
+<code>LET</code> introduces variables that are local to its block.  If variables with
+the same name already exist, they are shadowed while the <code>LET</code> block is
+rendered.  After the <code>LET</code> block ends, previous values come back to life.
+</p>
+
+
+
+<pre class="example">
+$(LET ((a =&gt; 10) (b =&gt; 20))
+  $a + $b = ${ a + b }
+$)
+</pre>
+
+
+
+
+<p>
+Since <code>LET</code> takes a block of text, it ends with the normal block terminator
+<code>$)</code>.  Here's an example to demonstrate scope:
+</p>
+
+
+
+<pre class="example">
+$(VAR ((x =&gt; "outside")))
+$(LET ((x =&gt; 10))
+  $x is 10
+  $(LET ((x =&gt; 20))
+    $x is 20
+  $)
+  $x is back 10
+$)
+$x is "outside"
+</pre>
+
+
+
+
+<p>
+<code>LET</code> operates by introducing an anonymous function, so it is compatible
+with all browsers.  Firefox introduced a <code>let</code> statement for declaring
+block-scoped variables, but unfortunately no other browser supports it at
+the moment.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4.3.6" class="outline-4">
+<h4 id="sec-4.3.6">4.3.6 <code>WITH</code> &ndash; modify the scope chain </h4>
+<div id="text-4.3.6">
+
+
+<p>
+When you have an object that has properties you need to access, you can use
+a <code>WITH</code> block to make for a more convenient syntax, so instead of saying
+<code>$object.foo</code> you would be able to say only <code>$foo</code>.  Assuming that <code>link</code>
+contains <code>address</code>, <code>tooltip</code> and <code>text</code>, the following two are equivalent:
+</p>
+
+
+
+<pre class="example">
+&lt;a href="$link.address|html" title="$link.tooltip|html"&gt;$link.text|html&lt;/a&gt;
+
+$(WITH (link)
+  &lt;a href="$address|html" title="$tooltip|html"&gt;$text|html&lt;/a&gt;
+$)
+</pre>
+
+
+
+
+<p>
+<code>WITH</code> can be used with literal objects as well:
+</p>
+
+
+
+<pre class="example">
+$(WITH ({ foo: 10, bar: 20 })
+  $foo + $bar = ${ foo + bar }
+$)
+</pre>
+
+
+
+
+<p>
+thus emulating a <code>LET</code> block, but it's less efficient because it uses the
+<a href="https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Statements/with">JavaScript with statement</a>.  I did some tests and for a really big number of
+iterations (1000000) with an iterator variable defined with <code>with</code> instead
+of <code>var</code>, the <code>with</code> block is 10 times slower.  That's very unfortunate
+because what we can do with it is quite interesting.  Still, it's fast
+enough for most use cases.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4.3.7" class="outline-4">
+<h4 id="sec-4.3.7">4.3.7 <code>BLOCK</code> and <code>FUNCTION</code> &ndash; define reusable template blocks </h4>
+<div id="text-4.3.7">
+
+
+<p>
+Both of these constructs define a function (local to your template) which
+renders a text block.  The difference between them is that <code>BLOCK</code> will
+define a function that “prints” the text block into the template output (and
+returns nothing), while <code>FUNCTION</code> will just return it.
+</p>
+<p>
+The syntax is straightforward.  They expect a name for the function,
+followed by a list of arguments in parens.  If there are no arguments, put
+<code>()</code> like you do for a plain JavaScript function.
+</p>
+
+
+
+<pre class="example">
+$(BLOCK display_link(link)
+  &lt;a href="$link.address|html" title="$link.title|html"&gt;$link.text|html&lt;/a&gt;
+$)
+
+&lt;!-- call it literally --&gt;
+$( display_link({ address: "/", title="Home page", text: "Home" }) )
+
+&lt;!-- or call it for an object --&gt;
+$(FOREACH (i IN links)
+  $( display_link(i) )
+$)
+</pre>
+
+
+
+
+<p>
+As you see, using <code>BLOCK / FUNCTION</code> you can split your template into small
+components.  Instead of having a big <code>FOREACH</code> loop that outputs a lot of
+stuff, we can separate logical parts in blocks and then just call them, so
+the loop itself becomes small.
+</p>
+<p>
+Combining <code>BLOCK</code> and <code>LET</code> or <code>WITH</code> we can define closures:
+</p>
+
+
+
+<pre class="example">
+$(WITH ({ value: 0 })
+  $(BLOCK counter()
+    &lt;p&gt;Counter is ${ ++value }&lt;/p&gt; $) $)
+
+$( counter() ) -- now it's 1
+$( counter() ) -- now it's 2
+$( counter() ) -- now it's 3
+</pre>
+
+
+
+
+<p>
+Doing the above with <code>LET</code> is a bit more tricky because <code>LET</code> creates its
+own environment, so the <code>BLOCK</code> that you define within it is actually local
+to the <code>LET</code> block.  The following won't work:
+</p>
+
+
+
+<pre class="example">
+$(LET ((value =&gt; 0))
+  $(BLOCK counter()
+    &lt;p&gt;Counter is ${ ++value }&lt;/p&gt; $) $)
+
+$( counter() ) -- error, counter is not defined!
+</pre>
+
+
+
+
+<p>
+It's easy to see why if you see the code that gets generated for the above.
+It looks like the following:
+</p>
+
+
+
+<pre class="example">
+(function(){
+    var value = 0;
+    function counter() {
+        output("Counter is " + (++value));
+    };
+})();
+</pre>
+
+
+
+
+<p>
+To do this with a <code>LET</code> block we would have to export the function; we can
+use an outside variable for that:
+</p>
+
+
+
+<pre class="example">
+$(VAR (counter))
+$(LET ((value =&gt; 0))
+  $( counter = _counter /* export it */ )
+  $(BLOCK _counter()
+    &lt;p&gt;Counter is ${ ++value }&lt;/p&gt; $) $)
+
+$( counter() ) -- now it works.
+</pre>
+
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-4.3.8" class="outline-4">
+<h4 id="sec-4.3.8">4.3.8 <code>WRAP</code>, <code>CONTENT</code> &ndash; call a wrapper with an additional block of text </h4>
+<div id="text-4.3.8">
+
+
+<p>
+<code>BLOCK</code> can be used to define wrappers.  A wrapper is something that
+receives a bit of text and puts something before and after that text.  For
+example, to define a wrapper that creates a table we can say:
+</p>
+
+
+
+<pre class="example">
+&lt;!-- define our wrapper --&gt;
+$(BLOCK table(cols)
+  &lt;table&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        $(MAP (label =&gt; cols) &lt;td&gt;$label&lt;/td&gt; $)
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      $(CONTENT)
+    &lt;/tbody&gt;
+  &lt;/table&gt; $)
+
+&lt;!-- and here's how we use it --&gt;
+$(WRAP table([ "Name", "Phone", "Email" ])
+  &lt;tr&gt; &lt;td&gt;Foo&lt;/td&gt; &lt;td&gt;123-1234&lt;/td&gt; &lt;td&gt;foo@foo.com&lt;/td&gt; &lt;/tr&gt;
+  &lt;tr&gt; &lt;td&gt;Bar&lt;/td&gt; &lt;td&gt;1234-123&lt;/td&gt; &lt;td&gt;bar@bar.com&lt;/td&gt; &lt;/tr&gt;
+$)
+</pre>
+
+
+
+
+<p>
+You can note that a wrapper is a normal function defined with <code>BLOCK</code> or
+<code>FUNCTION</code>, and it can take arguments.  To send the arguments with a <code>WRAP</code>
+block, just make it look like a normal function call.  If there are no
+arguments, you still need to insert the parens <code>()</code>.  When it's calling your
+block, <code>WRAP</code> sends an additional hidden argument that contains the text
+which is expanded by <code>$(CONTENT)</code>.  For now this argument is a function that
+renders the text, and <code>$(CONTENT)</code> simply calls this function.
+</p>
+
+
+
+
+
+
+
+</div>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5">5 Name </h2>
+<div id="text-5">
+
+
+<p>
+Various combinations of the letters Y, A, J, T, E from “Yet Another
+JavaScript Template Engine” led to the name YAJET.  Sounds good, isn't it?
+</p>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6">6 Known issues and limitations </h2>
+<div id="text-6">
+
+
+
+</div>
+
+<div id="outline-container-6.1" class="outline-3">
+<h3 id="sec-6.1">6.1 Literal RegExp-s in JavaScript expressions </h3>
+<div id="text-6.1">
+
+
+</div>
+
+</div>
+
+<div id="outline-container-6.2" class="outline-3">
+<h3 id="sec-6.2">6.2 Filters don't take additional arguments </h3>
+<div id="text-6.2">
+
+
+</div>
+
+</div>
+
+<div id="outline-container-6.3" class="outline-3">
+<h3 id="sec-6.3">6.3 Error reporting less than ideal </h3>
+<div id="text-6.3">
+
+
+
+
+
+
+</div>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+<p class="footnote"><sup><a class="footnum" name="fn.1" href="#fnr.1">1</a></sup> Seriously though, everything under an <code>with</code> block is
+s&hellip;l&hellip;o&hellip;w&hellip; &ndash; so, while this makes for a nice syntax, you should not
+use it where speed is critical.
+</p>
+</div>
+</div>
+<div id="postamble"><p class="author"> Author: Mihai Bazon
+<a href="mailto:mihai.bazon@gmail.com">&lt;mihai.bazon@gmail.com&gt;</a>
+</p>
+<p class="date"> Date: 2010-04-30 16:04:17 CEST</p>
+<p>HTML generated by org-mode 6.21b in emacs 23</p>
+</div></body>
+</html>

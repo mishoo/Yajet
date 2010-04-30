@@ -1,0 +1,665 @@
+#+TITLE: YAJET -- JavaScript template engine
+#+STYLE: <link rel="stylesheet" type="text/css" href="docstyle.css" />
+
+* Yet Another JavaScript Template Engine
+
+A “template engine” is a tool able to transform some text into another, by
+interpreting/replacing various patterns in the source text.  YAJET is such a
+tool designed for client-side (JavaScript, in-browser) transformation.
+
+YAJET is a compiler, in the sense that it transforms your template into
+runnable JavaScript code; after compiling a template you get a function
+which you can call with an argument that contains data required to fill your
+template, and it returns it rendered.
+
+YAJET is appropriate for any kind of text templates -- it was not designed
+specifically for HTML, although that's mostly what we use it for.  It shares
+some conceptual similarities with the venerable [[http://template-toolkit.org/][Template::Toolkit]] and some
+syntactic ones with Lisp.  I decided to write it because I couldn't find
+other tools to match my taste.
+
+* Features
+
+Other than the boring variable replacement, YAJET supports the following
+(and I will explain them later in this document):
+
+- conditionals (=IF= / =WHEN= / =UNLESS=, =ELSE=, =ELSIF=).  =WHEN= is a
+  synonym to =IF=, and =UNLESS= is, of course, the complete opposite.
+  =ELSE= and =ELSIF= are supported both in =IF/WHEN= and in =UNLESS= blocks,
+  but using =ELSE= in an =UNLESS= block makes the code look a bit werid.
+
+- repetitive constructs (=REPEAT= / =LOOP=).  They allow you to repeat a
+  part of the template a few times. =LOOP= is a synonym to =REPEAT=.
+
+- iterating array or hashes (=MAP= and =MAPHASH=) -- =MAP= to traverse a
+  list and =MAPHASH= to iterate an object (hash table).
+
+- all loops can be controlled by =BREAK= or =CONTINUE=.
+
+- variable definition (=LET=, =VAR= and =WITH=).  =LET= and =WITH= introduce
+  new lexical scopes.
+
+- block definitions (=BLOCK= and =FUNCTION=).  Useful to define a template
+  block that can be called as a function.  =BLOCK= will feed its output into
+  the main output stream, while =FUNCTION= will return it.  Both are
+  closures within their lexical context.
+
+- block wrappers can be called using =WRAP=.
+
+- simple filters a la Template::Toolkit (i.e. =$foo|html= will HTML-escape
+  the value of foo).
+
+- the documentation is bigger than the code.
+
+* Usage
+
+You need to load [[./js/yajet.js][yajet.js]], and to create an instance like this:
+
+#+BEGIN_EXAMPLE
+var yajet = new YAJET({
+    syntax_char : "$",
+    with_scope  : false
+    filters     : {
+        foo: function(val) { ... },
+        bar: function(val) { ... }
+    }
+});
+#+END_EXAMPLE
+
+All arguments are optional.  Then to compile a template, you do this:
+
+#+BEGIN_EXAMPLE
+var func = yajet.compile("You said: $this.foo $this.bar");
+#+END_EXAMPLE
+
+and to execute it:
+
+#+BEGIN_EXAMPLE
+alert( func({ foo: "hello", bar: "world!" }) );
+#+END_EXAMPLE
+
+The function created by “yajet.compile” receives one argument, and that
+argument is available in your templates via the JavaScript =this= keyword.
+This is the default behavior, because I think it's the best one in general,
+but if you don't like to use the =this.= prefix to access the members you
+can pass =with_scope: true= in the constructor.  It wraps the generated
+function in a =with(this) { ... }= block, so the above would become:
+
+#+BEGIN_EXAMPLE
+var yajet = new YAJET({ with_scope: true });
+var func = yajet.compile("You said: $foo $bar");
+// and call it the same:
+alert( func({ foo: "hello", bar: "world!" }) );
+#+END_EXAMPLE
+
+It's more convenient, but it's slower (more than 10 times slower in many
+cases).  How much slower depends on how big is your template and how many
+variables there are.  If you want a performance benchmark with and without
+the =with= statement, [[./test/with.html][see this file]] (Firebug is required for timing the
+operations; watch the Firebug console).
+
+* Syntax
+
+YAJET parses the template as text, leaving it unchanged, until an occurrence
+of a special character (let's name it the “reader char”).  By default this
+character is $, but you can change it in the constructor.  What follows in
+this document will assume that $ is the reader character.  A few types of
+constructs are recognized:
+
+- =$$= -- inserts a literal $ character.
+
+- =$foo= -- inserts the value of the variable foo.
+
+- =${ foo.bar.baz() }= -- evaluates the given JavaScript expression and
+  inserts the return value, if any.
+
+- =$(INSTRUCTION ... $)= -- processes the contents according to some rules
+  which are particular for INSTRUCTION
+
+- =$( ... )= -- inserts literal JavaScript code (must not be ill-formed!).
+
+** Simple interpolation (the =$foo= construct)
+
+To insert a variable you can say =$foo=, =$foo.bar=, etc.  This case is
+quite simple.  The parser will stop at a character which isn't a letter, a
+digit, an underscore or a dollar sign.  Additionally it supports filtering
+the values with a convenient syntax: =$foo|html=.
+
+Filters are functions that take one argument and should return the modified
+value.  You can easily define your own filters (but later on this).  Filters
+can be combined, for example: =$foo|upcase|html= will first make foo
+uppercase, then apply the html filter to the upcased string.
+
+** JavaScript expressions (the =${exp}= construct)
+
+This is similar to the “simple interpolation” case, but it allows for more
+complicated expressions.  For example =${a+b}= will insert the sum of a and
+b.  Your expression can be arbitrarily complex, and the parser is smart
+enough to read it, provided that it is valid JavaScript code (you need to be
+*careful about literal RegExp-s* though, for now; I'll fix this in a later
+release; more on this in [[Known issues]]).
+
+So, an example of a perfectly valid call is:
+
+#+BEGIN_EXAMPLE
+${
+   // Comments are allowed and can even contain the closing bracket: }
+   // it's ignored, since it is in a comment.
+   (function(arg){
+     return arg.a + arg.b + arg.text;
+   })({
+     a: 5,
+     b: 10,
+     text: "(foo}"
+   })
+}
+#+END_EXAMPLE
+
+The =${exp}= construct will evaluate the expression =foo= at run-time and
+will insert its value into the rendered template only if it's not =null=.
+
+*** Filters
+
+As already noted, the =$foo= construct allows filtering the value through
+some function using a convenient syntax like =$foo|html=.  At the time of
+this writing the filters available by default are:
+
+- =html=
+- =upcase=
+- =downcase=
+
+It's easy to define custom filters when you construct the YAJET object:
+
+#+BEGIN_EXAMPLE
+var yajet = new YAJET({
+    filters: {
+        md5: function(value) {
+            return md5_hex_of(value); // return the modified value
+        }
+    }
+});
+#+END_EXAMPLE
+
+... and in your template: =$password|md5=.
+
+There is also a syntax that allows for filters within the =${exp}=
+construct.  But since we parse valid JavaScript code, and since the pipe is
+a valid JavaScript character (“bitwise or”), we have to use something
+different.  The idea was, thus, that such expressions will be parsed as a
+list; the first element of the list is the expression itself, and any
+additional elements are filters.  For example:
+
+#+BEGIN_EXAMPLE
+${ this.getLabel(), upcase, html }
+#+END_EXAMPLE
+
+will convert into something like this (that's only pseudo-code):
+
+#+BEGIN_EXAMPLE
+output_string(
+  apply_html_filter(
+    apply_upcase_filter(
+      this.getLabel()
+    )
+  )
+)
+#+END_EXAMPLE
+
+Since the comma doesn't look very nice for this particular case, the “list
+reader” also allows a few aliases.  Syntactic sugar, baby!  You can also
+use:
+
+- =“=>”=
+- =“;”=
+- =“..”=
+- =“;”=
+
+So the above example can also be written like this:
+
+#+BEGIN_EXAMPLE
+${ this.getLabel() => upcase => html }
+${ this.getLabel() => upcase, html }
+${ this.getLabel() .. upcase; html }
+#+END_EXAMPLE
+
+Whitespace is ignored.
+
+These special separators only work for the “list reader” which is used in
+the =${exp}=-like constructs.  Also, note that filters are only interpreted
+in the top-level elements of this list, so for instance the following won't
+apply the "html" filter to “foo”: =${ something(foo, html) }=.  It will just
+call, instead, the function =something=, passing the variables =foo= and
+=html=, which is expected behavior.
+
+** Processing instructions
+
+So far we are able to introduce arbitrary JavaScript variables and
+expressions in the template.  However that's hardly enough.  First off, the
+expressions must be well-formed, so there is no way to start a JavaScript
+block somewhere and end it some place else.  The following is invalid for
+obvious reasons:
+
+#+BEGIN_EXAMPLE
+${ if (link != null) { }
+  <a href="$link|html">$link</a>
+${ } }
+#+END_EXAMPLE
+
+I emphasize that the lack of support for partial expressions is a /feature/,
+not a limitation.  This will never be “fixed”.  To support constructs like
+the above but without encouraging poorly written templates that start a
+block on line 10 and end it on line 1000, we have a few special processing
+instructions.  Let's call these the =$(BAR ... $)= construct.  To start
+with, here is how you would write the above code:
+
+#+BEGIN_EXAMPLE
+$(WHEN (link != null)
+  <a href="$link|html">$link</a>
+$)
+#+END_EXAMPLE
+
+Note that you still can start a block on one line and end it on another, but
+the style is a bit different.  Instead of inserting arbitrary code
+unconditionally, we simply end a known construct.  The condition that you
+pass to WHEN must be fully valid JavaScript (you cannot pass a partial
+expression there) and, if your editor does a good job about matching parens,
+then you can quickly see where the block begins/ends by moving the cursor to
+the parens.  I prefer this style.
+
+Note that the processing instructions are not case-sensitive.  I prefer to
+use UPPERCASE for them so that they stand out visually.
+
+The =$(BAR ... $)= construct has the following properties:
+
+- it starts with =$(= (so it's a normal paren, not a bracket).
+- it has a special instruction.
+- depending on the instruction, certain arguments may follow.
+- it may contain a block of text between the arguments and the =$)=
+  terminator.
+- it /should/ end with =$)=.
+
+The block of text is parsed normally, so it's interpreted as plain text
+until =$= (the reader char) is encountered, then what follows the reader
+char is processed by the rules I described in this document.  Despite all
+this, the parser is not recursive. :-)
+
+Following I will describe the processing instructions which are available at
+this time.  I think the set of them is quite comprehensive and allows you to
+express any kind of template in a simple and consistent manner.
+
+*** =IF= / =WHEN= / =UNLESS=, =ELSE= / =ELSIF= -- conditional execution
+
+=IF= and =WHEN= are synonyms, while =UNLESS= is the antonym.  =WHEN= seems more
+appropriate for cases where you don't have an =ELSE= clause.  They support one
+argument which must be a condition enclosed in parens.  Examples:
+
+#+BEGIN_EXAMPLE
+$(WHEN (user_id == null)
+  <a href="...">Please login</a> $)
+
+$(UNLESS (user_id != null)
+  <a href="...">Please login</a> $)
+
+$(IF (a < b)
+  <p>A is smaller</p>
+$(ELSIF (a > b))
+  <p>B is smaller</p>
+$(ELSE)
+  <p>A and B are equal</p> $)
+#+END_EXAMPLE
+
+Note that you can use =ELSE= or =ELSIF= inside =UNLESS= or =WHEN= blocks
+too, although I would not advise to use this style:
+
+#+BEGIN_EXAMPLE
+$(UNLESS (a == b)
+  they are different
+$(ELSE)
+  they are equal $)
+#+END_EXAMPLE
+
+You should also note that =ELSE= and =ELSIF= are not actually parsed like
+other instructions.  They don't take a block of text, and thus they don't
+need to end with =$)=.  Whether to do it this way was hard to decide, but
+since =ELSE= and =ELSIF= normally /continue/ an IF block, instead of ending
+it, it seems to make sense this way.  The same applies to =$(BREAK)= and
+=$(CONTINUE)= directives.
+
+*** =REPEAT= / =LOOP= -- to repeat stuff
+
+To repeat a part of the template you can use =REPEAT= or =LOOP= (they are
+synonyms).  For example, the following outputs “foo” 3 times: =$(REPEAT (3)
+foo $)=.  In various cases you might need to know the current iteration too,
+so you can pass a variable name for it:
+
+#+BEGIN_EXAMPLE
+$(REPEAT (5, i)
+  Item $i $)
+#+END_EXAMPLE
+
+The variable =i= takes values from 1 to 5 (inclusively) and the output will
+be “Item 1 Item 2 ” etc.  In some cases you might want to specify an
+interval (so that you start from something different than zero), so the
+following is allowed:
+
+#+BEGIN_EXAMPLE
+$(LOOP (5 .. 10 => i)
+  <a href="/page$i">Page $i</a> $)
+#+END_EXAMPLE
+
+=LOOP= seems to be nicer in this case, but the result is exactly the same if
+you use =REPEAT= too.  Also note that the arguments are parsed using the
+“list reader”, so you can use syntactic sugar to separate them (although a
+simple comma would do).
+
+*** =MAP= / =FOREACH= -- iterate an array
+
+Again, =MAP= and =FOREACH= are synonyms.  You can use them to do something
+for each element of an array.  For example the following outputs links
+contained in an array:
+
+#+BEGIN_EXAMPLE
+$(MAP (link => links)
+  <a href="$link.address|html"
+     title="$link.tooltip|html">$link.text|html</a> $)
+#+END_EXAMPLE
+
+That's assuming that =links= is an array of objects, each containing
+=address=, =tooltip= and =text=.  You could also use a literal object (the
+parser is smart enough for this):
+
+#+BEGIN_EXAMPLE
+$(MAP (link => [ { address : "http://www.google.com/",
+                   tooltip : "Search engine",
+                   text    : "Google" },
+
+                 { address : "http://www.ymacs.org/",
+                   tooltip : "AJAX code editor",
+                   text    : "Ymacs" }
+               ])
+  <a href="$link.address|html"
+     title="$link.tooltip|html">$link.text|html</a> $)
+#+END_EXAMPLE
+
+Sometimes you also need to know the current step of the iteration.  For
+example if you want to output some links that are separated with a pipe, you
+need to know not to output the pipe before the first, or after the last
+link.  We could write it like this:
+
+#+BEGIN_EXAMPLE
+$(MAP (i, link => links)
+  $(WHEN (i > 0) | $)
+  <a href="$link.address|html"
+     title="$link.tooltip|html">$link.text|html</a> $)
+#+END_EXAMPLE
+
+or
+
+#+BEGIN_EXAMPLE
+$(MAP (i, link => links)
+  ${ i > 0 ? "|" : "" }
+  <a href="$link.address|html"
+     title="$link.tooltip|html">$link.text|html</a> $)
+#+END_EXAMPLE
+
+A special case of =MAP= / =FOREACH= allows you to pass only the array, and
+no key or index variables.  In this case the special variable =$_= (which I
+will call the Perlism) gets assigned to the current element, and /more/, the
+loop body is lexically scoped to each element using a JavaScript =with=
+block (I know, your mom told you not to play the =with= statement, but mine
+didn't[fn:with] :-p).
+
+So using this style the first example would become:
+
+#+BEGIN_EXAMPLE
+$(MAP (links)
+  <a href="$address|html" title="$tooltip|html">$text|html</a> $)
+#+END_EXAMPLE
+
+=address=, =tooltip= and =text= access the specific property of each
+element.
+
+Just a last example showing the Perlism:
+
+#+BEGIN_EXAMPLE
+$(FOREACH ([ "foo", "bar", "baz" ]) <b>$_</b> $)
+#+END_EXAMPLE
+
+will output “<b>foo</b> <b>bar</b> <b>baz</b>”.  The =$_= variable is bound
+to each element.
+
+*** =MAPHASH= -- iterate an object (hash)
+
+=MAPHASH= is =MAP='s analogue for hashes.  It iterates over all properties
+of an object, binding a variable for the key and another for the value.  You
+must specify names for these variables.  Example, assuming that =users= is a
+hash that maps user IDs to some user objects (each of them having a
+=getName()= method):
+
+#+BEGIN_EXAMPLE
+$(MAPHASH (uid, obj => users)
+  User <b>$uid</b> has name <b>${ obj.getName() }</b><br /> $)
+#+END_EXAMPLE
+
+*** =LET= and =VAR= -- define variables
+
+You can define new variables with =LET= and =VAR=.  They are not equivalent:
+=LET= introduces a new lexical scope, so the variables that you define are
+only available in its block of text.  =VAR= on the other hand introduces
+variables that you can use anywhere in your template.  Note that they are
+/not global variables/--they are still local to the template function.
+
+=VAR= does not accept a block of text, so it ends directly with a closing
+paren.  Example:
+
+#+BEGIN_EXAMPLE
+$(VAR ((a => 10) (b => 20)))
+$a + $b = ${ a + b }
+#+END_EXAMPLE
+
+If variables with the same name were previously defined, they are replaced
+with the new ones.
+
+=LET= introduces variables that are local to its block.  If variables with
+the same name already exist, they are shadowed while the =LET= block is
+rendered.  After the =LET= block ends, previous values come back to life.
+
+#+BEGIN_EXAMPLE
+$(LET ((a => 10) (b => 20))
+  $a + $b = ${ a + b }
+$)
+#+END_EXAMPLE
+
+Since =LET= takes a block of text, it ends with the normal block terminator
+=$)=.  Here's an example to demonstrate scope:
+
+#+BEGIN_EXAMPLE
+$(VAR ((x => "outside")))
+$(LET ((x => 10))
+  $x is 10
+  $(LET ((x => 20))
+    $x is 20
+  $)
+  $x is back 10
+$)
+$x is "outside"
+#+END_EXAMPLE
+
+=LET= operates by introducing an anonymous function, so it is compatible
+with all browsers.  Firefox introduced a =let= statement for declaring
+block-scoped variables, but unfortunately no other browser supports it at
+the moment.
+
+*** =WITH= -- modify the scope chain
+
+When you have an object that has properties you need to access, you can use
+a =WITH= block to make for a more convenient syntax, so instead of saying
+=$object.foo= you would be able to say only =$foo=.  Assuming that =link=
+contains =address=, =tooltip= and =text=, the following two are equivalent:
+
+#+BEGIN_EXAMPLE
+<a href="$link.address|html" title="$link.tooltip|html">$link.text|html</a>
+
+$(WITH (link)
+  <a href="$address|html" title="$tooltip|html">$text|html</a>
+$)
+#+END_EXAMPLE
+
+=WITH= can be used with literal objects as well:
+
+#+BEGIN_EXAMPLE
+$(WITH ({ foo: 10, bar: 20 })
+  $foo + $bar = ${ foo + bar }
+$)
+#+END_EXAMPLE
+
+thus emulating a =LET= block, but it's less efficient because it uses the
+[[https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Statements/with][JavaScript with statement]].  I did some tests and for a really big number of
+iterations (1000000) with an iterator variable defined with =with= instead
+of =var=, the =with= block is 10 times slower.  That's very unfortunate
+because what we can do with it is quite interesting.  Still, it's fast
+enough for most use cases.
+
+*** =BLOCK= and =FUNCTION= -- define reusable template blocks
+
+Both of these constructs define a function (local to your template) which
+renders a text block.  The difference between them is that =BLOCK= will
+define a function that “prints” the text block into the template output (and
+returns nothing), while =FUNCTION= will just return it.
+
+The syntax is straightforward.  They expect a name for the function,
+followed by a list of arguments in parens.  If there are no arguments, put
+=()= like you do for a plain JavaScript function.
+
+#+BEGIN_EXAMPLE
+$(BLOCK display_link(link)
+  <a href="$link.address|html" title="$link.title|html">$link.text|html</a>
+$)
+
+<!-- call it literally -->
+$( display_link({ address: "/", title="Home page", text: "Home" }) )
+
+<!-- or call it for an object -->
+$(FOREACH (i IN links)
+  $( display_link(i) )
+$)
+#+END_EXAMPLE
+
+As you see, using =BLOCK / FUNCTION= you can split your template into small
+components.  Instead of having a big =FOREACH= loop that outputs a lot of
+stuff, we can separate logical parts in blocks and then just call them, so
+the loop itself becomes small.
+
+Combining =BLOCK= and =LET= or =WITH= we can define closures:
+
+#+BEGIN_EXAMPLE
+$(WITH ({ value: 0 })
+  $(BLOCK counter()
+    <p>Counter is ${ ++value }</p> $) $)
+
+$( counter() ) -- now it's 1
+$( counter() ) -- now it's 2
+$( counter() ) -- now it's 3
+#+END_EXAMPLE
+
+Doing the above with =LET= is a bit more tricky because =LET= creates its
+own environment, so the =BLOCK= that you define within it is actually local
+to the =LET= block.  The following won't work:
+
+#+BEGIN_EXAMPLE
+$(LET ((value => 0))
+  $(BLOCK counter()
+    <p>Counter is ${ ++value }</p> $) $)
+
+$( counter() ) -- error, counter is not defined!
+#+END_EXAMPLE
+
+It's easy to see why if you see the code that gets generated for the above.
+It looks like the following:
+
+#+BEGIN_EXAMPLE
+(function(){
+    var value = 0;
+    function counter() {
+        output("Counter is " + (++value));
+    };
+})();
+#+END_EXAMPLE
+
+To do this with a =LET= block we would have to export the function; we can
+use an outside variable for that:
+
+#+BEGIN_EXAMPLE
+$(VAR (counter))
+$(LET ((value => 0))
+  $( counter = _counter /* export it */ )
+  $(BLOCK _counter()
+    <p>Counter is ${ ++value }</p> $) $)
+
+$( counter() ) -- now it works.
+#+END_EXAMPLE
+
+*** =WRAP=, =CONTENT= -- call a wrapper with an additional block of text
+
+=BLOCK= can be used to define wrappers.  A wrapper is something that
+receives a bit of text and puts something before and after that text.  For
+example, to define a wrapper that creates a table we can say:
+
+#+BEGIN_EXAMPLE
+<!-- define our wrapper -->
+$(BLOCK table(cols)
+  <table>
+    <thead>
+      <tr>
+        $(MAP (label => cols) <td>$label</td> $)
+      </tr>
+    </thead>
+    <tbody>
+      $(CONTENT)
+    </tbody>
+  </table> $)
+
+<!-- and here's how we use it -->
+$(WRAP table([ "Name", "Phone", "Email" ])
+  <tr> <td>Foo</td> <td>123-1234</td> <td>foo@foo.com</td> </tr>
+  <tr> <td>Bar</td> <td>1234-123</td> <td>bar@bar.com</td> </tr>
+$)
+#+END_EXAMPLE
+
+You can note that a wrapper is a normal function defined with =BLOCK= or
+=FUNCTION=, and it can take arguments.  To send the arguments with a =WRAP=
+block, just make it look like a normal function call.  If there are no
+arguments, you still need to insert the parens =()=.  When it's calling your
+block, =WRAP= sends an additional hidden argument that contains the text
+which is expanded by =$(CONTENT)=.  For now this argument is a function that
+renders the text, and =$(CONTENT)= simply calls this function.
+
+
+
+
+
+
+
+
+* Name
+
+Various combinations of the letters Y, A, J, T, E from “Yet Another
+JavaScript Template Engine” led to the name YAJET.  Sounds good, isn't it?
+
+
+
+* Known issues and limitations
+
+** Literal RegExp-s in JavaScript expressions
+
+** Filters don't take additional arguments
+
+** Error reporting less than ideal
+
+
+
+#---- footnotes
+
+[fn:with] Seriously though, everything under an =with= block is
+s...l...o...w... -- so, while this makes for a nice syntax, you should not
+use it where speed is critical.
