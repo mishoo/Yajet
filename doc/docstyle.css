@@ -43,3 +43,19 @@ sup a:link, sup a:visited {
 
 sup a:before { content: "["; color: #999; }
 sup a:after { content: "]"; color: #999; }
+
+h1.title { border-bottom: 4px solid #000; padding-bottom: 5px; margin-bottom: 2em; }
+
+#postamble {
+  color: #777;
+  font-size: 90%;
+  padding-top: 1em; border-top: 1px solid #999;
+  margin-top: 2em;
+  padding-left: 2em;
+  padding-right: 2em;
+  text-align: right;
+}
+
+#postamble p { margin: 0; }
+
+#footnotes { border-top: 1px solid #000; }
