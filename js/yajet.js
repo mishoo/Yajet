@@ -174,7 +174,7 @@ function YAJET(yajet_args){
                                                 ++THE_INDEX;
                                                 if (open.length == 0) {
                                                         if (wantList) {
-                                                                expr = expr.trim();
+                                                                expr = trim(expr);
                                                                 if (expr)
                                                                         ret.push(expr);
                                                                 return ret;
@@ -402,7 +402,7 @@ function YAJET(yajet_args){
                                         };
                                 }
                                 skip_ws();
-                                var name = read_simple_token().trim();
+                                var name = trim(read_simple_token());
                                 var args = read_balanced();
                                 // THE_PREAMBLE.push("function " + name + "(){};");
                                 block_open(
@@ -421,7 +421,7 @@ function YAJET(yajet_args){
                                         };
                                 }
                                 skip_ws();
-                                var name = read_simple_token().trim();
+                                var name = trim(read_simple_token());
                                 var args = read_balanced();
                                 // THE_PREAMBLE.push("function " + name + "(){};");
                                 block_open(
@@ -431,7 +431,7 @@ function YAJET(yajet_args){
                         }
                         else if (skip(/^\(wrap\b/i)) {
                                 skip_ws();
-                                var name = read_simple_token().trim();
+                                var name = trim(read_simple_token());
                                 var args = read_balanced(true);
                                 if (args.length > 0)
                                         args = args.join(", ") + ", ";
@@ -456,7 +456,7 @@ function YAJET(yajet_args){
                                 var val = v.shift();
                                 if (/\S/.test(val)) {
                                         while (v.length > 0) {
-                                                var filter = v.shift().trim();
+                                                var filter = trim(v.shift());
                                                 // check if it has arguments
                                                 var par = filter.indexOf("(");
                                                 var args;
@@ -475,7 +475,7 @@ function YAJET(yajet_args){
                                 }
                         }
                         else {
-                                var v = read_simple_token().trim().split(/\s*\|\s*/);
+                                var v = trim(read_simple_token()).split(/\s*\|\s*/);
                                 var val = v.shift();
                                 while (v.length > 0) {
                                         val = "__YAJET.filter(" + to_js_string(v.shift()) + ", " + val + ")";
@@ -512,6 +512,10 @@ function YAJET(yajet_args){
                 }
         };
 
+        function trim(v) {
+                return v.replace(/^\s+|\s+$/g, "");
+        };
+
         var FILTERS = {
                 html: function(v) {
                         return String(v).replace(/&/g, "&amp;")
@@ -527,9 +531,7 @@ function YAJET(yajet_args){
                 downcase: function(v) {
                         return String(v).toLowerCase();
                 },
-                trim: function(v) {
-                        return v.replace(/^\s+|\s+$/g, "");
-                }
+                trim: trim
         };
 
         for (var i in yajet_args.filters)

@@ -89,6 +89,10 @@ Other than the boring variable replacement, YAJET supports the following
   minified, 2.2K gzipped) and it's completely self-contained (no library
   requirements, and it should not clash with any library).
 
+- it's browser agnostic.  In fact, it doesn't even need a browser---YAJET
+  should work with a standalone JavaScript engine such as [[http://code.google.com/p/v8/][Google's V8]] or
+  [[http://www.mozilla.org/rhino/][Rhino]].  I tested it with Rhino.
+
 * Usage
 
 You need to load [[../js/yajet.js][yajet.js]], and to create an instance like this:
