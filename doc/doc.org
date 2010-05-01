@@ -852,9 +852,75 @@ well (=\x28=), and same goes for all the other types of brackets such as
 
 ** Error reporting is less than ideal
 
+In some cases YAJET detects that something is wrong and will tell you what
+it expects and where.  In other cases, it can happen that it generates valid
+JavaScript code, which gets compiled but doesn't run as expected.  Then it's
+quite hard to debug.
+
+This problem is quite universal among template libraries, and there is no
+quick fix.  I should write a full JavaScript parser and perhaps
+interpreter... which isn't likely to happen anytime soon.
+
 ** Whitespace handling
 
+Currently YAJET keeps all whitespace in the generated source.  There is a
+directive that allows you to say “kill following whitespace” (=$-=, that is,
+the reader char followed by a minus sign) but it's not very convenient.
+What should probably be done is that it should, by default, eat all
+whitespace that occurs on lines which don't include literal text.  For
+example the following:
 
+#+BEGIN_EXAMPLE
+<p>
+$(IF (true)
+  foo
+$(ELSE)
+  bar
+$)
+</p>
+#+END_EXAMPLE
+
+results in this output:
+
+#+BEGIN_EXAMPLE
+<p>
+
+  foo
+
+</p>
+#+END_EXAMPLE
+
+Generally, it's not what one would expect.  What's worse, we can make it
+look better but it's totally unintuitive:
+
+#+BEGIN_EXAMPLE
+<p>$-
+$(IF (true)
+  foo$-
+$(ELSE)
+  bar
+$)
+</p>
+#+END_EXAMPLE
+
+This outputs better:
+
+#+BEGIN_EXAMPLE
+<p>
+  foo
+</p>
+#+END_EXAMPLE
+
+So the default behavior should probably be:
+
+- if a line starts with whitespace followed by a directive, the whitespace
+  should be eaten.
+
+- if a line ends with a block close paren (=$)=) followed only by
+  whitespace, then that whitespace + the newline will be eaten.
+
+Need to think about it a bit more.  However, fortunately in HTML whitespace
+is not too important.
 
 
 * License

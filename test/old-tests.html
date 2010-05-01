@@ -183,6 +183,17 @@ $)
         GOT: $foo
       $)
 
+      <!-- whitespace -->
+
+<p>$-
+$(IF (true)
+  foo$-
+$(ELSE)
+  bar
+$)
+</p>
+
+
       $)
     </textarea>
 
