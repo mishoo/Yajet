@@ -1,0 +1,17 @@
+$this.foo should be "foo"
+$this.bar should be "bar"
+${ this.method() } should be "<foobar>"
+${ this.method() => html } should be "&lt;foobar&gt;"
+${ this.method() => downcase => upcase, html, embed("<p>", "</p>") } should be "<p>&lt;FOOBAR&gt;</p>"
+${
+   // ugly expression
+   // Comments are allowed and can even contain the closing bracket: }
+   // it's ignored, since it is in a comment.
+   (function(arg){
+     return arg.a + arg.b + arg.text;
+   })({
+     a: 5,
+     b: 10,
+     text: "(foo}"
+   })
+} should be "15(foo}"

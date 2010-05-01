@@ -643,7 +643,7 @@ $(BLOCK display_link(link)
 $)
 
 <!-- call it literally -->
-$( display_link({ address: "/", title="Home page", text: "Home" }) )
+$( display_link({ address: "/", title: "Home page", text: "Home" }) )
 
 <!-- or call it for an object -->
 $(FOREACH (i IN links)
@@ -828,6 +828,7 @@ unique per compilation, so you should be safe as long as you don't use the
 
 
 
+# <<Known issues>>
 * Known issues
 
 ** Literal RegExp-s in JavaScript expressions
@@ -909,7 +910,7 @@ look better but it's totally unintuitive:
 $(IF (true)
   foo$-
 $(ELSE)
-  bar
+  bar$-
 $)
 </p>
 #+END_SRC
