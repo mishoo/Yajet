@@ -462,9 +462,9 @@ function YAJET(yajet_args){
                                                 var filter = trim(v.shift());
                                                 // check if it has arguments
                                                 var par = filter.indexOf("(");
-                                                var args;
+                                                var args = null;
                                                 if (par >= 0) {
-                                                        args = filter.substring(par + 1, filter.length - 1);
+                                                        args = trim(filter.substring(par + 1, filter.length - 1));
                                                         filter = filter.substring(0, par);
                                                 }
                                                 if (!args) {
