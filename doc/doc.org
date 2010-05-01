@@ -8,12 +8,13 @@ interpreting/replacing various patterns in the source text.  YAJET is such a
 tool designed for client-side (JavaScript, in-browser) transformation.
 
 YAJET is a compiler, in the sense that it transforms your template into
-runnable JavaScript code; after compiling a template you get a function
+executable JavaScript code; after compiling a template you get a function
 which you can call with data required to fill your template, and it returns
 it rendered.
 
 YAJET is appropriate for any kind of text templates -- it was not designed
 specifically for HTML, although that's mostly what we use it for.
+
 
 * What makes it different?
 
@@ -21,7 +22,7 @@ I'm hot happy with the syntax of various template tools.  Let's face it,
 they're all creepy.  How many times have you seen stuff like this in PHP
 code:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC php
 <?php if (...) { ?>
 
 ... two
@@ -30,7 +31,7 @@ code:
 ... here
 
 <?php } ?>
-#+END_EXAMPLE
+#+END_SRC
 
 At some point the code becomes write only: you have no clue what's going on
 and where, you can't fix it, all you can do is add another IF.
@@ -47,6 +48,7 @@ venerable [[http://template-toolkit.org/][Template::Toolkit]] (which is probably
 used so far) and some syntactic ones with Lisp.
 
 Also see [[Correctness]].
+
 
 * Features
 
@@ -93,32 +95,33 @@ Other than the boring variable replacement, YAJET supports the following
   should work with a standalone JavaScript engine such as [[http://code.google.com/p/v8/][Google's V8]] or
   [[http://www.mozilla.org/rhino/][Rhino]].  I tested it with Rhino.
 
+
 * Usage
 
 You need to load [[../js/yajet.js][yajet.js]], and to create an instance like this:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 var yajet = new YAJET({
     reader_char : "$",
     with_scope  : false,
     filters     : {
-        foo: function(val) { ... },
-        bar: function(val) { ... }
+        foo: function(val) { /*...*/ },
+        bar: function(val) { /*...*/ }
     }
 });
-#+END_EXAMPLE
+#+END_SRC
 
 All arguments are optional.  Then to compile a template, you do this:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 var func = yajet.compile("You said: $this.foo $this.bar");
-#+END_EXAMPLE
+#+END_SRC
 
 and to execute it:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 alert( func({ foo: "hello", bar: "world!" }) );
-#+END_EXAMPLE
+#+END_SRC
 
 ** Template arguments
 
@@ -129,12 +132,12 @@ but if you don't like to use the =this.= prefix to access the members you
 can pass =with_scope: true= in the constructor.  It wraps the generated
 function in a =with(this) { ... }= block, so the above would become:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 var yajet = new YAJET({ with_scope: true });
 var func = yajet.compile("You said: $foo $bar");
 // and call it the same way:
 alert( func({ foo: "hello", bar: "world!" }) );
-#+END_EXAMPLE
+#+END_SRC
 
 It's more convenient, but it's slower (more than 10 times slower sometimes).
 How much slower depends on how big is your template and how many variables
@@ -150,10 +153,11 @@ character is =$=, but you can use anything else by passing the =reader_char=
 constructor argument.  I personally would prefer to use some Unicode
 character, for instance:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 var yajet = new YAJET({ reader_char: "•" });
 var tmpl = yajet.compile("You said •foo •bar");
-#+END_EXAMPLE
+#+END_SRC
+
 
 * Syntax
 
@@ -198,7 +202,7 @@ release; more on this in [[Known issues]]).
 
 So, an example of a perfectly valid call is:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 ${
    // Comments are allowed and can even contain the closing bracket: }
    // it's ignored, since it is in a comment.
@@ -210,7 +214,7 @@ ${
      text: "(foo}"
    })
 }
-#+END_EXAMPLE
+#+END_SRC
 
 The expression is evaluated at runtime and its value is inserted into the
 template output only if it's not null.
@@ -228,7 +232,7 @@ this writing the filters available by default are:
 
 It's easy to define custom filters when you construct the YAJET object:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 var yajet = new YAJET({
     filters: {
         md5: function(value) {
@@ -236,7 +240,7 @@ var yajet = new YAJET({
         }
     }
 });
-#+END_EXAMPLE
+#+END_SRC
 
 ... and in your template: =$password|md5=.
 
@@ -247,13 +251,13 @@ different.  The idea was, thus, that such expressions will be parsed as a
 list; the first element of the list is the expression itself, and any
 additional elements are filters.  For example:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 ${ this.getLabel(), upcase, html }
-#+END_EXAMPLE
+#+END_SRC
 
 will convert into something like this:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 output_string(
   apply_html_filter(
     apply_upcase_filter(
@@ -261,7 +265,7 @@ output_string(
     )
   )
 )
-#+END_EXAMPLE
+#+END_SRC
 
 Since the comma doesn't look very nice for this particular case, the “list
 reader” also allows a few aliases.  Syntactic sugar, baby!  You can also
@@ -275,12 +279,12 @@ use:
 
 So the above example can also be written like this:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 ${ this.getLabel() IN upcase, html }
 ${ this.getLabel() => upcase => html }
 ${ this.getLabel() => upcase, html }
 ${ this.getLabel() .. upcase; html }
-#+END_EXAMPLE
+#+END_SRC
 
 These special separators only work for the “list reader”, which is used in
 the =${exp}=-like constructs (and several others).  Also, note that filters
@@ -294,7 +298,7 @@ arguments.  For example, assuming you have some date formatting library, you
 can easily define a filter that formats a Date object according to the
 arguments:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 var yajet = new YAJET({
     filters: {
         format_date: function(date, format) {
@@ -302,9 +306,11 @@ var yajet = new YAJET({
         }
     }
 });
+#+END_SRC
 
-// and in the template:
+and in the template:
 
+#+BEGIN_EXAMPLE
 “Today is: ${ new Date() => format_date("YYYY-MM-DD") }”
 #+END_EXAMPLE
 
@@ -320,11 +326,11 @@ expressions must be well-formed, so there is no way to start a JavaScript
 block somewhere and end it some place else.  The following is invalid for
 obvious reasons:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 ${ if (link != null) { }
   <a href="$link|html">$link</a>
 ${ } }
-#+END_EXAMPLE
+#+END_SRC
 
 I emphasize that the lack of support for partial expressions is a /feature/,
 not a limitation.  This will never be “fixed”.  To support constructs like
@@ -333,11 +339,11 @@ block on line 10 and end it on line 1000, we have a few special processing
 directives.  Let's call these the =$(BAR ... $)= construct.  To start with,
 here is how you would write the above code:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(IF (link != null)
   <a href="$link|html">$link</a>
 $)
-#+END_EXAMPLE
+#+END_SRC
 
 Note that you still can start a block on one line and end it on another, but
 the style is a bit different.  Instead of inserting arbitrary code
@@ -374,7 +380,7 @@ template in a simple and consistent manner.
 appropriate for cases where you don't have an =ELSE= clause.  They support one
 argument which must be a condition enclosed in parens.  Examples:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(WHEN (user_id == null)
   <a href="...">Please login</a> $)
 
@@ -387,7 +393,7 @@ $(ELSIF (a > b))
   <p>B is smaller</p>
 $(ELSE)
   <p>A and B are equal</p> $)
-#+END_EXAMPLE
+#+END_SRC
 
 Note that you can use =ELSE= or =ELSIF= inside =UNLESS= or =WHEN= blocks
 too, although I would not advise to use this style:
@@ -423,10 +429,10 @@ be “Item 1 Item 2 ” etc.  In some cases you might want to specify an
 interval (so that you start from something else than 1), so the following is
 allowed:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(LOOP (5 .. 10 => i)
   <a href="/page$i">Page $i</a> $)
-#+END_EXAMPLE
+#+END_SRC
 
 The =LOOP= keyword seems to be nicer in this case, but again, they are
 synonyms.  Also note that the arguments are parsed using the “list reader”,
@@ -439,17 +445,17 @@ Again, =MAP= and =FOREACH= are synonyms.  You can use them to do something
 for each element of an array.  For example the following outputs links
 contained in an array:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(MAP (link => links)
   <a href="$link.address|html"
      title="$link.tooltip|html">$link.text|html</a> $)
-#+END_EXAMPLE
+#+END_SRC
 
 That's assuming that =links= is an array of objects, each containing
 =address=, =tooltip= and =text=.  You could also use a literal object (the
 parser is smart enough for this):
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(MAP (link => [ { address : "http://www.google.com/",
                    tooltip : "Search engine",
                    text    : "Google" },
@@ -460,28 +466,28 @@ $(MAP (link => [ { address : "http://www.google.com/",
                ])
   <a href="$link.address|html"
      title="$link.tooltip|html">$link.text|html</a> $)
-#+END_EXAMPLE
+#+END_SRC
 
 Sometimes you also need to know the current step of the iteration.  For
 example if you want to output some links that are separated with a pipe, you
 need to know not to output the pipe before the first, or after the last
 link.  We could write it like this:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(MAP (i, link => links)
   $(WHEN (i > 0) | $)
   <a href="$link.address|html"
      title="$link.tooltip|html">$link.text|html</a> $)
-#+END_EXAMPLE
+#+END_SRC
 
 or
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(MAP (i, link => links)
   ${ i > 0 ? "|" : "" }
   <a href="$link.address|html"
      title="$link.tooltip|html">$link.text|html</a> $)
-#+END_EXAMPLE
+#+END_SRC
 
 A special case of =MAP= / =FOREACH= allows you to pass only the array, and
 no key or index variables.  In this case the special variable =$_= (which I
@@ -492,19 +498,19 @@ didn't[fn:with] :-p).
 
 So using this style the first example would become:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(MAP (links)
   <a href="$address|html" title="$tooltip|html">$text|html</a> $)
-#+END_EXAMPLE
+#+END_SRC
 
 =address=, =tooltip= and =text= access the specific property of each
 element.
 
 Just a last example showing the Perlism:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(FOREACH ([ "foo", "bar", "baz" ]) <b>$_</b> $)
-#+END_EXAMPLE
+#+END_SRC
 
 will output “<b>foo</b> <b>bar</b> <b>baz</b>”.  The =$_= variable is bound
 to each element.
@@ -517,10 +523,10 @@ must specify names for these variables.  Example, assuming that =users= is a
 hash that maps user IDs to some user objects (each of them having a
 =getName()= method):
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(MAPHASH (uid, obj => users)
   User <b>$uid</b> has name <b>${ obj.getName() }</b><br /> $)
-#+END_EXAMPLE
+#+END_SRC
 
 *** =CONTINUE= and =BREAK= --- for loop control
 
@@ -601,12 +607,12 @@ a =WITH= block to make for a more convenient syntax, so instead of saying
 =$object.foo= you would be able to say only =$foo=.  Assuming that =link=
 contains =address=, =tooltip= and =text=, the following two are equivalent:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 <a href="$link.address|html" title="$link.tooltip|html">$link.text|html</a>
 
 $(WITH (link)
   <a href="$address|html" title="$tooltip|html">$text|html</a> $)
-#+END_EXAMPLE
+#+END_SRC
 
 =WITH= can be used with literal objects as well:
 
@@ -631,7 +637,7 @@ followed by a list of arguments in parens (if there are no arguments, put
 =()= like you do for a plain JavaScript function).  Then continue with the
 block of text that the function should expand into:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(BLOCK display_link(link)
   <a href="$link.address|html" title="$link.title|html">$link.text|html</a>
 $)
@@ -643,7 +649,7 @@ $( display_link({ address: "/", title="Home page", text: "Home" }) )
 $(FOREACH (i IN links)
   $( display_link(i) )
 $)
-#+END_EXAMPLE
+#+END_SRC
 
 As you see, using =BLOCK / FUNCTION= you can split your template into small
 components.  Instead of having a big =FOREACH= loop that outputs a lot of
@@ -652,7 +658,7 @@ the loop itself becomes small.
 
 Combining =BLOCK= and =LET= or =WITH= we can define closures:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(WITH ({ value: 0 })
   $(BLOCK counter()
     <p>Counter is ${ ++value }</p> $) $)
@@ -660,24 +666,24 @@ $(WITH ({ value: 0 })
 $( counter() ) -- now it's 1
 $( counter() ) -- now it's 2
 $( counter() ) -- now it's 3
-#+END_EXAMPLE
+#+END_SRC
 
 Doing the above with =LET= is a bit more tricky because =LET= creates its
 own environment, so the =BLOCK= that you define within it is actually local
 to the =LET= block.  The following won't work:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(LET ((value => 0))
   $(BLOCK counter()
     <p>Counter is ${ ++value }</p> $) $)
 
 $( counter() ) -- error, counter is not defined!
-#+END_EXAMPLE
+#+END_SRC
 
 It's easy to see why if you see the code that gets generated for the above.
 It looks like the following:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 (function(){
     var value = 0;
     function counter() {
@@ -686,12 +692,12 @@ It looks like the following:
 })();
 
 counter(); // but there's no free lunch
-#+END_EXAMPLE
+#+END_SRC
 
 To do this with a =LET= block we would have to export the function; we can
 use an outside variable for that:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 $(VAR (counter))
 $(LET ((value => 0))
   $( counter = _counter /* export it */ )
@@ -699,7 +705,7 @@ $(LET ((value => 0))
     <p>Counter is ${ ++value }</p> $) $)
 
 $( counter() ) -- now it works.
-#+END_EXAMPLE
+#+END_SRC
 
 *** =WRAP=, =CONTENT= --- call a wrapper with an additional block of text
 
@@ -707,7 +713,7 @@ $( counter() ) -- now it works.
 receives a bit of text and puts something before and after it.  For example,
 to define a wrapper that creates a table we can say:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 <!-- define our wrapper -->
 $(BLOCK table(cols)
   <table>
@@ -726,7 +732,7 @@ $(WRAP table([ "Name", "Phone", "Email" ])
   <tr> <td>Foo</td> <td>123-1234</td> <td>foo@foo.com</td> </tr>
   <tr> <td>Bar</td> <td>1234-123</td> <td>bar@bar.com</td> </tr>
 $)
-#+END_EXAMPLE
+#+END_SRC
 
 You can note that a wrapper is a normal function defined with =BLOCK= or
 =FUNCTION=, and it can take arguments.  To send the arguments with a =WRAP=
@@ -737,6 +743,7 @@ which is expanded by =$(CONTENT)=.  For now this argument is a function that
 renders the text, and =$(CONTENT)= simply calls this function.
 
 # <<Correctness>>
+
 * Correctness
 
 YAJET aims to do The Right Thing.  If you've ever written Lisp or C macros,
@@ -747,12 +754,12 @@ it's built around good principles.
 For example, a dumb implementation would translate =$(FOREACH (link => links)
 ...STUFF... $)= into this:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 for (var i = 0; i < links.length; ++i) {
     var link = links[i];
-    ... do STUFF
+    // ... do STUFF
 }
-#+END_EXAMPLE
+#+END_SRC
 
 However the above code has two problems:
 
@@ -778,7 +785,7 @@ $)
 
 The resulted code would be:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 for (var i = 0; i < this.getLinksFromServer().length; ++i) {
     var link = this.getLinksFromServer()[i];
     var i = link.text.length;
@@ -787,7 +794,7 @@ for (var i = 0; i < this.getLinksFromServer().length; ++i) {
     }
     ...
 }
-#+END_EXAMPLE
+#+END_SRC
 
 ... which means that this.getLinksFromServer() will be called twice for each
 step, and also that the loop would be stopped arbitrarily when we encounter
@@ -798,7 +805,7 @@ YAJET avoids this problem by creating temporary variables with (hopefully)
 unique names, so that template writes don't have to worry about it.  The
 actual generated code is more like this:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 var __GSY12 = this.getLinksFromServer();
 for (var __GSY13 = 0; __GSY13 < __GSY12.length; ++__GSY13) {
     var link = __GSY12[__GSY13];
@@ -808,7 +815,7 @@ for (var __GSY13 = 0; __GSY13 < __GSY12.length; ++__GSY13) {
     }
     ...
 }
-#+END_EXAMPLE
+#+END_SRC
 
 The variables that are created get the prefix =__GSY= and a number which is
 unique per compilation, so you should be safe as long as you don't use the
@@ -832,21 +839,21 @@ However, what this means for now is that you should be careful about parens
 in literal RegExp-s.  Since the parser does not allow for unbalanced parens,
 the following should /not/ be a problem:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 $( if (/(a|b)/.test("bar")) {
      matches();
    } else {
      no_match();
    }
  )
-#+END_EXAMPLE
+#+END_SRC
 
 All parens are properly closed, so there's no reason why our parser should
 miss the closing paren.  However, the following will break stuff:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC espresso
 $( if (/\)/.test(")")) { ... } )
-#+END_EXAMPLE
+#+END_SRC
 
 Although it is valid JavaScript inside, having the closing paren in the
 RegExp will confuse YAJET.  It looks quite ugly, too---for such cases,
@@ -874,7 +881,7 @@ What should probably be done is that it should, by default, eat all
 whitespace that occurs on lines which don't include literal text.  For
 example the following:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 <p>
 $(IF (true)
   foo
@@ -882,22 +889,22 @@ $(ELSE)
   bar
 $)
 </p>
-#+END_EXAMPLE
+#+END_SRC
 
 results in this output:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 <p>
 
   foo
 
 </p>
-#+END_EXAMPLE
+#+END_SRC
 
 Generally, it's not what one would expect.  What's worse, we can make it
 look better but it's totally unintuitive:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 <p>$-
 $(IF (true)
   foo$-
@@ -905,15 +912,15 @@ $(ELSE)
   bar
 $)
 </p>
-#+END_EXAMPLE
+#+END_SRC
 
 This outputs better:
 
-#+BEGIN_EXAMPLE
+#+BEGIN_SRC html
 <p>
   foo
 </p>
-#+END_EXAMPLE
+#+END_SRC
 
 So the default behavior should probably be:
 
