@@ -49,7 +49,7 @@ h1.title { border-bottom: 4px solid #000; padding-bottom: 5px; margin-bottom: 2e
 #postamble {
   color: #777;
   font-size: 90%;
-  padding-top: 1em; border-top: 1px solid #999;
+  padding-top: 1em; padding-bottom: 1em; border-top: 1px solid #999;
   margin-top: 2em;
   padding-left: 2em;
   padding-right: 2em;
@@ -59,3 +59,7 @@ h1.title { border-bottom: 4px solid #000; padding-bottom: 5px; margin-bottom: 2e
 #postamble p { margin: 0; }
 
 #footnotes { border-top: 1px solid #000; }
+
+@media print {
+  html { font-size: 11pt; }
+}

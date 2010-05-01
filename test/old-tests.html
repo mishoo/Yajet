@@ -9,6 +9,17 @@
 
     <textarea id="source" style="width: 100%; height: 10em">
 
+      <!-- filters -->
+      ${ "<htmlEscape>" => html }
+      ${ new Date() => date }   <!--custom filter-->
+      ${ "foo" => repeat(3) }   <!--custom filter with argument-->
+      ${ "      foo&bar       " => trim, upcase, html
+                                => embed("=><b>}) ", // line comment
+                                         " ({</b><=")
+       } <!--chaining filters and funny args-->
+
+
+
 <!-- define our wrapper -->
 $(BLOCK table(cols)
   <table>
@@ -150,7 +161,7 @@ $)
 
       $(LET ((v1 => "<foo>")
              (v2 => "<bar>"))
-        <p>$v1, $v2|html</p>
+        <p>$v1, ${ v2 => html }</p>
         $(LET ((v1 => "shadow"))
           <p><b>New v1: $v1</b></p>
         $)
@@ -176,14 +187,33 @@ $)
     </textarea>
 
     <script>//<![CDATA[
-var jst = new YAJET({ syntax_char: "$" });
+var jst = new YAJET({
+    syntax_char: "$",
+    filters: {
+        date: function(d) {
+            var m = d.getMonth() + 1;
+            if (m < 10) m = "0" + m;
+            var date = d.getDate();
+            if (date < 10) date = "0" + date;
+            return d.getFullYear() + "-" + m + "-" + date;
+        },
+        repeat: function(val, n) {
+            var ret = "";
+            while (n-- > 0) ret += val;
+            return ret;
+        },
+        embed: function(val, prefix, suffix) {
+            return prefix + val + suffix;
+        }
+    }
+});
 try {
 
-console.time("compile");
+window.console && console.time("compile");
 var template = jst.compile(document.getElementById("source").value);
-console.timeEnd("compile");
+window.console && console.timeEnd("compile");
 
-console.time("run");
+window.console && console.time("run");
 var output = template({
     test: "test var",
     foo: {
@@ -197,10 +227,11 @@ var output = template({
 });
 
 document.getElementById("target").innerHTML = jst.filter("html", String(output + "\n\n\n" + template.orig.toString()));
-console.timeEnd("run");
+window.console && console.timeEnd("run");
 
 } catch(ex) {
-console.log(ex);
+window.console && console.log(ex);
+alert(ex);
 }
 
     //]]></script>

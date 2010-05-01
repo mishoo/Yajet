@@ -1,7 +1,31 @@
+//> Copyright (c) 2010, Mihai Bazon <mihai.bazon@gmail.com>.  All rights
+//> reserved.
+//>
+//> Redistribution and use in source and binary forms, with or without
+//> modification, are permitted provided that the following conditions are met:
+//>
+//>     * Redistributions of source code must retain the above copyright notice,
+//>       this list of conditions and the following disclaimer.
+//>
+//>     * Redistributions in binary form must reproduce the above copyright
+//>       notice, this list of conditions and the following disclaimer in the
+//>       documentation and/or other materials provided with the distribution.
+//>
+//> THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY EXPRESS OR
+//> IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+//> MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+//> EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+//> INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+//> LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+//> OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//> LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//> NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+//> EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 function YAJET(yajet_args){
 
         yajet_args = DEF(yajet_args || {}, {
-                syntax_char : "$",
+                reader_char : "$",
                 filters     : {},
                 with_scope  : false
         });
@@ -42,7 +66,7 @@ function YAJET(yajet_args){
                 "[" : "]"
         };
 
-        var READER_CHAR = yajet_args.syntax_char;
+        var READER_CHAR = yajet_args.reader_char;
         var READER_CHAR_STR = to_js_string(READER_CHAR);
 
         var BUFFER_DEF = ( "var __BUF = '';" +
@@ -432,7 +456,20 @@ function YAJET(yajet_args){
                                 var val = v.shift();
                                 if (/\S/.test(val)) {
                                         while (v.length > 0) {
-                                                val = "__YAJET.filter(" + to_js_string(v.shift().trim()) + ", " + val + ")";
+                                                var filter = v.shift().trim();
+                                                // check if it has arguments
+                                                var par = filter.indexOf("(");
+                                                var args;
+                                                if (par >= 0) {
+                                                        args = filter.substring(par + 1, filter.length - 1);
+                                                        filter = filter.substring(0, par);
+                                                }
+                                                if (!args) {
+                                                        args = val;
+                                                } else {
+                                                        args = val + ", " + args;
+                                                }
+                                                val = "__YAJET.filter(" + to_js_string(filter) + ", " + args + ")";
                                         }
                                         out("__VUT(" + val + ");");
                                 }
@@ -489,6 +526,9 @@ function YAJET(yajet_args){
                 },
                 downcase: function(v) {
                         return String(v).toLowerCase();
+                },
+                trim: function(v) {
+                        return v.replace(/^\s+|\s+$/g, "");
                 }
         };
 
@@ -499,18 +539,35 @@ function YAJET(yajet_args){
         // API
 
         this.compile = compile;
-        this.filter = function(f, val) {
+        this.filter = function(f) {
+                var args = Array$(arguments, 1);
                 var filter = FILTERS[f];
                 if (filter)
-                        return filter(val);
+                        return filter.apply(this, args);
                 EX_RUNTIME("No filter " + f);
         };
+
+        /* -----[ utils ]----- */
 
         function DEF(a, d, i, r) {
                 r = {};
                 for (i in d) if (d.hasOwnProperty(i)) r[i] = d[i];
                 for (i in a) if (a.hasOwnProperty(i)) r[i] = a[i];
                 return r;
+        };
+
+        function Array$(obj, start) {
+                if (start == null)
+                        start = 0;
+                var a, i, j;
+                try {
+                        a = Array.prototype.slice.call(obj, start);
+                } catch (ex) {
+                        a = new Array(obj.length - start);
+                        for (i = start, j = 0; i < obj.length; ++i, ++j)
+                                a[j] = obj[i];
+                }
+                return a;
         };
 
 };

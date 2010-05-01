@@ -9,14 +9,44 @@ tool designed for client-side (JavaScript, in-browser) transformation.
 
 YAJET is a compiler, in the sense that it transforms your template into
 runnable JavaScript code; after compiling a template you get a function
-which you can call with an argument that contains data required to fill your
-template, and it returns it rendered.
+which you can call with data required to fill your template, and it returns
+it rendered.
 
 YAJET is appropriate for any kind of text templates -- it was not designed
-specifically for HTML, although that's mostly what we use it for.  It shares
-some conceptual similarities with the venerable [[http://template-toolkit.org/][Template::Toolkit]] and some
-syntactic ones with Lisp.  I decided to write it because I couldn't find
-other tools to match my taste.
+specifically for HTML, although that's mostly what we use it for.
+
+* What makes it different?
+
+I'm hot happy with the syntax of various template tools.  Let's face it,
+they're all creepy.  How many times have you seen stuff like this in PHP
+code:
+
+#+BEGIN_EXAMPLE
+<?php if (...) { ?>
+
+... two
+... thousand
+... lines
+... here
+
+<?php } ?>
+#+END_EXAMPLE
+
+At some point the code becomes write only: you have no clue what's going on
+and where, you can't fix it, all you can do is add another IF.
+
+The defining quality, I think, of YAJET is that, while it allows you to pass
+literal JavaScript code[fn:literal-js], it doesn't allow you to pass
+unbalanced structures.  In other words, it's impossible to start a literal
+JS block in a part of the template and end it in some other part.
+
+The syntax that I'm proposing encourages you to split your template into
+small components and call them where appropriate; blocks should not become
+very long in this way.  It shares some conceptual similarities with the
+venerable [[http://template-toolkit.org/][Template::Toolkit]] (which is probably the best template engine I've
+used so far) and some syntactic ones with Lisp.
+
+Also see [[Correctness]].
 
 * Features
 
@@ -39,19 +69,25 @@ Other than the boring variable replacement, YAJET supports the following
 - variable definition (=LET=, =VAR= and =WITH=).  =LET= and =WITH= introduce
   new lexical scopes.
 
-- block definitions (=BLOCK= and =FUNCTION=).  Useful to define a template
-  block that can be called as a function.  =BLOCK= will feed its output into
-  the main output stream, while =FUNCTION= will return it.  Both are
-  closures within their lexical context.
+- components (=BLOCK= and =FUNCTION=).  Useful to declare a block that can
+  be called as a function.  =BLOCK= will feed its output into the main
+  output stream, while =FUNCTION= will return it.  Both are closures within
+  their lexical context.
 
-- block wrappers can be called using =WRAP=.
+- components can be called using =WRAP=.  They receive some content and are
+  able to output something before and after it.
 
 - simple filters a la Template::Toolkit (i.e. =$foo|html= will HTML-escape
   the value of foo).
 
-- the code is way shorter than the documentation (5.5K minified, 2.2K
-  gzipped) and it's completely self-contained (no library requirements, and
-  it does not clash with any library).
+- it compiles the template into a runnable JavaScript function which is
+  blazing fast.
+
+- it does not use eval().
+
+- the code is shorter than the documentation (~500 lines of code, 5.5K
+  minified, 2.2K gzipped) and it's completely self-contained (no library
+  requirements, and it should not clash with any library).
 
 * Usage
 
@@ -59,7 +95,7 @@ You need to load [[../js/yajet.js][yajet.js]], and to create an instance like th
 
 #+BEGIN_EXAMPLE
 var yajet = new YAJET({
-    syntax_char : "$",
+    reader_char : "$",
     with_scope  : false,
     filters     : {
         foo: function(val) { ... },
@@ -80,6 +116,8 @@ and to execute it:
 alert( func({ foo: "hello", bar: "world!" }) );
 #+END_EXAMPLE
 
+** Template arguments
+
 The function created by “yajet.compile” receives one argument, and that
 argument is available in your templates via the JavaScript =this= keyword.
 This is the default behavior, because I think it's the best one in general,
@@ -94,20 +132,30 @@ var func = yajet.compile("You said: $foo $bar");
 alert( func({ foo: "hello", bar: "world!" }) );
 #+END_EXAMPLE
 
-It's more convenient, but it's slower (more than 10 times slower in many
-cases).  How much slower depends on how big is your template and how many
-variables there are.  If you want a performance benchmark with and without
-the =with= statement, [[../test/with.html][see this file]] (Firebug is required for timing the
-operations; watch the Firebug console; it also works in Chrome with its
-JavaScript console; Chrome is even slower than Firefox for the =with= case).
+It's more convenient, but it's slower (more than 10 times slower sometimes).
+How much slower depends on how big is your template and how many variables
+there are.  If you want a performance benchmark with and without the =with=
+statement, [[../test/with.html][see this file]] (Firebug is required for timing the operations;
+watch the Firebug console; it also works in Chrome with its JavaScript
+console; Chrome is even slower than Firefox for the =with= case).
+
+** Reader char
+
+Template syntax is triggered by a special “reader char”.  By default this
+character is =$=, but you can use anything else by passing the =reader_char=
+constructor argument.  I personally would prefer to use some Unicode
+character, for instance:
+
+#+BEGIN_EXAMPLE
+var yajet = new YAJET({ reader_char: "•" });
+var tmpl = yajet.compile("You said •foo •bar");
+#+END_EXAMPLE
 
 * Syntax
 
-YAJET parses the template as text, leaving it unchanged, until an occurrence
-of a special character (let's name it the “reader char”).  By default this
-character is $, but you can change it in the constructor.  What follows in
-this document will assume that $ is the reader character.  A few types of
-constructs are recognized:
+YAJET parses the template as text, leaving it unchanged, until it encounters
+the “reader char”.  What follows in this document will assume that $ is the
+reader character (the default).  A few types of constructs are recognized:
 
 - =$$= --- inserts a literal $ character.
 
@@ -139,7 +187,7 @@ uppercase, then apply the html filter to the upcased string.
 
 This is similar to the “simple interpolation” case, but it allows for more
 complicated expressions.  For example =${a+b}= will insert the sum of a and
-b.  Your expression can be arbitrarily complex, and the parser is smart
+b.  Your expression can be arbitrarily complex, and the scanner is smart
 enough to read it, provided that it is valid JavaScript code (you need to be
 *careful about literal RegExp-s* though, for now; I'll fix this in a later
 release; more on this in [[Known issues]]).
@@ -160,8 +208,8 @@ ${
 }
 #+END_EXAMPLE
 
-The =${exp}= construct will evaluate the expression =foo= at run-time and
-will insert its value into the rendered template only if it's not =null=.
+The expression is evaluated at runtime and its value is inserted into the
+template output only if it's not null.
 
 *** Filters
 
@@ -169,9 +217,10 @@ As already noted, the =$foo= construct allows filtering the value through
 some function using a convenient syntax like =$foo|html=.  At the time of
 this writing the filters available by default are:
 
-- =html=
-- =upcase=
-- =downcase=
+- =html= --- encodes HTML special characters
+- =upcase= --- converts the string to uppercase
+- =downcase= --- lowercase the string
+- =trim= --- removes leading and trailing whitespace
 
 It's easy to define custom filters when you construct the YAJET object:
 
@@ -236,7 +285,30 @@ the following won't apply the "html" filter to “foo”: =${ something(foo,
 html) }=.  It will just call, instead, the function =something=, passing the
 variables =foo= and =html=, which is expected behavior.
 
-** Processing instructions
+When used in the =${foo}= construct, filters can receive additional
+arguments.  For example, assuming you have some date formatting library, you
+can easily define a filter that formats a Date object according to the
+arguments:
+
+#+BEGIN_EXAMPLE
+var yajet = new YAJET({
+    filters: {
+        format_date: function(date, format) {
+            // ... now return the *date* formatted according to *format*
+        }
+    }
+});
+
+// and in the template:
+
+“Today is: ${ new Date() => format_date("YYYY-MM-DD") }”
+#+END_EXAMPLE
+
+The first argument of your filter is always the value from the template (in
+the above case, the Date object created with =new Date()=), and the other
+arguments are passed following the filter name ("YYYY-MM-DD").
+
+** Directives
 
 So far we are able to introduce arbitrary JavaScript variables and
 expressions in the template.  However that's hardly enough.  First off, the
@@ -254,8 +326,8 @@ I emphasize that the lack of support for partial expressions is a /feature/,
 not a limitation.  This will never be “fixed”.  To support constructs like
 the above but without encouraging poorly written templates that start a
 block on line 10 and end it on line 1000, we have a few special processing
-instructions.  Let's call these the =$(BAR ... $)= construct.  To start
-with, here is how you would write the above code:
+directives.  Let's call these the =$(BAR ... $)= construct.  To start with,
+here is how you would write the above code:
 
 #+BEGIN_EXAMPLE
 $(IF (link != null)
@@ -286,14 +358,13 @@ The =$(BAR ... $)= construct has the following properties:
 
 The /block of text/ is parsed normally, so it's interpreted as plain text
 until =$= (the reader char) is encountered, then what follows the reader
-char is processed by the rules I described in this document.  Despite all
-this, the parser is not recursive. :-)
+char is processed by the rules I described in this document.
 
 Following I will describe the directives available at this time.  I think
 the set of them is quite comprehensive and allows you to express any kind of
 template in a simple and consistent manner.
 
-*** =IF= / =WHEN= / =UNLESS=, =ELSE= / =ELSIF= -- conditional execution
+*** =IF= / =WHEN= / =UNLESS=, =ELSE= / =ELSIF= --- conditional execution
 
 =IF= and =WHEN= are synonyms, while =UNLESS= is the antonym.  =WHEN= seems more
 appropriate for cases where you don't have an =ELSE= clause.  They support one
@@ -331,7 +402,7 @@ since =ELSE= and =ELSIF= normally /continue/ an IF block, instead of ending
 it, it seems to make sense this way.  The same applies to =$(BREAK)= and
 =$(CONTINUE)= directives.
 
-*** =REPEAT= / =LOOP= -- to repeat stuff
+*** =REPEAT= / =LOOP= --- to repeat stuff
 
 To repeat a part of the template you can use =REPEAT= or =LOOP= (they are
 synonyms).  For example, the following outputs “foo” 3 times: =$(REPEAT (3)
@@ -358,7 +429,7 @@ synonyms.  Also note that the arguments are parsed using the “list reader”,
 so you can use syntactic sugar to separate them (although a simple comma
 would do).
 
-*** =MAP= / =FOREACH= -- iterate an array
+*** =MAP= / =FOREACH= --- iterate an array
 
 Again, =MAP= and =FOREACH= are synonyms.  You can use them to do something
 for each element of an array.  For example the following outputs links
@@ -434,7 +505,7 @@ $(FOREACH ([ "foo", "bar", "baz" ]) <b>$_</b> $)
 will output “<b>foo</b> <b>bar</b> <b>baz</b>”.  The =$_= variable is bound
 to each element.
 
-*** =MAPHASH= -- iterate an object (hash)
+*** =MAPHASH= --- iterate an object (hash)
 
 =MAPHASH= is =MAP='s analogue for hashes.  It iterates over all properties
 of an object, binding a variable for the key and another for the value.  You
@@ -447,15 +518,15 @@ $(MAPHASH (uid, obj => users)
   User <b>$uid</b> has name <b>${ obj.getName() }</b><br /> $)
 #+END_EXAMPLE
 
-*** =CONTINUE= and =BREAK= -- for loop control
+*** =CONTINUE= and =BREAK= --- for loop control
 
 These don't take any arguments, and also don't take a block of text, so the
 expected syntax is =$(CONTINUE)= and =$(BREAK)=.  They can appear in the
 text block of some looping construct, be it =REPEAT=, =LOOP=, =MAP=,
-=FOREACH= or =MAPHASH=, and they have the same signification as their
-JavaScript counterparts, that is: =CONTINUE= will go to the next iteration,
-skipping any code between it and the end of the loop, and =BREAK= will
-immediately end the loop.
+=FOREACH= or =MAPHASH=, and they do the same as their JavaScript
+counterparts, that is: =CONTINUE= will go to the next iteration, skipping
+any code between it and the end of the loop, and =BREAK= will immediately
+end the loop.
 
 I'm giving an example just to illustrate the syntax:
 
@@ -468,7 +539,7 @@ $)
 
 The above will print numbers from 1 to 5.
 
-*** =LET= and =VAR= -- define variables
+*** =LET= and =VAR= --- define variables
 
 You can define new variables with =LET= and =VAR=.  They are not equivalent:
 =LET= introduces a new lexical scope, so the variables that you define are
@@ -519,7 +590,7 @@ with all browsers.  JavaScript 1.7 introduced a =let= statement for
 declaring block-scoped variables, and it's supported by Firefox, but
 unfortunately no other browser has it at the moment.
 
-*** =WITH= -- modify the scope chain
+*** =WITH= --- modify the scope chain
 
 When you have an object that has properties you need to access, you can use
 a =WITH= block to make for a more convenient syntax, so instead of saying
@@ -530,8 +601,7 @@ contains =address=, =tooltip= and =text=, the following two are equivalent:
 <a href="$link.address|html" title="$link.tooltip|html">$link.text|html</a>
 
 $(WITH (link)
-  <a href="$address|html" title="$tooltip|html">$text|html</a>
-$)
+  <a href="$address|html" title="$tooltip|html">$text|html</a> $)
 #+END_EXAMPLE
 
 =WITH= can be used with literal objects as well:
@@ -545,7 +615,7 @@ $)
 thus emulating a =LET= block, but it's less efficient because it uses the
 [[https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Statements/with][JavaScript with statement]].
 
-*** =BLOCK= and =FUNCTION= -- define reusable template blocks
+*** =BLOCK= and =FUNCTION= --- define reusable template blocks
 
 Both of these constructs define a function (local to your template) which
 renders a text block.  The difference between them is that =BLOCK= will
@@ -553,8 +623,9 @@ define a function that “prints” the text block into the template output (and
 returns nothing), while =FUNCTION= will just return it.
 
 The syntax is straightforward.  They expect a name for the function,
-followed by a list of arguments in parens.  If there are no arguments, put
-=()= like you do for a plain JavaScript function.
+followed by a list of arguments in parens (if there are no arguments, put
+=()= like you do for a plain JavaScript function).  Then continue with the
+block of text that the function should expand into:
 
 #+BEGIN_EXAMPLE
 $(BLOCK display_link(link)
@@ -626,56 +697,7 @@ $(LET ((value => 0))
 $( counter() ) -- now it works.
 #+END_EXAMPLE
 
-*** =BLOCK*=, =FUNCTION*= -- variations of the above
-
-#+BEGIN_QUOTE
-*Note*: this section is probably confusing; you can safely ignore it if you
-don't use the =with_scope: true= switch in constructor.
-#+END_QUOTE
-
-As I presented in [[Usage]], you can pass =with_scope: true= in constructor in
-order to embed all of your template in a =with(this) { ... }= block.
-Normally, functions in JavaScript are accessible before the place where they
-are defined (if in the same scope), but however =with= messes this up, and
-for good reason.  The following (plain JavaScript code) won't work:
-
-#+BEGIN_EXAMPLE
-with (foo) {
-    do_something();
-    function do_something() {
-        // ...
-    };
-}
-#+END_EXAMPLE
-
-although if you remove the =with= block it would work just fine.  The reason
-why it doesn't work inside it is that the compiler /can't/ know what is
-=foo= until runtime, so it can't optimize occurrences of =do_something= as
-references to the inner function.  It might happen that =foo= has a
-=do_something= method, in which case, by the rules of =with= blocks, it
-should be accessed instead if the function definition comes later.
-Incidentally that's the main reason why =with= blocks slow down execution
-time so terribly.
-
-So, because I wanted to allow the following:
-
-#+BEGIN_EXAMPLE
-$( do_something() /* accessing the function before its definition */)
-$(BLOCK do_something()
-  .. something happens
-$)
-#+END_EXAMPLE
-
-but because it doesn't work when it occurs inside a =WITH= block (thus it
-won't work at all when your template was compiled using the =with_scope:
-true= option), and also because it might be useful to be able to define
-functions outside of the global =with= block that slows down everything, we
-allow this variation for =BLOCK*= and =FUNCTION*=.  Just add an asterisk
-after the directive.  They behave exactly the same as documented in the
-previous section, but the function definition is placed before the actual
-template code.
-
-*** =WRAP=, =CONTENT= -- call a wrapper with an additional block of text
+*** =WRAP=, =CONTENT= --- call a wrapper with an additional block of text
 
 =BLOCK= can be used to define wrappers.  A wrapper is a function that
 receives a bit of text and puts something before and after it.  For example,
@@ -710,14 +732,15 @@ block, =WRAP= sends an additional hidden argument that contains the text
 which is expanded by =$(CONTENT)=.  For now this argument is a function that
 renders the text, and =$(CONTENT)= simply calls this function.
 
+# <<Correctness>>
 * Correctness
 
 YAJET aims to do The Right Thing.  If you've ever written Lisp or C macros,
-for instance, then you know that it's dangerous to invent variable names, or
-to use a macro argument more than once.  YAJET is essentially a macro expander
-and it's built around good principles.
+then you know that it's dangerous to invent variable names, or to use a
+macro argument more than once.  YAJET is essentially a macro expander and
+it's built around good principles.
 
-For example, a dumb implementation would translate =$(FOREACH link => links
+For example, a dumb implementation would translate =$(FOREACH (link => links)
 ...STUFF... $)= into this:
 
 #+BEGIN_EXAMPLE
@@ -737,7 +760,7 @@ However the above code has two problems:
    then it will be evaluated for each iteration... twice.
 
 If =FOREACH= would really expand into the above code, then the following
-sample suffers from both problems:
+sample would suffer from both problems:
 
 #+BEGIN_EXAMPLE
 $(FOREACH (link => this.getLinksFromServer())
@@ -827,8 +850,6 @@ encode the paren as =\x29=.  Note that you have to escape open parens as
 well (=\x28=), and same goes for all the other types of brackets such as
 =[=, =]=,  ={= and =}=.
 
-** Filters don't take additional arguments
-
 ** Error reporting is less than ideal
 
 ** Whitespace handling
@@ -868,6 +889,9 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #---- footnotes
+
+[fn:literal-js] Although the directives that YAJET supports should provide
+enough abstraction so that you don't need to pass on literal JS too often.
 
 [fn:name] The misspelling is intentional.  Various combinations of the
 letters Y, A, J, T, E from “Yet Another JavaScript Template Engine” led to
