@@ -285,7 +285,7 @@ the following won't apply the "html" filter to “foo”: =${ something(foo,
 html) }=.  It will just call, instead, the function =something=, passing the
 variables =foo= and =html=, which is expected behavior.
 
-When used in the =${foo}= construct, filters can receive additional
+When used in the =${exp}= construct, filters can receive additional
 arguments.  For example, assuming you have some date formatting library, you
 can easily define a filter that formats a Date object according to the
 arguments:
