@@ -1,19 +1,19 @@
 //> Copyright (c) 2010, Mihai Bazon, Dynarch.com.  All rights reserved.
-//> 
+//>
 //> Redistribution and use in source and binary forms, with or without
 //> modification, are permitted provided that the following conditions are met:
-//> 
+//>
 //>     * Redistributions of source code must retain the above copyright notice,
 //>       this list of conditions and the following disclaimer.
-//> 
+//>
 //>     * Redistributions in binary form must reproduce the above copyright
 //>       notice, this list of conditions and the following disclaimer in the
 //>       documentation and/or other materials provided with the distribution.
-//> 
+//>
 //>     * Neither the name of Dynarch.com nor the names of its contributors may
 //>       be used to endorse or promote products derived from this software
 //>       without specific prior written permission.
-//> 
+//>
 //> THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY EXPRESS OR
 //> IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 //> MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
@@ -91,6 +91,14 @@ function YAJET(yajet_args){
                 }
                 return makeClosure.call(this, THE_PREAMBLE.join("\n") + THE_CODE.join("\n"));
 
+                function peek() {
+                        return THE_STRING.charAt(THE_INDEX);
+                };
+
+                function next() {
+                        return THE_STRING.charAt(THE_INDEX++);
+                };
+
                 function rest(len) {
                         return THE_STRING.substr(THE_INDEX, len != null ? len : THE_LENGTH);
                 };
@@ -100,22 +108,19 @@ function YAJET(yajet_args){
                 };
 
                 function flush_text() {
-                        if (THE_TEXT.length > 0) {
+                        if (THE_TEXT.length > 0)
                                 out("__OUT(" + to_js_string(THE_TEXT) + ");");
-                        }
                         THE_TEXT = "";
                 };
 
                 function skip_ws() {
-                        while (THE_INDEX < THE_LENGTH && /\s/.test(THE_STRING.charAt(THE_INDEX)))
-                                THE_INDEX++;
+                        skip(/^\s+/);
                 };
 
                 function assert(ch) {
                         var ret = looking_at(ch);
-                        if (!ret) {
+                        if (!ret)
                                 EX_PARSE("Expecting " + ch + " at " + THE_INDEX);
-                        }
                         return ret;
                 };
 
@@ -154,16 +159,15 @@ function YAJET(yajet_args){
 
                 function block_close() {
                         var end = THE_CLOSING.pop();
-                        if (end instanceof Function) {
+                        if (end instanceof Function)
                                 end();
-                        } else {
+                        else
                                 out(end);
-                        }
                 };
 
                 function read_balanced(wantList) {
                         skip_ws();
-                        var begc = THE_STRING.charAt(THE_INDEX);
+                        var begc = peek();
                         var endc = PARENS[begc];
                         if (endc) {
                                 var open = [ endc ];
@@ -171,7 +175,7 @@ function YAJET(yajet_args){
                                 var ret = [];
                                 ++THE_INDEX;
                                 while (THE_INDEX < THE_LENGTH) {
-                                        var ch = THE_STRING.charAt(THE_INDEX);
+                                        var ch = peek();
                                         if (ch == last(open)) {
                                                 open.pop();
                                                 ++THE_INDEX;
@@ -205,7 +209,7 @@ function YAJET(yajet_args){
                                                         var pos = THE_STRING.indexOf("\n", THE_INDEX + 2);
                                                         if (pos == -1)
                                                                 // new newline at EOF
-                                                                pos += THE_LENGTH;
+                                                                pos = THE_LENGTH;
                                                         THE_INDEX = pos + 1;
                                                 }
                                                 else if (looking_at("/*")) {
@@ -231,7 +235,7 @@ function YAJET(yajet_args){
 
                 function parse() {
                         while (THE_INDEX < THE_LENGTH) {
-                                var ch = THE_STRING.charAt(THE_INDEX++);
+                                var ch = next();
                                 if (ch == READER_CHAR) {
                                         flush_text();
                                         read_code();
@@ -244,11 +248,12 @@ function YAJET(yajet_args){
                 };
 
                 function read_string() {
-                        var begc = THE_STRING.charAt(THE_INDEX);
+                        var begc = peek();
                         if (begc == "'" || begc == '"') {
                                 var esc = false, data = "";
-                                while (++THE_INDEX < THE_LENGTH) {
-                                        var ch = THE_STRING.charAt(THE_INDEX);
+                                do {
+                                        ++THE_INDEX;
+                                        var ch = peek();
                                         if (!esc) {
                                                 if (ch == "\\") {
                                                         esc = true;
@@ -262,16 +267,16 @@ function YAJET(yajet_args){
                                         esc = false;
                                         data += ch;
                                 }
+                                while (THE_INDEX < THE_LENGTH);
                                 EX_PARSE("Unterminated string");
                         }
                 };
 
                 function read_simple_token() {
+                        skip_ws();
                         var token = "";
-                        while (THE_INDEX < THE_LENGTH && /[a-z0-9_$.\|]/i.test(THE_STRING.charAt(THE_INDEX))) {
-                                token += THE_STRING.charAt(THE_INDEX);
-                                ++THE_INDEX;
-                        }
+                        while (looking_at(/^[a-z0-9_$.\|]/i))
+                                token += next();
                         return token;
                 };
 
@@ -318,8 +323,7 @@ function YAJET(yajet_args){
                         else if (skip(/^\(elsif\b/i)) {
                                 skip_ws();
                                 out("} else if (" + read_balanced() + ") {"); // again
-                                if (THE_STRING.charAt(THE_INDEX) == ")")
-                                        ++THE_INDEX;
+                                skip(")");
                         }
                         else if (skip(/^\(maphash\b/i)) {
                                 var args = read_balanced(true);
@@ -351,11 +355,11 @@ function YAJET(yajet_args){
                                         block_open(
                                                 // open
                                                 ( loop +
-                                                  "with ({ $_ :" + sym + "[" + idx + "]}) {" +
+                                                  "with ({ $_ :" + sym + "[" + idx + "]})" +
                                                   "with ($_) {" )
                                                 ,
                                                 // close loop and the with blocks
-                                                "}}}"
+                                                "}}"
                                         );
                                 } else {
                                         block_open(loop);
@@ -395,19 +399,17 @@ function YAJET(yajet_args){
                                 block_open("with (" + read_balanced() + ") {");
                         }
                         else if (skip(/^\(block\b/i)) {
-                                var close = "return; }";
+                                var close = null;
                                 if (skip("*")) {
                                         var place = THE_CODE;
-                                        THE_CODE = THE_PREAMBLE;
                                         close = function() {
                                                 out("return; }");
                                                 THE_CODE = place;
                                         };
+                                        THE_CODE = THE_PREAMBLE;
                                 }
-                                skip_ws();
                                 var name = trim(read_simple_token());
                                 var args = read_balanced();
-                                // THE_PREAMBLE.push("function " + name + "(){};");
                                 block_open(
                                         "function " + name + "(" + args + ") {",
                                         close
@@ -423,17 +425,14 @@ function YAJET(yajet_args){
                                                 THE_CODE = place;
                                         };
                                 }
-                                skip_ws();
                                 var name = trim(read_simple_token());
                                 var args = read_balanced();
-                                // THE_PREAMBLE.push("function " + name + "(){};");
                                 block_open(
                                         ( "function " + name + "(" + args + ") {" + BUFFER_DEF ),
                                         close
                                 );
                         }
                         else if (skip(/^\(wrap\b/i)) {
-                                skip_ws();
                                 var name = trim(read_simple_token());
                                 var args = read_balanced(true);
                                 if (args.length > 0)

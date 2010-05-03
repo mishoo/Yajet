@@ -91,9 +91,8 @@ Other than the boring variable replacement, YAJET supports the following
   minified, 2.2K gzipped) and it's completely self-contained (no library
   requirements, and it should not clash with any library).
 
-- it's browser agnostic.  In fact, it doesn't even need a browser---YAJET
-  should work with a standalone JavaScript engine such as [[http://code.google.com/p/v8/][Google's V8]] or
-  [[http://www.mozilla.org/rhino/][Rhino]].  I tested it with Rhino.
+- it's browser agnostic.  In fact, it works with standalone JavaScript engines too ([[http://code.google.com/p/v8/][Google's V8]]
+  or [[http://www.mozilla.org/rhino/][Rhino]]).  I tested it with Rhino.
 
 
 * Usage
@@ -139,12 +138,12 @@ var func = yajet.compile("You said: $foo $bar");
 alert( func({ foo: "hello", bar: "world!" }) );
 #+END_SRC
 
-It's more convenient, but it's slower (more than 10 times slower sometimes).
-How much slower depends on how big is your template and how many variables
-there are.  If you want a performance benchmark with and without the =with=
-statement, [[../test/with.html][see this file]] (Firebug is required for timing the operations;
-watch the Firebug console; it also works in Chrome with its JavaScript
-console; Chrome is even slower than Firefox for the =with= case).
+It's more convenient, but it's slower.  How much slower depends on how
+big is your template and how many variables there are.  If you want a
+performance benchmark with and without the =with= statement, [[../test/with.html][see this
+file]] (Firebug is required for timing the operations; watch the Firebug
+console; it also works in Chrome with its JavaScript console; Chrome
+is even slower than Firefox for the =with= case).
 
 ** Reader char
 
@@ -863,15 +862,6 @@ well (=\x28=), and same goes for all the other types of brackets such as
 =[=, =]=,  ={= and =}=.
 
 ** Error reporting is less than ideal
-
-In some cases YAJET detects that something is wrong and will tell you what
-it expects and where.  In other cases, it can happen that it generates valid
-JavaScript code, which gets compiled but doesn't run as expected.  Then it's
-quite hard to debug.
-
-This problem is quite universal among template libraries, and there is no
-quick fix.  I should write a full JavaScript parser and perhaps
-interpreter... which isn't likely to happen anytime soon.
 
 ** Whitespace handling
 
