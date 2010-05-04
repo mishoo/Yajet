@@ -1,8 +1,13 @@
 $this.foo should be "foo"
+
 $this.bar should be "bar"
+
 ${ this.method() } should be "<foobar>"
+
 ${ this.method() => html } should be "&lt;foobar&gt;"
+
 ${ this.method() => upcase, html, embed("<p>", "</p>") } should be "<p>&lt;FOOBAR&gt;</p>"
+
 ${
    // ugly expression
    // Comments are allowed and can even contain the closing bracket: }
@@ -15,3 +20,14 @@ ${
      text: "(foo}"
    })
 } should be "15(foo}"
+
+${
+   // ugly expression and filters
+   (function(arg){
+     return this.foo + arg.start + arg.text + arg.end + this.bar;
+   }).call(this, {
+     start: "<",
+     end: ">",
+     text: "div"
+   }) IN upcase, html
+} should be "FOO&lt;DIV&gt;BAR"

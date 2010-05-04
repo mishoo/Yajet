@@ -314,6 +314,11 @@ function YAJET(yajet_args){
                         else if (skip(/^\((if|when)\b/i)) {
                                 block_open("if (" + read_balanced() + ") {");
                         }
+                        else if (skip(/^\((aif|awhen)\b/i)) {
+                                // from http://common-lisp.net/project/anaphora/
+                                // "the anaphoric macro collection from hell".
+                                block_open("(function(it) { if (it != null && it != false && !(it instanceof Array && it.length == 0)) {", "}}).call(this, " + read_balanced() + ");");
+                        }
                         else if (skip(/^\(unless\b/i)) {
                                 block_open("if (!(" + read_balanced() + ")) {");
                         }

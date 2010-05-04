@@ -3,6 +3,11 @@
 
 * Yet Another JavaScript Emplate Tengine[fn:name]
 
+[fn:name] The misspelling is intentional.  Various combinations of the
+letters Y, A, J, T, E from “Yet Another JavaScript Template Engine” led to
+the name YAJET.  YAJET stands for “Yet Another JavaScript Emplate Tengine”.
+Sounds buzzy, isn't it?  Also, [[http://en.wikipedia.org/wiki/Jet_engine][JET]]-s are fast, and so is YAJET.
+
 A “template engine” is a tool able to transform some text into another, by
 interpreting/replacing various patterns in the source text.  YAJET is such a
 tool designed for client-side (JavaScript, in-browser) transformation.
@@ -15,50 +20,19 @@ it rendered.
 YAJET is appropriate for any kind of text templates -- it was not designed
 specifically for HTML, although that's mostly what we use it for.
 
-
-* What makes it different?
-
-I'm hot happy with the syntax of various template tools.  Let's face it,
-they're all creepy.  How many times have you seen stuff like this in PHP
-code:
-
-#+BEGIN_SRC php
-<?php if (...) { ?>
-
-... two
-... thousand
-... lines
-... here
-
-<?php } ?>
-#+END_SRC
-
-At some point the code becomes write only: you have no clue what's going on
-and where, you can't fix it, all you can do is add another IF.
-
-The defining quality, I think, of YAJET is that, while it allows you to pass
-literal JavaScript code[fn:literal-js], it doesn't allow you to pass
-unbalanced structures.  In other words, it's impossible to start a literal
-JS block in a part of the template and end it in some other part.
-
-The syntax that I'm proposing encourages you to split your template into
-small components and call them where appropriate; blocks should not become
-very long in this way.  It shares some conceptual similarities with the
-venerable [[http://template-toolkit.org/][Template::Toolkit]] (which is probably the best template engine I've
-used so far) and some syntactic ones with Lisp.
-
-Also see [[Correctness]].
-
-
 * Features
 
-Other than the boring variable replacement, YAJET supports the following
-(and I will explain them all in this document):
+Other than the boring variable interpolation, YAJET supports the
+following (and I will explain them all in this document):
 
-- conditionals (=IF= / =WHEN= / =UNLESS=, =ELSE=, =ELSIF=).  =WHEN= is a
-  synonym to =IF=, and =UNLESS= is, of course, the complete opposite.
-  =ELSE= and =ELSIF= are supported both in =IF/WHEN= and in =UNLESS= blocks,
-  but using =ELSE= in an =UNLESS= block makes the code look a bit werid.
+- very clean syntax; examples:
+  + =$foo= --- insert variable foo
+  + =$foo|html= --- insert variable foo, HTML escaped
+  + =${ a() + b() }= --- insert sum of a() and b()
+  + =${ a() + b() => html }= --- insert sum of a() and b(), HTML escaped
+  + =$(REPEAT (3 => i) <li>Item $i</li> $)= --- display 3 items
+
+- conditionals (=IF= / =WHEN= / =UNLESS=, =ELSE=, =ELSIF=).
 
 - repetitive constructs (=REPEAT= / =LOOP=).  They allow you to repeat a
   part of the template a few times. =LOOP= is a synonym to =REPEAT=.
@@ -87,9 +61,9 @@ Other than the boring variable replacement, YAJET supports the following
 
 - it does not use eval().
 
-- the code is shorter than the documentation (~500 lines of code, 5.5K
-  minified, 2.2K gzipped) and it's completely self-contained (no library
-  requirements, and it should not clash with any library).
+- the code is shorter than the documentation (~550 lines of code, 6K
+  minified, 2.5K gzipped) and it's completely self-contained (no
+  library requirements, and it should not clash with any library).
 
 - it's browser agnostic.  In fact, it works with standalone JavaScript engines too ([[http://code.google.com/p/v8/][Google's V8]]
   or [[http://www.mozilla.org/rhino/][Rhino]]).  I tested it with Rhino.
@@ -140,10 +114,11 @@ alert( func({ foo: "hello", bar: "world!" }) );
 
 It's more convenient, but it's slower.  How much slower depends on how
 big is your template and how many variables there are.  If you want a
-performance benchmark with and without the =with= statement, [[../test/with.html][see this
-file]] (Firebug is required for timing the operations; watch the Firebug
-console; it also works in Chrome with its JavaScript console; Chrome
-is even slower than Firefox for the =with= case).
+comparison for a large number of iterations with and without the
+=with= statement, [[../test/with.html][see this file]] (Firebug is required for timing the
+operations; watch the Firebug console; it also works in Chrome with
+its JavaScript console; Chrome is even slower than Firefox for the
+=with= case).
 
 ** Reader char
 
@@ -411,6 +386,47 @@ since =ELSE= and =ELSIF= normally /continue/ an IF block, instead of ending
 it, it seems to make sense this way.  The same applies to =$(BREAK)= and
 =$(CONTINUE)= directives.
 
+*** =AIF= / =AWHEN= --- like =IF= / =WHEN=, but store the condition in =$it=
+
+These two come from the [[http://common-lisp.net/project/anaphora/][anaphoric macro collection from Hell]] and I
+find them quite useful for cases where the block inside the =IF= is
+not very big.  They help with the following case:
+
+#+BEGIN_EXAMPLE
+$(LET ((foo => this.looongComputation()))
+  $(WHEN (foo)
+    ... do something with $foo
+  $)
+$)
+#+END_EXAMPLE
+
+The two [[http://en.wikipedia.org/wiki/Anaphora_(linguistics)][anaphoric]] macros (which are synonyms) allow you to avoid the
+boilerplate:
+
+#+BEGIN_EXAMPLE
+$(AWHEN (this.looongComputation())
+  .. do something with $it
+$)
+#+END_EXAMPLE
+
+The variable =$it= is created by the macro and takes the value of the
+condition, and the text block is executed only if:
+
+- =$it= is not =null= and not =undefined=
+- =$it= is not =false=
+- =$it= is not an empty array
+
+(Note that the JavaScript rules for falsity are different, but I think
+the Lisp rules are more useful).  It expands to this code:
+
+#+BEGIN_SRC espresso
+(function(it){
+  if (it != null && it != false && !(it instanceof Array && it.length == 0)) {
+    // splice the block of code here
+  }
+}).call(this, this.looongComputation());
+#+END_SRC
+
 *** =REPEAT= / =LOOP= --- to repeat stuff
 
 To repeat a part of the template you can use =REPEAT= or =LOOP= (they are
@@ -494,6 +510,10 @@ will call the Perlism) gets assigned to the current element, and /more/, the
 loop body is lexically scoped to each element using a JavaScript =with=
 block (I know, your mom told you not to play the =with= statement, but mine
 didn't[fn:with] :-p).
+
+[fn:with] Seriously though, everything under an =with= block is
+s...l...o...w... -- so, while this makes for a nice syntax, you should not
+use it where speed is critical.
 
 So using this style the first example would become:
 
@@ -748,7 +768,11 @@ renders the text, and =$(CONTENT)= simply calls this function.
 YAJET aims to do The Right Thing.  If you've ever written Lisp or C macros,
 then you know that it's dangerous to invent variable names, or to use a
 macro argument more than once.  YAJET is essentially a macro expander and
-it's built around good principles.
+it's built around good principles[fn:anaphora].
+
+[fn:anaphora] With the exception of =AIF= / =AWHEN=, two macros that
+introduce a variable named =it= when the condition evaluates =true=.  These are from the
+[[http://common-lisp.net/project/anaphora/][anaphoric macro collection from Hell]] and I find them quite useful.
 
 For example, a dumb implementation would translate =$(FOREACH (link => links)
 ...STUFF... $)= into this:
@@ -924,10 +948,13 @@ So the default behavior should probably be:
 Need to think about it a bit more.  However, fortunately in HTML whitespace
 is not too important.
 
+* How to get help
+
+If you have any questions please post them on the [[http://groups.google.com/group/yajet][YAJET Google Group]].
 
 * License
 
-Copyright (c) 2010, Mihai Bazon, Dynarch.com.  All rights reserved.
+Copyright (c) 2010, [[http://mihai.bazon.net/blog][Mihai Bazon]], Dynarch.com.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -953,22 +980,3 @@ OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-
-
-
-
-#---- footnotes
-
-[fn:literal-js] Although the directives that YAJET supports should provide
-enough abstraction so that you don't need to pass on literal JS too often.
-
-[fn:name] The misspelling is intentional.  Various combinations of the
-letters Y, A, J, T, E from “Yet Another JavaScript Template Engine” led to
-the name YAJET.  YAJET stands for “Yet Another JavaScript Emplate Tengine”.
-Sounds buzzy, isn't it?  Also, [[http://en.wikipedia.org/wiki/Jet_engine][JET]]-s are fast, and so is YAJET.
-
-[fn:with] Seriously though, everything under an =with= block is
-s...l...o...w... -- so, while this makes for a nice syntax, you should not
-use it where speed is critical.
