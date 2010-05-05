@@ -1,0 +1,7 @@
+$(MAP (i => [ 1, 2, 3 ]) $i $)
+
+$(MAP ([ 1, 2, 3 ]) $_ $)
+
+$(MAP (key, val => [ "foo", "bar", "baz" ]) $key = $val $)
+
+$(MAPHASH (key, val => { foo: "1", bar: "2" }) $key = $val $)

@@ -20,7 +20,9 @@ var yajet = new YAJET({
 });
 
 var TESTS = [
-        "vars.txt"
+        "vars.txt",
+        "map.txt",
+        "loop.txt"
 ];
 
 for (var i = 0; i < TESTS.length; ++i) {
@@ -33,10 +35,10 @@ function run_test(file) {
         var func = compile(tmpl, file);
         if (func) {
                 var output = execute(func, file);
-                print("---[ TEMPLATE OUTPUT ]---\n");
-                print(indent(yajet.filter("trim", output)) + "\n");
                 print("---[ GENERATED CODE ]---");
                 print(indent(String(func.orig)));
+                print("---[ TEMPLATE OUTPUT ]---\n");
+                print(indent(output) + "\n");
                 print("-------------------------------------------------------------\n");
         }
 };

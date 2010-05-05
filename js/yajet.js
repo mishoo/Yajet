@@ -317,7 +317,8 @@ function YAJET(yajet_args){
                         else if (skip(/^\((aif|awhen)\b/i)) {
                                 // from http://common-lisp.net/project/anaphora/
                                 // "the anaphoric macro collection from hell".
-                                block_open("(function(it) { if (it != null && it != false && !(it instanceof Array && it.length == 0)) {", "}}).call(this, " + read_balanced() + ");");
+                                block_open("(function(it) { if (it != null && it != false && !(it instanceof Array && it.length == 0)) {",
+                                           "}}).call(this, " + read_balanced() + ");");
                         }
                         else if (skip(/^\(unless\b/i)) {
                                 block_open("if (!(" + read_balanced() + ")) {");
@@ -333,13 +334,19 @@ function YAJET(yajet_args){
                         else if (skip(/^\(maphash\b/i)) {
                                 var args = read_balanced(true);
                                 var key = args[0], val = args[1], hash = args[2], sym = gensym();
-                                out("var " + sym + " = " + hash + ";");
-                                block_open("for (var " + key + " in " + sym + ") {");
-                                out("if (!" + sym + ".hasOwnProperty(" + key + ")) continue;");
-                                out("var " + val + " = " + sym + "[" + key + "];");
+                                block_open(
+                                        // open
+                                        "(function(" + sym + ") {" +
+                                                "for (var " + key + " in " + sym + ") {" +
+                                                "if (" + sym + ".hasOwnProperty(" + key + ")) {" +
+                                                "var " + val + " = " + sym + "[" + key + "];"
+                                        ,
+                                        // close
+                                        "}}}).call(this, " + hash + ");"
+                                );
                         }
                         else if (skip(/^\((map|foreach)\b/i)) {
-                                var args = read_balanced(true), idx, key, arr, sym = gensym();
+                                var args = read_balanced(true), idx, key, arr, sym = gensym(), len = gensym();
                                 if (args.length == 3) {
                                         idx = args[0], key = args[1], arr = args[2];
                                 } else {
@@ -351,28 +358,30 @@ function YAJET(yajet_args){
                                                 arr = args[0];
                                         }
                                 }
-                                out("var " + sym + " = " + arr + ";");
-                                var loop = "for (var " + idx + " = 0; " + idx + " < " + sym + ".length; ++" + idx + ") {";
+
+                                // what happens next is a bit tricky. >-D
+                                // we open a block that has only one open bracked, but close two.
+                                // then, when args.length == 1 we put a second open bracked on the with block.
+                                // otherwise, we put it before the var (key) declaration.
+
+                                block_open(
+                                        // open
+                                        "(function(" + sym + "){" +
+                                                "for (var " +
+                                                (args.length == 1 ? "$_," : "") +
+                                                len + " = " + sym + ".length," +
+                                                idx + " = 0; " + idx + " < " + len + "; ++" + idx + ")"
+                                        ,
+                                        // close
+                                        "}}).call(this, " + arr + ");"
+                                );
                                 if (args.length == 1) {
-                                        // when no name has been specified for the value variable,
-                                        // iterate inside a "with" block for each element.
-                                        // additionally, provide the $_ perlism to refer to the current element itself.
-                                        block_open(
-                                                // open
-                                                ( loop +
-                                                  "with ({ $_ :" + sym + "[" + idx + "]})" +
-                                                  "with ($_) {" )
-                                                ,
-                                                // close loop and the with blocks
-                                                "}}"
-                                        );
+                                        out("with ($_ = " + sym + "[" + idx + "]) {");
                                 } else {
-                                        block_open(loop);
-                                        out("var " + key + " = " + sym + "[" + idx + "];");
+                                        out("{ var " + key + " = " + sym + "[" + idx + "];");
                                 }
                         }
                         else if (skip(/^\((repeat|loop)\b/i)) {
-                                skip_ws();
                                 var args = read_balanced(true), count, start = 1, idx, sym = gensym();
                                 if (args.length == 3)
                                         start = args.shift();
@@ -380,8 +389,10 @@ function YAJET(yajet_args){
                                 idx = args.shift() || gensym();
                                 block_open(
                                         // open
-                                        ( "var " + sym + " = " + count + "; " +
-                                          "for (var " + idx + " = " + start + "; " + idx + " <= " + sym + "; ++" + idx + ") {" )
+                                        "(function(" + sym + ") {" +
+                                                "for (var " + idx + " = " + start + "; " + idx + " <= " + sym + "; ++" + idx + ") {",
+                                        // close
+                                        "}}).call(this, " + count + ");"
                                 );
                         }
                         else if (skip(/^\(continue\)/i)) {
@@ -400,7 +411,6 @@ function YAJET(yajet_args){
                                 assert_skip(")");
                         }
                         else if (skip(/^\(with\b/i)) {
-                                skip_ws();
                                 block_open("with (" + read_balanced() + ") {");
                         }
                         else if (skip(/^\(block\b/i)) {
@@ -460,8 +470,8 @@ function YAJET(yajet_args){
                         }
                         else if (looking_at(/^\{/i)) {
                                 var v = read_balanced(true);
-                                var val = v.shift();
-                                if (/\S/.test(val)) {
+                                if (v.length > 0 && /\S/.test(v[0])) {
+                                        var val = v.shift();
                                         while (v.length > 0) {
                                                 var filter = trim(v.shift());
                                                 // check if it has arguments
