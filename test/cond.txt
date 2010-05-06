@@ -5,3 +5,5 @@ $(AWHEN (true => that) $that $)
 $(AWHEN (10 * 5 / 2 => foo) $foo $)
 
 $(AWHEN (false => it) don't get here $(ELSE) but get here: $it $)
+
+$(AWHEN (10 * 5 / 2 => bar, bar > 10) $bar $)

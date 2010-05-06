@@ -482,6 +482,18 @@ $(AWHEN (this.looongComputation() => that)
 $)
 #+END_SRC
 
+Also, for cases when you are unhappy with the default falsity rules,
+you can state the condition as well:
+
+#+BEGIN_EXAMPLE
+$(AIF (this.looongComputation() => foo, foo > 5)
+  $foo is now this.looongComputation() but this is displayed
+  only if it's greater than 5.
+$(ELSE)
+  And you can still use $foo here.
+$)
+#+END_EXAMPLE
+
 *** =REPEAT= / =LOOP= --- to repeat stuff
 
 To repeat a part of the template you can use =REPEAT= or =LOOP= (they are

@@ -316,11 +316,15 @@ function YAJET(yajet_args){
                         else if (skip(/^\((aif|awhen)\b/i)) {
                                 // from http://common-lisp.net/project/anaphora/
                                 // "the anaphoric macro collection from hell".
-                                var cond = read_balanced(true);
-                                var sym = cond.length > 1 ? cond.pop() : "it";
-                                block_open("(function(" + sym + ") { if (" + sym + " != null && " +
-                                           sym + " !== false && !(" + sym + " instanceof Array && " + sym + ".length == 0)) {",
-                                           "}}).call(this, " + cond[0] + ");");
+                                // But here it's somewhat extended.
+                                var args = read_balanced(true);
+                                var sym = args.length > 1 ? args[1] : "it";
+                                var cond = args.length > 2
+                                        ? args[2]
+                                        : ( sym + " != null && " +
+                                            sym + " !== false && !(" + sym + " instanceof Array && " + sym + ".length == 0)" );
+                                block_open("(function(" + sym + ") { if (" + cond + ") {",
+                                           "}}).call(this, " + args[0] + ");");
                         }
                         else if (skip(/^\(unless\b/i)) {
                                 block_open("if (!(" + read_balanced() + ")) {");
