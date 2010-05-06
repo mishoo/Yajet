@@ -6,8 +6,8 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Emplate Tengine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-06 22:07:46 CEST"/>
-<meta name="author" content="Mihai Bazon"/>
+<meta name="generated" content="2010-05-06 23:47:40 CEST"/>
+<meta name="author" content="Mihai Bazon <mihai.bazon@gmail.com>"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   html { font-family: Times, serif; font-size: 12pt; }
@@ -893,7 +893,7 @@ condition, and the text block is executed only if:
 <code>$it</code> is not <code>null</code> and not <code>undefined</code>
 </li>
 <li>
-<code>$it</code> is not <code>false</code>
+<code>$it</code> is not <code>false</code> <sup><a class="footref" name="fnr.5" href="#fn.5">5</a></sup>
 </li>
 <li>
 <code>$it</code> is not an empty array
@@ -909,10 +909,28 @@ the Lisp rules are more useful).  It expands to this code:
 
 <pre class="src src-espresso">
 (<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">it</span>){
-  <span style="color: #8b0000;">if</span> (it != <span style="color: #cd0000;">null</span> &amp;&amp; it != <span style="color: #cd0000;">false</span> &amp;&amp; !(it <span style="color: #8b0000;">instanceof</span> <span style="color: #4682b4;">Array</span> &amp;&amp; it.length == 0)) {
+  <span style="color: #8b0000;">if</span> (it != <span style="color: #cd0000;">null</span> &amp;&amp; it !== <span style="color: #cd0000;">false</span> &amp;&amp; !(it <span style="color: #8b0000;">instanceof</span> <span style="color: #4682b4;">Array</span> &amp;&amp; it.length == 0)) {
     <span style="color: #00008b;">// </span><span style="color: #00008b;">splice the block of code here
 </span>  }
 }).call(<span style="color: #cd0000;">this</span>, <span style="color: #cd0000;">this</span>.looongComputation());
+</pre>
+
+
+
+
+<p>
+OK, now that you agree that this is useful, but are depressed by the
+sheer lack of inspiration in picking the name <code>it</code>, let me show you
+that you can actually name the variable:
+</p>
+
+
+
+<pre class="src src-html">
+$(AWHEN (this.looongComputation() =&gt; that)
+  <span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">no more $it </span><span style="color: #00008b;">--&gt;</span>
+  .. do something with $that
+$)
 </pre>
 
 
@@ -1057,7 +1075,7 @@ no key or index variables.  In this case the special variable <code>$_</code> (w
 will call the Perlism) gets assigned to the current element, and <i>more</i>, the
 loop body is lexically scoped to each element using a JavaScript <code>with</code>
 block (I know, your mom told you not to play the <code>with</code> statement, but mine
-didn't<sup><a class="footref" name="fnr.5" href="#fn.5">5</a></sup> :-p).
+didn't<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup> :-p).
 </p>
 <p>
 So using this style the first example would become:
@@ -1190,7 +1208,7 @@ You can define new variables with <code>LET</code> and <code>VAR</code>.  They a
 only available in its block of text.  <code>VAR</code> on the other hand does something
 similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-5.3.9"><code>BLOCK</code> or <code>FUNCTION</code></a> block too<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>.
+could be a <a href="#sec-5.3.9"><code>BLOCK</code> or <code>FUNCTION</code></a> block too<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>.
 </p>
 <p>
 <code>VAR</code> does not accept a text argument, so it ends directly with a closing
@@ -1649,10 +1667,9 @@ What YAJET actually generates for the above case looks like this:
 
 
 <p>
-The variables that aren't explicitly named in the template get names
-with the prefix <code>__GSY</code> and a number which is unique per compilation,
-so you should be safe as long as you don't use the <code>__GSY</code> prefix
-yourself.  Hope you don't. :-)
+The variables that aren't explicitly named in the template get unique
+names with the prefix <code>__GSY</code>, so you should be safe as long as you
+don't use the <code>__GSY</code> prefix yourself.  Hope you don't. :-)
 </p>
 <p>
 Also, the loop block is embedded in a function, so that it doesn't
@@ -1905,6 +1922,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
+
 </div>
 </div>
 <div id="footnotes">
@@ -1918,26 +1936,29 @@ Sounds buzzy, isn't it?  Also, <a href="http://en.wikipedia.org/wiki/Jet_engine"
 <p class="footnote"><sup><a class="footnum" name="fn.2" href="#fnr.2">2</a></sup> You can still put literal JavaScript inside using <code>$( ... )</code>, but it has to be properly balanced.
 </p>
 <p class="footnote"><sup><a class="footnum" name="fn.3" href="#fnr.3">3</a></sup> I added this because it was easy, and it can be useful
-for one-liners, but I vote against it for blocks bigger than one line.
+for one-liners, but I vote against it for blocks bigger than a few
+lines.
 </p>
 <p class="footnote"><sup><a class="footnum" name="fn.4" href="#fnr.4">4</a></sup> <a href="http://beebole.com/pure/">Pure</a> comes first on Google when we search “JavaScript
 template engine”.  Have you notice how exaggeratedly creepy is the syntax for <a href="http://beebole.com/pure/documentation/iteration-with-directives/">rendering with directives</a>?
 I guess we truly live in a “worse is better” world, but I'm still trying to do The Right Thing.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.5" href="#fnr.5">5</a></sup> Seriously though, everything under an <code>with</code> block is
+<p class="footnote"><sup><a class="footnum" name="fn.5" href="#fnr.5">5</a></sup> BTW, did you know that in JavaScript the expression <b>(0 == false)</b> evaluates to <b>true</b> in conditionals?
+</p>
+<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> Seriously though, everything under an <code>with</code> block is
 s&hellip;l&hellip;o&hellip;w&hellip; &ndash; so, while this makes for a nice syntax, you should not
 use it where speed is critical.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
+<p class="footnote"><sup><a class="footnum" name="fn.7" href="#fnr.7">7</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
 completely, but it's useful for exporting an inner function from a
 <code>LET</code> block.
 </p>
 </div>
 </div>
-<div id="postamble"><p class="author"> Author: Mihai Bazon
+<div id="postamble"><p class="author"> Author: Mihai Bazon <mihai.bazon@gmail.com>
 <a href="mailto:mishoo@mihai-cn.corp.cnet">&lt;mishoo@mihai-cn.corp.cnet&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-06 22:07:46 CEST</p>
+<p class="date"> Date: 2010-05-06 23:47:40 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>

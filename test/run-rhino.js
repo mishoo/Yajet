@@ -22,7 +22,8 @@ var yajet = new YAJET({
 var TESTS = [
         "vars.txt",
         "map.txt",
-        "loop.txt"
+        "loop.txt",
+        "cond.txt"
 ];
 
 for (var i = 0; i < TESTS.length; ++i) {

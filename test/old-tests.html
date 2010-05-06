@@ -39,12 +39,12 @@ $(WRAP table([ "Name", "Phone", "Email" ])
   <tr> <td>Bar</td> <td>1234-123</td> <td>bar@bar.com</td> </tr>
 $)
 
-      $(BLOCK wrapper()
+      $(FUNCTION wrapper()
         <wrapper>$(CONTENT)</wrapper>
       $)
 
       $(REPEAT (5 => i)
-        $(WRAP (wrapper)
+        $(WRAP wrapper()
           <b>Wrapped $i time</b>
         $)$)
 

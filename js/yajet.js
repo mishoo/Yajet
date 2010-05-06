@@ -77,8 +77,7 @@ function YAJET(yajet_args){
                            "function __VUT(str) { if (str != null) __BUF += str };" );
 
         function compile(THE_STRING) {
-                var THE_PREAMBLE = [],
-                    THE_CODE = [],
+                var THE_CODE = [],
                     THE_CLOSING = [],
                     THE_INDEX = 0,
                     THE_LENGTH = THE_STRING.length,
@@ -89,7 +88,7 @@ function YAJET(yajet_args){
                         THE_CODE.unshift("with (this) {");
                         THE_CODE.push("}");
                 }
-                return makeClosure.call(this, THE_PREAMBLE.join("\n") + THE_CODE.join("\n"));
+                return makeClosure.call(this, THE_CODE.join("\n"));
 
                 function peek() {
                         return THE_STRING.charAt(THE_INDEX);
@@ -208,7 +207,7 @@ function YAJET(yajet_args){
                                                 if (looking_at("//")) {
                                                         var pos = THE_STRING.indexOf("\n", THE_INDEX + 2);
                                                         if (pos == -1)
-                                                                // new newline at EOF
+                                                                // no newline at EOF
                                                                 pos = THE_LENGTH;
                                                         THE_INDEX = pos + 1;
                                                 }
@@ -317,8 +316,11 @@ function YAJET(yajet_args){
                         else if (skip(/^\((aif|awhen)\b/i)) {
                                 // from http://common-lisp.net/project/anaphora/
                                 // "the anaphoric macro collection from hell".
-                                block_open("(function(it) { if (it != null && it != false && !(it instanceof Array && it.length == 0)) {",
-                                           "}}).call(this, " + read_balanced() + ");");
+                                var cond = read_balanced(true);
+                                var sym = cond.length > 1 ? cond.pop() : "it";
+                                block_open("(function(" + sym + ") { if (" + sym + " != null && " +
+                                           sym + " !== false && !(" + sym + " instanceof Array && " + sym + ".length == 0)) {",
+                                           "}}).call(this, " + cond[0] + ");");
                         }
                         else if (skip(/^\(unless\b/i)) {
                                 block_open("if (!(" + read_balanced() + ")) {");
@@ -414,37 +416,18 @@ function YAJET(yajet_args){
                                 block_open("with (" + read_balanced() + ") {");
                         }
                         else if (skip(/^\(block\b/i)) {
-                                var close = null;
-                                if (skip("*")) {
-                                        var place = THE_CODE;
-                                        close = function() {
-                                                out("return; }");
-                                                THE_CODE = place;
-                                        };
-                                        THE_CODE = THE_PREAMBLE;
-                                }
                                 var name = trim(read_simple_token());
                                 var args = read_balanced();
-                                block_open(
-                                        "function " + name + "(" + args + ") {",
-                                        close
-                                );
+                                block_open("function " + name + "(" + args + ") {");
                         }
                         else if (skip(/^\(function\b/i)) {
-                                var close = "return __BUF; }";
-                                if (skip("*")) {
-                                        var place = THE_CODE;
-                                        THE_CODE = THE_PREAMBLE;
-                                        close = function() {
-                                                out("return __BUF; }");
-                                                THE_CODE = place;
-                                        };
-                                }
                                 var name = trim(read_simple_token());
                                 var args = read_balanced();
                                 block_open(
-                                        ( "function " + name + "(" + args + ") {" + BUFFER_DEF ),
-                                        close
+                                        // open
+                                        "function " + name + "(" + args + ") {" + BUFFER_DEF,
+                                        // close
+                                        "return __BUF; }"
                                 );
                         }
                         else if (skip(/^\(wrap\b/i)) {
@@ -454,7 +437,7 @@ function YAJET(yajet_args){
                                         args = args.join(", ") + ", ";
                                 else
                                         args = "";
-                                block_open(name + "(" + args + "function(__OUT, __VUT){", "})");
+                                block_open("__VUT(" + name + "(" + args + "function(__OUT, __VUT){", "}));");
                         }
                         else if (skip(/^\(content\)/i)) {
                                 out("arguments[arguments.length - 1].call(this, __OUT, __VUT);");
