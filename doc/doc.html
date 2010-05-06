@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
                "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -7,20 +6,18 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Emplate Tengine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-06 08:16:15 CEST"/>
+<meta name="generated" content="2010-05-06 22:07:46 CEST"/>
 <meta name="author" content="Mihai Bazon"/>
-<meta name="description" content=""/>
-<meta name="keywords" content=""/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   html { font-family: Times, serif; font-size: 12pt; }
   .title  { text-align: center; }
   .todo   { color: red; }
   .done   { color: green; }
-  .tag    { background-color: #add8e6; font-weight:normal }
+  .tag    { background-color:lightblue; font-weight:normal }
   .target { }
-  .timestamp { color: #bebebe; }
-  .timestamp-kwd { color: #5f9ea0; }
+  .timestamp { color: grey }
+  .timestamp-kwd { color: CadetBlue }
   p.verse { margin-left: 3% }
   pre {
 	border: 1pt solid #AEBDCC;
@@ -35,7 +32,6 @@ lang="en" xml:lang="en">
   dt { font-weight: bold; }
   div.figure { padding: 0.5em; }
   div.figure p { text-align: center; }
-  textarea { overflow-x: auto; }
   .linenr { font-size:smaller }
   .code-highlighted {background-color:#ffff00;}
   .org-info-js_info-navigation { border-style:none; }
@@ -66,12 +62,9 @@ lang="en" xml:lang="en">
    if(elem.cacheClassTarget)
      target.className = elem.cacheClassTarget;
  }
-/*]]>*///-->
+/*]]>*/-->
 </script>
-</head>
-<body>
-<div id="content">
-
+</head><body>
 <h1 class="title">YAJET &ndash; JavaScript Emplate Tengine</h1>
 
 
@@ -79,45 +72,45 @@ lang="en" xml:lang="en">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">1 Yet Another JavaScript Emplate Tengine </a></li>
+<li><a href="#sec-1">1 Yet Another JavaScript Emplate Tengine[1] </a></li>
 <li><a href="#sec-2">2 What makes it different </a></li>
 <li><a href="#sec-3">3 Features </a></li>
 <li><a href="#sec-4">4 Usage </a>
 <ul>
-<li><a href="#sec-4_1">4.1 Template arguments </a></li>
-<li><a href="#sec-4_2">4.2 Reader char </a></li>
+<li><a href="#sec-4.1">4.1 Template arguments </a></li>
+<li><a href="#sec-4.2">4.2 Reader char </a></li>
 </ul>
 </li>
 <li><a href="#sec-5">5 Syntax </a>
 <ul>
-<li><a href="#sec-5_1">5.1 Simple interpolation (the <code>$foo</code> construct) </a></li>
-<li><a href="#sec-5_2">5.2 JavaScript expressions (the <code>${exp}</code> construct) </a>
+<li><a href="#sec-5.1">5.1 Simple interpolation (the <code>$foo</code> construct) </a></li>
+<li><a href="#sec-5.2">5.2 JavaScript expressions (the <code>${exp}</code> construct) </a>
 <ul>
-<li><a href="#sec-5_2_1">5.2.1 Filters </a></li>
+<li><a href="#sec-5.2.1">5.2.1 Filters </a></li>
 </ul>
 </li>
-<li><a href="#sec-5_3">5.3 Directives </a>
+<li><a href="#sec-5.3">5.3 Directives </a>
 <ul>
-<li><a href="#sec-5_3_1">5.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </a></li>
-<li><a href="#sec-5_3_2">5.3.2 <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </a></li>
-<li><a href="#sec-5_3_3">5.3.3 <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </a></li>
-<li><a href="#sec-5_3_4">5.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </a></li>
-<li><a href="#sec-5_3_5">5.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </a></li>
-<li><a href="#sec-5_3_6">5.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </a></li>
-<li><a href="#sec-5_3_7">5.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </a></li>
-<li><a href="#sec-5_3_8">5.3.8 <code>WITH</code> &mdash; modify the scope chain </a></li>
-<li><a href="#sec-5_3_9">5.3.9 <code>BLOCK</code> and <code>FUNCTION</code> &mdash; define reusable template blocks </a></li>
-<li><a href="#sec-5_3_10">5.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </a></li>
-<li><a href="#sec-5_3_11">5.3.11 Literal JavaScript with <code>$( ... )</code> </a></li>
+<li><a href="#sec-5.3.1">5.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </a></li>
+<li><a href="#sec-5.3.2">5.3.2 <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </a></li>
+<li><a href="#sec-5.3.3">5.3.3 <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </a></li>
+<li><a href="#sec-5.3.4">5.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </a></li>
+<li><a href="#sec-5.3.5">5.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </a></li>
+<li><a href="#sec-5.3.6">5.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </a></li>
+<li><a href="#sec-5.3.7">5.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </a></li>
+<li><a href="#sec-5.3.8">5.3.8 <code>WITH</code> &mdash; modify the scope chain </a></li>
+<li><a href="#sec-5.3.9">5.3.9 <code>BLOCK</code> and <code>FUNCTION</code> &mdash; define reusable template blocks </a></li>
+<li><a href="#sec-5.3.10">5.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </a></li>
+<li><a href="#sec-5.3.11">5.3.11 Literal JavaScript with <code>$( ... )</code> </a></li>
 </ul></li>
 </ul>
 </li>
 <li><a href="#sec-6">6 Correctness </a></li>
 <li><a href="#sec-7">7 Known issues </a>
 <ul>
-<li><a href="#sec-7_1">7.1 Literal RegExp-s in JavaScript expressions </a></li>
-<li><a href="#sec-7_2">7.2 Error reporting is less than ideal </a></li>
-<li><a href="#sec-7_3">7.3 Whitespace handling </a></li>
+<li><a href="#sec-7.1">7.1 Literal RegExp-s in JavaScript expressions </a></li>
+<li><a href="#sec-7.2">7.2 Error reporting is less than ideal </a></li>
+<li><a href="#sec-7.3">7.3 Whitespace handling </a></li>
 </ul>
 </li>
 <li><a href="#sec-8">8 How to get help </a></li>
@@ -127,8 +120,8 @@ lang="en" xml:lang="en">
 </div>
 
 <div id="outline-container-1" class="outline-2">
-<h2 id="sec-1"><span class="section-number-2">1</span> Yet Another JavaScript Emplate Tengine<sup><a class="footref" name="fnr.1" href="#fn.1">1</a></sup> </h2>
-<div class="outline-text-2" id="text-1">
+<h2 id="sec-1">1 Yet Another JavaScript Emplate Tengine<sup><a class="footref" name="fnr.1" href="#fn.1">1</a></sup> </h2>
+<div id="text-1">
 
 
 <p>
@@ -147,8 +140,8 @@ it rendered.
 </div>
 
 <div id="outline-container-2" class="outline-2">
-<h2 id="sec-2"><span class="section-number-2">2</span> What makes it different </h2>
-<div class="outline-text-2" id="text-2">
+<h2 id="sec-2">2 What makes it different </h2>
+<div id="text-2">
 
 
 <p>
@@ -183,11 +176,13 @@ you don't write, for example:
 
 
 
-<pre class="src src-html">&lt;<span style="color: #8b0000;">?js</span> for (var i = 0; i &lt; list.length; ++i) { ?&gt;
+<pre class="src src-html">
+&lt;<span style="color: #8b0000;">?js</span> for (var i = 0; i &lt; list.length; ++i) { ?&gt;
 &lt;<span style="color: #8b0000;">?js</span>     var el = list[i] ?&gt;
      &lt;<span style="color: #8b2323;">li</span>&gt;#{el}&lt;/<span style="color: #8b2323;">li</span>&gt;
 &lt;<span style="color: #8b0000;">?js</span> } ?&gt;
 </pre>
+
 
 
 
@@ -197,8 +192,10 @@ you don't write, for example:
 
 
 
-<pre class="src src-html">$(MAP (el =&gt; list)  &lt;<span style="color: #8b2323;">li</span>&gt;$ei&lt;/<span style="color: #8b2323;">li</span>&gt;  $)
+<pre class="src src-html">
+$(MAP (el =&gt; list)  &lt;<span style="color: #8b2323;">li</span>&gt;$ei&lt;/<span style="color: #8b2323;">li</span>&gt;  $)
 </pre>
+
 
 
 
@@ -218,8 +215,8 @@ specifically for HTML, although that's mostly what I use it for.
 </div>
 
 <div id="outline-container-3" class="outline-2">
-<h2 id="sec-3"><span class="section-number-2">3</span> Features </h2>
-<div class="outline-text-2" id="text-3">
+<h2 id="sec-3">3 Features </h2>
+<div id="text-3">
 
 
 <p>
@@ -294,8 +291,8 @@ or <a href="http://www.mozilla.org/rhino/">Rhino</a>).  I tested it with Rhino.
 </div>
 
 <div id="outline-container-4" class="outline-2">
-<h2 id="sec-4"><span class="section-number-2">4</span> Usage </h2>
-<div class="outline-text-2" id="text-4">
+<h2 id="sec-4">4 Usage </h2>
+<div id="text-4">
 
 
 <p>
@@ -304,7 +301,8 @@ You need to load <a href="../js/yajet.js">yajet.js</a>, and to create an instanc
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
     reader_char : <span style="color: #008b00;">"$"</span>,
     with_scope  : <span style="color: #cd0000;">false</span>,
     filters     : {
@@ -316,14 +314,17 @@ You need to load <a href="../js/yajet.js">yajet.js</a>, and to create an instanc
 
 
 
+
 <p>
 All arguments are optional.  Then to compile a template, you do this:
 </p>
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">var</span> <span style="color: #8b008b;">func</span> = yajet.compile(<span style="color: #008b00;">"You said: $this.foo $this.bar"</span>);
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">func</span> = yajet.compile(<span style="color: #008b00;">"You said: $this.foo $this.bar"</span>);
 </pre>
+
 
 
 
@@ -333,17 +334,19 @@ and to execute it:
 
 
 
-<pre class="src src-espresso">alert( func({ foo: <span style="color: #008b00;">"hello"</span>, bar: <span style="color: #008b00;">"world!"</span> }) );
+<pre class="src src-espresso">
+alert( func({ foo: <span style="color: #008b00;">"hello"</span>, bar: <span style="color: #008b00;">"world!"</span> }) );
 </pre>
+
 
 
 
 
 </div>
 
-<div id="outline-container-4_1" class="outline-3">
-<h3 id="sec-4_1"><span class="section-number-3">4.1</span> Template arguments </h3>
-<div class="outline-text-3" id="text-4_1">
+<div id="outline-container-4.1" class="outline-3">
+<h3 id="sec-4.1">4.1 Template arguments </h3>
+<div id="text-4.1">
 
 
 <p>
@@ -357,11 +360,13 @@ function in a <code>with(this) { ... }</code> block, so the above would become:
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({ with_scope: <span style="color: #cd0000;">true</span> });
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({ with_scope: <span style="color: #cd0000;">true</span> });
 <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">func</span> = yajet.compile(<span style="color: #008b00;">"You said: $foo $bar"</span>);
 <span style="color: #00008b;">// </span><span style="color: #00008b;">and call it the same way:
 </span>alert( func({ foo: <span style="color: #008b00;">"hello"</span>, bar: <span style="color: #008b00;">"world!"</span> }) );
 </pre>
+
 
 
 
@@ -378,9 +383,9 @@ its JavaScript console; Chrome is even slower than Firefox for the
 
 </div>
 
-<div id="outline-container-4_2" class="outline-3">
-<h3 id="sec-4_2"><span class="section-number-3">4.2</span> Reader char </h3>
-<div class="outline-text-3" id="text-4_2">
+<div id="outline-container-4.2" class="outline-3">
+<h3 id="sec-4.2">4.2 Reader char </h3>
+<div id="text-4.2">
 
 
 <p>
@@ -392,9 +397,11 @@ character, for instance:
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({ reader_char: <span style="color: #008b00;">"&#8226;"</span> });
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({ reader_char: <span style="color: #008b00;">"&#8226;"</span> });
 <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">tmpl</span> = yajet.compile(<span style="color: #008b00;">"You said &#8226;foo &#8226;bar"</span>);
 </pre>
+
 
 
 
@@ -405,8 +412,8 @@ character, for instance:
 </div>
 
 <div id="outline-container-5" class="outline-2">
-<h2 id="sec-5"><span class="section-number-2">5</span> Syntax </h2>
-<div class="outline-text-2" id="text-5">
+<h2 id="sec-5">5 Syntax </h2>
+<div id="text-5">
 
 
 <p>
@@ -445,9 +452,9 @@ which are particular for INSTRUCTION.
 
 </div>
 
-<div id="outline-container-5_1" class="outline-3">
-<h3 id="sec-5_1"><span class="section-number-3">5.1</span> Simple interpolation (the <code>$foo</code> construct) </h3>
-<div class="outline-text-3" id="text-5_1">
+<div id="outline-container-5.1" class="outline-3">
+<h3 id="sec-5.1">5.1 Simple interpolation (the <code>$foo</code> construct) </h3>
+<div id="text-5.1">
 
 
 <p>
@@ -466,9 +473,9 @@ uppercase, then apply the html filter to the upcased string.
 
 </div>
 
-<div id="outline-container-5_2" class="outline-3">
-<h3 id="sec-5_2"><span class="section-number-3">5.2</span> JavaScript expressions (the <code>${exp}</code> construct) </h3>
-<div class="outline-text-3" id="text-5_2">
+<div id="outline-container-5.2" class="outline-3">
+<h3 id="sec-5.2">5.2 JavaScript expressions (the <code>${exp}</code> construct) </h3>
+<div id="text-5.2">
 
 
 <p>
@@ -485,7 +492,8 @@ So, an example of a perfectly valid call is:
 
 
 
-<pre class="src src-espresso">${
+<pre class="src src-espresso">
+${
    <span style="color: #00008b;">// </span><span style="color: #00008b;">Comments are allowed and can even contain the closing bracket: }
 </span>   <span style="color: #00008b;">// </span><span style="color: #00008b;">it's ignored, since it is in a comment.
 </span>   (<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">arg</span>){
@@ -500,6 +508,7 @@ So, an example of a perfectly valid call is:
 
 
 
+
 <p>
 The expression is evaluated at runtime and its value is inserted into the
 template output only if it's not null.
@@ -507,9 +516,9 @@ template output only if it's not null.
 
 </div>
 
-<div id="outline-container-5_2_1" class="outline-4">
-<h4 id="sec-5_2_1"><span class="section-number-4">5.2.1</span> Filters </h4>
-<div class="outline-text-4" id="text-5_2_1">
+<div id="outline-container-5.2.1" class="outline-4">
+<h4 id="sec-5.2.1">5.2.1 Filters </h4>
+<div id="text-5.2.1">
 
 
 <p>
@@ -538,7 +547,8 @@ this writing the filters available by default are:
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
     filters: {
         <span style="color: #8b2323;">md5</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">value</span>) {
             <span style="color: #8b0000;">return</span> md5_hex_of(value); <span style="color: #00008b;">// </span><span style="color: #00008b;">return the modified value
@@ -546,6 +556,7 @@ this writing the filters available by default are:
     }
 });
 </pre>
+
 
 
 
@@ -563,8 +574,10 @@ additional elements are filters.  For example:
 
 
 
-<pre class="src src-espresso">${ <span style="color: #cd0000;">this</span>.getLabel(), upcase, html }
+<pre class="src src-espresso">
+${ <span style="color: #cd0000;">this</span>.getLabel(), upcase, html }
 </pre>
+
 
 
 
@@ -574,7 +587,8 @@ will convert into something like this:
 
 
 
-<pre class="src src-espresso">output_string(
+<pre class="src src-espresso">
+output_string(
   apply_html_filter(
     apply_upcase_filter(
       <span style="color: #cd0000;">this</span>.getLabel()
@@ -582,6 +596,7 @@ will convert into something like this:
   )
 )
 </pre>
+
 
 
 
@@ -595,7 +610,7 @@ use:
 <code>“=&gt;”</code>
 </li>
 <li>
-<code>“;”</code>
+<code>“,”</code>
 </li>
 <li>
 <code>“..”</code>
@@ -614,11 +629,13 @@ use:
 
 
 
-<pre class="src src-espresso">${ <span style="color: #cd0000;">this</span>.getLabel() IN upcase, html }
+<pre class="src src-espresso">
+${ <span style="color: #cd0000;">this</span>.getLabel() IN upcase, html }
 ${ <span style="color: #cd0000;">this</span>.getLabel() =&gt; upcase =&gt; html }
 ${ <span style="color: #cd0000;">this</span>.getLabel() =&gt; upcase, html }
 ${ <span style="color: #cd0000;">this</span>.getLabel() .. upcase; html }
 </pre>
+
 
 
 
@@ -638,7 +655,8 @@ arguments:
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
     filters: {
         <span style="color: #8b2323;">format_date</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">date</span>, <span style="color: #8b008b;">format</span>) {
             <span style="color: #00008b;">// </span><span style="color: #00008b;">... now return the *date* formatted according to *format*
@@ -649,14 +667,17 @@ arguments:
 
 
 
+
 <p>
 and in the template:
 </p>
 
 
 
-<pre class="example">“Today is: ${ new Date() =&gt; format_date("YYYY-MM-DD") }”
+<pre class="example">
+“Today is: ${ new Date() =&gt; format_date("YYYY-MM-DD") }”
 </pre>
+
 
 
 
@@ -670,9 +691,9 @@ arguments are passed following the filter name ("YYYY-MM-DD").
 
 </div>
 
-<div id="outline-container-5_3" class="outline-3">
-<h3 id="sec-5_3"><span class="section-number-3">5.3</span> Directives </h3>
-<div class="outline-text-3" id="text-5_3">
+<div id="outline-container-5.3" class="outline-3">
+<h3 id="sec-5.3">5.3 Directives </h3>
+<div id="text-5.3">
 
 
 <p>
@@ -685,10 +706,12 @@ obvious reasons:
 
 
 
-<pre class="src src-html">${ if (link != null) { }
+<pre class="src src-html">
+${ if (link != null) { }
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link|html"</span>&gt;$link&lt;/<span style="color: #8b2323;">a</span>&gt;
 ${ } }
 </pre>
+
 
 
 
@@ -703,10 +726,12 @@ here is how you would write the above code:
 
 
 
-<pre class="src src-html">$(IF (link != null)
+<pre class="src src-html">
+$(IF (link != null)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link|html"</span>&gt;$link&lt;/<span style="color: #8b2323;">a</span>&gt;
 $)
 </pre>
+
 
 
 
@@ -759,9 +784,9 @@ template in a simple and consistent manner.
 
 </div>
 
-<div id="outline-container-5_3_1" class="outline-4">
-<h4 id="sec-5_3_1"><span class="section-number-4">5.3.1</span> <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </h4>
-<div class="outline-text-4" id="text-5_3_1">
+<div id="outline-container-5.3.1" class="outline-4">
+<h4 id="sec-5.3.1">5.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </h4>
+<div id="text-5.3.1">
 
 
 <p>
@@ -772,7 +797,8 @@ argument which must be a condition enclosed in parens.  Examples:
 
 
 
-<pre class="src src-html">$(WHEN (user_id == null)
+<pre class="src src-html">
+$(WHEN (user_id == null)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"..."</span>&gt;Please login&lt;/<span style="color: #8b2323;">a</span>&gt; $)
 
 $(UNLESS (user_id != null)
@@ -788,6 +814,7 @@ $(ELSE)
 
 
 
+
 <p>
 Note that you can use <code>ELSE</code> or <code>ELSIF</code> inside <code>UNLESS</code> or <code>WHEN</code> blocks
 too, although I would not advise to use this style:
@@ -795,11 +822,13 @@ too, although I would not advise to use this style:
 
 
 
-<pre class="example">$(UNLESS (a == b)
+<pre class="example">
+$(UNLESS (a == b)
   they are different
 $(ELSE)
   they are equal $)
 </pre>
+
 
 
 
@@ -815,9 +844,9 @@ it, it seems to make sense this way.  The same applies to <code>$(BREAK)</code> 
 
 </div>
 
-<div id="outline-container-5_3_2" class="outline-4">
-<h4 id="sec-5_3_2"><span class="section-number-4">5.3.2</span> <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </h4>
-<div class="outline-text-4" id="text-5_3_2">
+<div id="outline-container-5.3.2" class="outline-4">
+<h4 id="sec-5.3.2">5.3.2 <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </h4>
+<div id="text-5.3.2">
 
 
 <p>
@@ -828,12 +857,14 @@ not very big.  They help with the following case:
 
 
 
-<pre class="example">$(LET ((foo =&gt; this.looongComputation()))
+<pre class="example">
+$(LET ((foo =&gt; this.looongComputation()))
   $(WHEN (foo)
     ... do something with $foo
   $)
 $)
 </pre>
+
 
 
 
@@ -844,10 +875,12 @@ boilerplate:
 
 
 
-<pre class="example">$(AWHEN (this.looongComputation())
+<pre class="example">
+$(AWHEN (this.looongComputation())
   .. do something with $it
 $)
 </pre>
+
 
 
 
@@ -874,7 +907,8 @@ the Lisp rules are more useful).  It expands to this code:
 
 
 
-<pre class="src src-espresso">(<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">it</span>){
+<pre class="src src-espresso">
+(<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">it</span>){
   <span style="color: #8b0000;">if</span> (it != <span style="color: #cd0000;">null</span> &amp;&amp; it != <span style="color: #cd0000;">false</span> &amp;&amp; !(it <span style="color: #8b0000;">instanceof</span> <span style="color: #4682b4;">Array</span> &amp;&amp; it.length == 0)) {
     <span style="color: #00008b;">// </span><span style="color: #00008b;">splice the block of code here
 </span>  }
@@ -883,13 +917,14 @@ the Lisp rules are more useful).  It expands to this code:
 
 
 
-</div>
 
 </div>
 
-<div id="outline-container-5_3_3" class="outline-4">
-<h4 id="sec-5_3_3"><span class="section-number-4">5.3.3</span> <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </h4>
-<div class="outline-text-4" id="text-5_3_3">
+</div>
+
+<div id="outline-container-5.3.3" class="outline-4">
+<h4 id="sec-5.3.3">5.3.3 <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </h4>
+<div id="text-5.3.3">
 
 
 <p>
@@ -900,9 +935,11 @@ so you can pass a variable name for it:
 
 
 
-<pre class="example">$(REPEAT (5, i)
+<pre class="example">
+$(REPEAT (5, i)
   Item $i $)
 </pre>
+
 
 
 
@@ -915,9 +952,11 @@ allowed:
 
 
 
-<pre class="src src-html">$(LOOP (5 .. 10 =&gt; i)
+<pre class="src src-html">
+$(LOOP (5 .. 10 =&gt; i)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"/page$i"</span>&gt;Page $i&lt;/<span style="color: #8b2323;">a</span>&gt; $)
 </pre>
+
 
 
 
@@ -931,9 +970,9 @@ would do).
 
 </div>
 
-<div id="outline-container-5_3_4" class="outline-4">
-<h4 id="sec-5_3_4"><span class="section-number-4">5.3.4</span> <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </h4>
-<div class="outline-text-4" id="text-5_3_4">
+<div id="outline-container-5.3.4" class="outline-4">
+<h4 id="sec-5.3.4">5.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </h4>
+<div id="text-5.3.4">
 
 
 <p>
@@ -944,10 +983,12 @@ contained in an array:
 
 
 
-<pre class="src src-html">$(MAP (link =&gt; links)
+<pre class="src src-html">
+$(MAP (link =&gt; links)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span>
      <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
 </pre>
+
 
 
 
@@ -959,7 +1000,8 @@ parser is smart enough for this):
 
 
 
-<pre class="src src-html">$(MAP (link =&gt; [ { address : <span style="color: #008b00;">"http://www.google.com/"</span>,
+<pre class="src src-html">
+$(MAP (link =&gt; [ { address : <span style="color: #008b00;">"http://www.google.com/"</span>,
                    tooltip : <span style="color: #008b00;">"Search engine"</span>,
                    text    : <span style="color: #008b00;">"Google"</span> },
 
@@ -973,6 +1015,7 @@ parser is smart enough for this):
 
 
 
+
 <p>
 Sometimes you also need to know the current step of the iteration.  For
 example if you want to output some links that are separated with a pipe, you
@@ -982,11 +1025,13 @@ link.  We could write it like this:
 
 
 
-<pre class="src src-html">$(MAP (i, link =&gt; links)
+<pre class="src src-html">
+$(MAP (i, link =&gt; links)
   $(WHEN (i &gt; 0) | $)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>="$link.address|html"
      <span style="color: #8b008b;">title</span>="$link.tooltip|html"&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
 </pre>
+
 
 
 
@@ -996,11 +1041,13 @@ or
 
 
 
-<pre class="src src-html">$(MAP (i, link =&gt; links)
+<pre class="src src-html">
+$(MAP (i, link =&gt; links)
   ${ i &gt; 0 ? "|" : "" }
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>="$link.address|html"
      <span style="color: #8b008b;">title</span>="$link.tooltip|html"&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
 </pre>
+
 
 
 
@@ -1018,9 +1065,11 @@ So using this style the first example would become:
 
 
 
-<pre class="src src-html">$(MAP (links)
+<pre class="src src-html">
+$(MAP (links)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$tooltip|html"</span>&gt;$text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
 </pre>
+
 
 
 
@@ -1034,8 +1083,10 @@ Just a last example showing the Perlism:
 
 
 
-<pre class="src src-html">$(FOREACH ([ <span style="color: #008b00;">"foo"</span>, <span style="color: #008b00;">"bar"</span>, <span style="color: #008b00;">"baz"</span> ]) &lt;<span style="color: #8b2323;">b</span>&gt;<span style="font-weight: bold;">$_</span>&lt;/<span style="color: #8b2323;">b</span>&gt; $)
+<pre class="src src-html">
+$(FOREACH ([ <span style="color: #008b00;">"foo"</span>, <span style="color: #008b00;">"bar"</span>, <span style="color: #008b00;">"baz"</span> ]) &lt;<span style="color: #8b2323;">b</span>&gt;<span style="font-weight: bold;">$_</span>&lt;/<span style="color: #8b2323;">b</span>&gt; $)
 </pre>
+
 
 
 
@@ -1046,11 +1097,13 @@ bound to each element.  Note that because YAJET is doing <a href="#Correctness">
 
 
 
-<pre class="example">$(MAP ([ "foo", "bar", "baz" ])
+<pre class="example">
+$(MAP ([ "foo", "bar", "baz" ])
   $(MAP ([ 1, 2, 3 ])
     inside: $_ $)
   outside: $_ $)
 </pre>
+
 
 
 
@@ -1062,9 +1115,9 @@ will take "foo", "bar" then "baz".
 
 </div>
 
-<div id="outline-container-5_3_5" class="outline-4">
-<h4 id="sec-5_3_5"><span class="section-number-4">5.3.5</span> <code>MAPHASH</code> &mdash; iterate an object (hash) </h4>
-<div class="outline-text-4" id="text-5_3_5">
+<div id="outline-container-5.3.5" class="outline-4">
+<h4 id="sec-5.3.5">5.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </h4>
+<div id="text-5.3.5">
 
 
 <p>
@@ -1077,19 +1130,21 @@ hash that maps user IDs to some user objects (each of them having a
 
 
 
-<pre class="src src-html">$(MAPHASH (uid, obj =&gt; users)
+<pre class="src src-html">
+$(MAPHASH (uid, obj =&gt; users)
   User &lt;<span style="color: #8b2323;">b</span>&gt;<span style="font-weight: bold;">$uid</span>&lt;/<span style="color: #8b2323;">b</span>&gt; has name &lt;<span style="color: #8b2323;">b</span>&gt;<span style="font-weight: bold;">${ obj.getName() }</span>&lt;/<span style="color: #8b2323;">b</span>&gt;&lt;<span style="color: #8b2323;">br</span> /&gt; $)
 </pre>
 
 
 
-</div>
 
 </div>
 
-<div id="outline-container-5_3_6" class="outline-4">
-<h4 id="sec-5_3_6"><span class="section-number-4">5.3.6</span> <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </h4>
-<div class="outline-text-4" id="text-5_3_6">
+</div>
+
+<div id="outline-container-5.3.6" class="outline-4">
+<h4 id="sec-5.3.6">5.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </h4>
+<div id="text-5.3.6">
 
 
 <p>
@@ -1107,11 +1162,13 @@ I'm giving an example just to illustrate the syntax:
 
 
 
-<pre class="example">$(REPEAT (10 =&gt; i)
+<pre class="example">
+$(REPEAT (10 =&gt; i)
   $(WHEN (i &gt; 5) $(BREAK) $)
   $i
 $)
 </pre>
+
 
 
 
@@ -1122,9 +1179,9 @@ The above will print numbers from 1 to 5.
 
 </div>
 
-<div id="outline-container-5_3_7" class="outline-4">
-<h4 id="sec-5_3_7"><span class="section-number-4">5.3.7</span> <code>LET</code> and <code>VAR</code> &mdash; define variables </h4>
-<div class="outline-text-4" id="text-5_3_7">
+<div id="outline-container-5.3.7" class="outline-4">
+<h4 id="sec-5.3.7">5.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </h4>
+<div id="text-5.3.7">
 
 
 <p>
@@ -1133,7 +1190,7 @@ You can define new variables with <code>LET</code> and <code>VAR</code>.  They a
 only available in its block of text.  <code>VAR</code> on the other hand does something
 similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-5_3_9"><code>BLOCK</code> or <code>FUNCTION</code></a> block too<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>.
+could be a <a href="#sec-5.3.9"><code>BLOCK</code> or <code>FUNCTION</code></a> block too<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>.
 </p>
 <p>
 <code>VAR</code> does not accept a text argument, so it ends directly with a closing
@@ -1142,9 +1199,11 @@ paren (no need for <code>$)</code>).  Example:
 
 
 
-<pre class="example">$(VAR ((a =&gt; 10) (b =&gt; 20)))
+<pre class="example">
+$(VAR ((a =&gt; 10) (b =&gt; 20)))
 $a + $b = ${ a + b }
 </pre>
+
 
 
 
@@ -1160,10 +1219,12 @@ rendered.  After the <code>LET</code> block ends, previous values come back to l
 
 
 
-<pre class="example">$(LET ((a =&gt; 10) (b =&gt; 20))
+<pre class="example">
+$(LET ((a =&gt; 10) (b =&gt; 20))
   $a + $b = ${ a + b }
 $)
 </pre>
+
 
 
 
@@ -1174,7 +1235,8 @@ Since <code>LET</code> takes a block of text, it ends with the normal block term
 
 
 
-<pre class="example">$(VAR ((x =&gt; "outside")))
+<pre class="example">
+$(VAR ((x =&gt; "outside")))
 $(LET ((x =&gt; 10))
   $x is 10
   $(LET ((x =&gt; 20))
@@ -1184,6 +1246,7 @@ $(LET ((x =&gt; 10))
 $)
 $x is "outside"
 </pre>
+
 
 
 
@@ -1197,9 +1260,9 @@ unfortunately no other browser has it at the moment.
 
 </div>
 
-<div id="outline-container-5_3_8" class="outline-4">
-<h4 id="sec-5_3_8"><span class="section-number-4">5.3.8</span> <code>WITH</code> &mdash; modify the scope chain </h4>
-<div class="outline-text-4" id="text-5_3_8">
+<div id="outline-container-5.3.8" class="outline-4">
+<h4 id="sec-5.3.8">5.3.8 <code>WITH</code> &mdash; modify the scope chain </h4>
+<div id="text-5.3.8">
 
 
 <p>
@@ -1211,11 +1274,13 @@ contains <code>address</code>, <code>tooltip</code> and <code>text</code>, the f
 
 
 
-<pre class="src src-html">&lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt;
+<pre class="src src-html">
+&lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt;
 
 $(WITH (link)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$tooltip|html"</span>&gt;$text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
 </pre>
+
 
 
 
@@ -1225,10 +1290,12 @@ $(WITH (link)
 
 
 
-<pre class="example">$(WITH ({ foo: 10, bar: 20 })
+<pre class="example">
+$(WITH ({ foo: 10, bar: 20 })
   $foo + $bar = ${ foo + bar }
 $)
 </pre>
+
 
 
 
@@ -1240,9 +1307,9 @@ thus emulating a <code>LET</code> block, but it's less efficient because it uses
 
 </div>
 
-<div id="outline-container-5_3_9" class="outline-4">
-<h4 id="sec-5_3_9"><span class="section-number-4">5.3.9</span> <code>BLOCK</code> and <code>FUNCTION</code> &mdash; define reusable template blocks </h4>
-<div class="outline-text-4" id="text-5_3_9">
+<div id="outline-container-5.3.9" class="outline-4">
+<h4 id="sec-5.3.9">5.3.9 <code>BLOCK</code> and <code>FUNCTION</code> &mdash; define reusable template blocks </h4>
+<div id="text-5.3.9">
 
 
 <p>
@@ -1260,7 +1327,8 @@ block of text that the function should expand into:
 
 
 
-<pre class="src src-html">$(BLOCK display_link(link)
+<pre class="src src-html">
+$(BLOCK display_link(link)
   &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.title|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt;
 $)
 
@@ -1272,6 +1340,7 @@ $(FOREACH (i IN links)
   $( display_link(i) )
 $)
 </pre>
+
 
 
 
@@ -1287,7 +1356,8 @@ Combining <code>BLOCK</code> and <code>LET</code> or <code>WITH</code> we can de
 
 
 
-<pre class="src src-html">$(WITH ({ value: 0 })
+<pre class="src src-html">
+$(WITH ({ value: 0 })
   $(BLOCK counter()
     &lt;<span style="color: #8b2323;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #8b2323;">p</span>&gt; $) $)
 
@@ -1295,6 +1365,7 @@ $( counter() ) -- now it's 1
 $( counter() ) -- now it's 2
 $( counter() ) -- now it's 3
 </pre>
+
 
 
 
@@ -1306,12 +1377,14 @@ to the <code>LET</code> block.  The following won't work:
 
 
 
-<pre class="src src-html">$(LET ((value =&gt; 0))
+<pre class="src src-html">
+$(LET ((value =&gt; 0))
   $(BLOCK counter()
     &lt;<span style="color: #8b2323;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #8b2323;">p</span>&gt; $) $)
 
 $( counter() ) -- error, counter is not defined!
 </pre>
+
 
 
 
@@ -1322,7 +1395,8 @@ It looks like the following:
 
 
 
-<pre class="src src-espresso">(<span style="color: #8b0000;">function</span>(){
+<pre class="src src-espresso">
+(<span style="color: #8b0000;">function</span>(){
     <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">value</span> = 0;
     <span style="color: #8b0000;">function</span> <span style="color: #8b2323;">counter</span>() {
         output(<span style="color: #008b00;">"Counter is "</span> + (++value));
@@ -1334,6 +1408,7 @@ counter(); <span style="color: #00008b;">// </span><span style="color: #00008b;"
 
 
 
+
 <p>
 To do this with a <code>LET</code> block we would have to export the function; we can
 use an outside variable for that:
@@ -1341,7 +1416,8 @@ use an outside variable for that:
 
 
 
-<pre class="src src-html">$(VAR (counter))
+<pre class="src src-html">
+$(VAR (counter))
 $(LET ((value =&gt; 0))
   $( counter = _counter /* export it */ )
   $(BLOCK _counter()
@@ -1352,13 +1428,14 @@ $( counter() ) -- now it works.
 
 
 
-</div>
 
 </div>
 
-<div id="outline-container-5_3_10" class="outline-4">
-<h4 id="sec-5_3_10"><span class="section-number-4">5.3.10</span> <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </h4>
-<div class="outline-text-4" id="text-5_3_10">
+</div>
+
+<div id="outline-container-5.3.10" class="outline-4">
+<h4 id="sec-5.3.10">5.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </h4>
+<div id="text-5.3.10">
 
 
 <p>
@@ -1369,7 +1446,8 @@ to define a wrapper that creates a table we can say:
 
 
 
-<pre class="src src-html"><span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">define our wrapper </span><span style="color: #00008b;">--&gt;</span>
+<pre class="src src-html">
+<span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">define our wrapper </span><span style="color: #00008b;">--&gt;</span>
 $(BLOCK table(cols)
   &lt;<span style="color: #8b2323;">table</span>&gt;
     &lt;<span style="color: #8b2323;">thead</span>&gt;
@@ -1391,6 +1469,7 @@ $)
 
 
 
+
 <p>
 You can note that a wrapper is a normal function defined with <code>BLOCK</code> or
 <code>FUNCTION</code>, and it can take arguments.  To send the arguments with a <code>WRAP</code>
@@ -1407,9 +1486,9 @@ renders the text, and <code>$(CONTENT)</code> simply calls this function.
 
 </div>
 
-<div id="outline-container-5_3_11" class="outline-4">
-<h4 id="sec-5_3_11"><span class="section-number-4">5.3.11</span> Literal JavaScript with <code>$( ... )</code> </h4>
-<div class="outline-text-4" id="text-5_3_11">
+<div id="outline-container-5.3.11" class="outline-4">
+<h4 id="sec-5.3.11">5.3.11 Literal JavaScript with <code>$( ... )</code> </h4>
+<div id="text-5.3.11">
 
 
 <p>
@@ -1426,9 +1505,11 @@ already defined, you can do this:
 
 
 
-<pre class="example">$( myVar = doSomething() )
+<pre class="example">
+$( myVar = doSomething() )
   ^-- note this space.
 </pre>
+
 
 
 
@@ -1441,10 +1522,12 @@ separated with a semicolon:
 
 
 
-<pre class="example">$( foo = "bar";
+<pre class="example">
+$( foo = "bar";
    someSideEffects();
    i = 10 )
 </pre>
+
 
 
 
@@ -1455,8 +1538,8 @@ separated with a semicolon:
 </div>
 
 <div id="outline-container-6" class="outline-2">
-<h2 id="sec-6"><span class="section-number-2">6</span> Correctness </h2>
-<div class="outline-text-2" id="text-6">
+<h2 id="sec-6">6 Correctness </h2>
+<div id="text-6">
 
 
 <p>
@@ -1471,11 +1554,13 @@ For example, a dumb implementation would translate <code>$(FOREACH (link =&gt; l
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = 0; i &lt; links.length; ++i) {
+<pre class="src src-espresso">
+<span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = 0; i &lt; links.length; ++i) {
     <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = links[i];
     <span style="color: #00008b;">// </span><span style="color: #00008b;">... do STUFF
 </span>}
 </pre>
+
 
 
 
@@ -1502,7 +1587,8 @@ sample would suffer from both problems:
 
 
 
-<pre class="example">$(FOREACH (link =&gt; this.getLinksFromServer())
+<pre class="example">
+$(FOREACH (link =&gt; this.getLinksFromServer())
   $(VAR ((i =&gt; link.text.length)))
   $(WHEN (i &gt; 30)
     ... truncate text
@@ -1513,13 +1599,15 @@ $)
 
 
 
+
 <p>
 The resulted code would be:
 </p>
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = 0; i &lt; <span style="color: #cd0000;">this</span>.getLinksFromServer().length; ++i) {
+<pre class="src src-espresso">
+<span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = 0; i &lt; <span style="color: #cd0000;">this</span>.getLinksFromServer().length; ++i) {
   <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = <span style="color: #cd0000;">this</span>.getLinksFromServer()[i];
   <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.text.length;
   <span style="color: #8b0000;">if</span> (i &gt; 30) {
@@ -1528,6 +1616,7 @@ The resulted code would be:
   ...
 }
 </pre>
+
 
 
 
@@ -1543,7 +1632,8 @@ What YAJET actually generates for the above case looks like this:
 
 
 
-<pre class="src src-espresso">(<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">__GSY12</span>){
+<pre class="src src-espresso">
+(<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">__GSY12</span>){
   <span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">__GSY13</span> = __GSY12.length, <span style="color: #8b008b;">__GSY14</span> = 0; __GSY14 &lt; __GSY13; ++__GSY14) {
     <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = __GSY12[__GSY14];
     <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.length;
@@ -1554,6 +1644,7 @@ What YAJET actually generates for the above case looks like this:
   }
 }).call(<span style="color: #cd0000;">this</span>, <span style="color: #cd0000;">this</span>.getLinksFromServer());
 </pre>
+
 
 
 
@@ -1579,16 +1670,16 @@ affect outside variables.
 </div>
 
 <div id="outline-container-7" class="outline-2">
-<h2 id="sec-7"><a name="Known==issues" id="Known==issues"></a><span class="section-number-2">7</span> Known issues </h2>
-<div class="outline-text-2" id="text-7">
+<h2 id="sec-7"><a name="Known==issues" id="Known==issues"></a>7 Known issues </h2>
+<div id="text-7">
 
 
 
 </div>
 
-<div id="outline-container-7_1" class="outline-3">
-<h3 id="sec-7_1"><span class="section-number-3">7.1</span> Literal RegExp-s in JavaScript expressions </h3>
-<div class="outline-text-3" id="text-7_1">
+<div id="outline-container-7.1" class="outline-3">
+<h3 id="sec-7.1">7.1 Literal RegExp-s in JavaScript expressions </h3>
+<div id="text-7.1">
 
 
 <p>
@@ -1602,13 +1693,15 @@ the following should <i>not</i> be a problem:
 
 
 
-<pre class="src src-espresso">$( <span style="color: #8b0000;">if</span> (<span style="color: #008b00;">/(a|b)/</span>.test(<span style="color: #008b00;">"bar"</span>)) {
+<pre class="src src-espresso">
+$( <span style="color: #8b0000;">if</span> (<span style="color: #008b00;">/(a|b)/</span>.test(<span style="color: #008b00;">"bar"</span>)) {
      matches();
    } <span style="color: #8b0000;">else</span> {
      no_match();
    }
  )
 </pre>
+
 
 
 
@@ -1619,8 +1712,10 @@ miss the closing paren.  However, the following will break stuff:
 
 
 
-<pre class="src src-espresso">$( <span style="color: #8b0000;">if</span> (<span style="color: #008b00;">/\)/</span>.test(<span style="color: #008b00;">")"</span>)) { ... } )
+<pre class="src src-espresso">
+$( <span style="color: #8b0000;">if</span> (<span style="color: #008b00;">/\)/</span>.test(<span style="color: #008b00;">")"</span>)) { ... } )
 </pre>
+
 
 
 
@@ -1635,18 +1730,18 @@ well (<code>\x28</code>), and same goes for all the other types of brackets such
 
 </div>
 
-<div id="outline-container-7_2" class="outline-3">
-<h3 id="sec-7_2"><span class="section-number-3">7.2</span> Error reporting is less than ideal </h3>
-<div class="outline-text-3" id="text-7_2">
+<div id="outline-container-7.2" class="outline-3">
+<h3 id="sec-7.2">7.2 Error reporting is less than ideal </h3>
+<div id="text-7.2">
 
 
 </div>
 
 </div>
 
-<div id="outline-container-7_3" class="outline-3">
-<h3 id="sec-7_3"><span class="section-number-3">7.3</span> Whitespace handling </h3>
-<div class="outline-text-3" id="text-7_3">
+<div id="outline-container-7.3" class="outline-3">
+<h3 id="sec-7.3">7.3 Whitespace handling </h3>
+<div id="text-7.3">
 
 
 <p>
@@ -1660,7 +1755,8 @@ example the following:
 
 
 
-<pre class="src src-html">&lt;<span style="color: #8b2323;">p</span>&gt;
+<pre class="src src-html">
+&lt;<span style="color: #8b2323;">p</span>&gt;
 $(IF (true)
   foo
 $(ELSE)
@@ -1671,18 +1767,21 @@ $)
 
 
 
+
 <p>
 results in this output:
 </p>
 
 
 
-<pre class="src src-html">&lt;<span style="color: #8b2323;">p</span>&gt;
+<pre class="src src-html">
+&lt;<span style="color: #8b2323;">p</span>&gt;
 
   foo
 
 &lt;/<span style="color: #8b2323;">p</span>&gt;
 </pre>
+
 
 
 
@@ -1693,7 +1792,8 @@ look better but it's totally unintuitive:
 
 
 
-<pre class="src src-html">&lt;<span style="color: #8b2323;">p</span>&gt;$-
+<pre class="src src-html">
+&lt;<span style="color: #8b2323;">p</span>&gt;$-
 $(IF (true)
   foo$-
 $(ELSE)
@@ -1704,16 +1804,19 @@ $)
 
 
 
+
 <p>
 This outputs better:
 </p>
 
 
 
-<pre class="src src-html">&lt;<span style="color: #8b2323;">p</span>&gt;
+<pre class="src src-html">
+&lt;<span style="color: #8b2323;">p</span>&gt;
   foo
 &lt;/<span style="color: #8b2323;">p</span>&gt;
 </pre>
+
 
 
 
@@ -1742,8 +1845,8 @@ is not too important.
 </div>
 
 <div id="outline-container-8" class="outline-2">
-<h2 id="sec-8"><span class="section-number-2">8</span> How to get help </h2>
-<div class="outline-text-2" id="text-8">
+<h2 id="sec-8">8 How to get help </h2>
+<div id="text-8">
 
 
 <p>
@@ -1754,8 +1857,8 @@ If you have any questions please post them on the <a href="http://groups.google.
 </div>
 
 <div id="outline-container-9" class="outline-2">
-<h2 id="sec-9"><span class="section-number-2">9</span> License </h2>
-<div class="outline-text-2" id="text-9">
+<h2 id="sec-9">9 License </h2>
+<div id="text-9">
 
 
 <p>
@@ -1831,12 +1934,10 @@ completely, but it's useful for exporting an inner function from a
 </p>
 </div>
 </div>
-<div id="postamble">
-<p class="author"> Author: Mihai Bazon
+<div id="postamble"><p class="author"> Author: Mihai Bazon
+<a href="mailto:mishoo@mihai-cn.corp.cnet">&lt;mishoo@mihai-cn.corp.cnet&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-06 08:16:15 CEST</p>
-<p class="creator">HTML generated by org-mode 6.35trans in emacs 23</p>
-</div>
-</div>
-</body>
+<p class="date"> Date: 2010-05-06 22:07:46 CEST</p>
+<p>HTML generated by org-mode 6.21b in emacs 23</p>
+</div></body>
 </html>

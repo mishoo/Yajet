@@ -285,7 +285,7 @@ reader” also allows a few aliases.  Syntactic sugar, baby!  You can also
 use:
 
 - =“=>”=
-- =“;”=
+- =“,”=
 - =“..”=
 - =“;”=
 - =“IN”= (case insensitive, but /must/ be preceded by whitespace)
