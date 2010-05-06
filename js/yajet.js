@@ -524,7 +524,6 @@ function YAJET(yajet_args){
                         ret.code = code;
                         return ret;
                 } catch(ex) {
-                        alert(code);
                         EX_RUNTIME("Bad code: " + code);
                 }
         };
@@ -547,6 +546,19 @@ function YAJET(yajet_args){
                 },
                 downcase: function(v) {
                         return String(v).toLowerCase();
+                },
+                plural: function(n, fmt) {
+                        if (!(fmt instanceof Array)) {
+                                if (arguments.length > 2) {
+                                        fmt = Array.$(arguments, 1);
+                                } else {
+                                        fmt = fmt.split(/\s*\|\s*/);
+                                }
+                        }
+                        fmt = n < fmt.length ? fmt[n] : fmt[fmt.length - 1];
+                        return fmt.replace(/##?/g, function(s){
+			        return s.length == 2 ? "#" : n;
+		        });
                 },
                 trim: trim
         };

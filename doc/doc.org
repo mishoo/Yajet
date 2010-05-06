@@ -100,7 +100,7 @@ following:
 - it compiles the template into a runnable JavaScript function which is
   blazing fast.
 
-- the code is way shorter than the documentation (~550 lines of code, 6K
+- the code is way shorter than the documentation (~600 lines of code, 6K
   minified, 2.5K gzipped) and it's completely self-contained (no
   library requirements, and it should not clash with any library).
 
@@ -570,8 +570,19 @@ Just a last example showing the Perlism:
 $(FOREACH ([ "foo", "bar", "baz" ]) <b>$_</b> $)
 #+END_SRC
 
-will output “<b>foo</b> <b>bar</b> <b>baz</b>”.  The =$_= variable is bound
-to each element.
+will output “<b>foo</b> <b>bar</b> <b>baz</b>”.  The =$_= variable is
+bound to each element.  Note that because YAJET is doing [[Correctness][The Right
+Thing]], the following will work as expected:
+
+#+BEGIN_EXAMPLE
+$(MAP ([ "foo", "bar", "baz" ])
+  $(MAP ([ 1, 2, 3 ])
+    inside: $_ $)
+  outside: $_ $)
+#+END_EXAMPLE
+
+When “inside”, =$_= will take the values from 1 to 3; “outside” it
+will take "foo", "bar" then "baz".
 
 *** =MAPHASH= --- iterate an object (hash)
 
@@ -615,7 +626,11 @@ only available in its block of text.  =VAR= on the other hand does something
 similar to the standard JavaScript =var= keyword.  Note that they are /still
 not global variables/---they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a [[reusable template blocks][=BLOCK= or =FUNCTION=]] block too.
+could be a [[reusable template blocks][=BLOCK= or =FUNCTION=]] block too[fn:var].
+
+[fn:var] =VAR= is only marginally useful.  I would remove it
+completely, but it's useful for exporting an inner function from a
+=LET= block.
 
 =VAR= does not accept a text argument, so it ends directly with a closing
 paren (no need for =$)=).  Example:
@@ -802,6 +817,33 @@ renders the text, and =$(CONTENT)= simply calls this function.
 
 # <<Correctness>>
 
+*** Literal JavaScript with =$( ... )=
+
+Finally, you can include literal JavaScript code if you need to (but
+you /shouldn't/ need this) by placing a space after the open bracket.
+The code inside =$( ... )= must be valid JavaScript and by this I mean
+properly balanced (you cannot open a paren in such a block and close
+it in another).
+
+For example, if you need to change the value of some variable which is
+already defined, you can do this:
+
+#+BEGIN_EXAMPLE
+$( myVar = doSomething() )
+  ^-- note this space.
+#+END_EXAMPLE
+
+Unlike a =${ ... }= block, which would allow the above code as well,
+this one won't place the result into the template output.  Also,
+unlike a =${ ... }= block, this one allows multiple statements
+separated with a semicolon:
+
+#+BEGIN_EXAMPLE
+$( foo = "bar";
+   someSideEffects();
+   i = 10 )
+#+END_EXAMPLE
+
 * Correctness
 
 YAJET aims to do The Right Thing.  If you've ever written Lisp or C macros,
@@ -845,12 +887,12 @@ The resulted code would be:
 
 #+BEGIN_SRC espresso
 for (var i = 0; i < this.getLinksFromServer().length; ++i) {
-    var link = this.getLinksFromServer()[i];
-    var i = link.text.length;
-    if (i > 30) {
-        ... truncate text
-    }
-    ...
+  var link = this.getLinksFromServer()[i];
+  var i = link.text.length;
+  if (i > 30) {
+    ... truncate text
+  }
+  ...
 }
 #+END_SRC
 
@@ -859,25 +901,28 @@ step, and also that the loop would be stopped arbitrarily when we encounter
 a link whose text has more characters than the number of links.  That would
 break in unexpected and hard to debug ways.
 
-YAJET avoids this problem by creating temporary variables with (hopefully)
-unique names, so that template writes don't have to worry about it.  The
-actual generated code is more like this:
+What YAJET actually generates for the above case looks like this:
 
 #+BEGIN_SRC espresso
-var __GSY12 = this.getLinksFromServer();
-for (var __GSY13 = 0; __GSY13 < __GSY12.length; ++__GSY13) {
-    var link = __GSY12[__GSY13];
-    var i = link.text.length;
+(function(__GSY12){
+  for (var __GSY13 = __GSY12.length, __GSY14 = 0; __GSY14 < __GSY13; ++__GSY14) {
+    var link = __GSY12[__GSY14];
+    var i = link.length;
     if (i > 30) {
-        ... truncate text
+      ... truncate text
     }
     ...
-}
+  }
+}).call(this, this.getLinksFromServer());
 #+END_SRC
 
-The variables that are created get the prefix =__GSY= and a number which is
-unique per compilation, so you should be safe as long as you don't use the
-=__GSY= prefix yourself.  Hope you don't. :-)
+The variables that aren't explicitly named in the template get names
+with the prefix =__GSY= and a number which is unique per compilation,
+so you should be safe as long as you don't use the =__GSY= prefix
+yourself.  Hope you don't. :-)
+
+Also, the loop block is embedded in a function, so that it doesn't
+affect outside variables.
 
 
 

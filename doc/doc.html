@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Emplate Tengine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-05 20:01:31 CEST"/>
+<meta name="generated" content="2010-05-06 08:16:15 CEST"/>
 <meta name="author" content="Mihai Bazon"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -108,6 +108,7 @@ lang="en" xml:lang="en">
 <li><a href="#sec-5_3_8">5.3.8 <code>WITH</code> &mdash; modify the scope chain </a></li>
 <li><a href="#sec-5_3_9">5.3.9 <code>BLOCK</code> and <code>FUNCTION</code> &mdash; define reusable template blocks </a></li>
 <li><a href="#sec-5_3_10">5.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </a></li>
+<li><a href="#sec-5_3_11">5.3.11 Literal JavaScript with <code>$( ... )</code> </a></li>
 </ul></li>
 </ul>
 </li>
@@ -276,7 +277,7 @@ blazing fast.
 
 </li>
 <li>
-the code is way shorter than the documentation (~550 lines of code, 6K
+the code is way shorter than the documentation (~600 lines of code, 6K
 minified, 2.5K gzipped) and it's completely self-contained (no
 library requirements, and it should not clash with any library).
 
@@ -1039,8 +1040,23 @@ Just a last example showing the Perlism:
 
 
 <p>
-will output “&lt;b&gt;foo&lt;/b&gt; &lt;b&gt;bar&lt;/b&gt; &lt;b&gt;baz&lt;/b&gt;”.  The <code>$_</code> variable is bound
-to each element.
+will output “&lt;b&gt;foo&lt;/b&gt; &lt;b&gt;bar&lt;/b&gt; &lt;b&gt;baz&lt;/b&gt;”.  The <code>$_</code> variable is
+bound to each element.  Note that because YAJET is doing <a href="#Correctness">The Right Thing</a>, the following will work as expected:
+</p>
+
+
+
+<pre class="example">$(MAP ([ "foo", "bar", "baz" ])
+  $(MAP ([ 1, 2, 3 ])
+    inside: $_ $)
+  outside: $_ $)
+</pre>
+
+
+
+<p>
+When “inside”, <code>$_</code> will take the values from 1 to 3; “outside” it
+will take "foo", "bar" then "baz".
 </p>
 </div>
 
@@ -1117,7 +1133,7 @@ You can define new variables with <code>LET</code> and <code>VAR</code>.  They a
 only available in its block of text.  <code>VAR</code> on the other hand does something
 similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-5_3_9"><code>BLOCK</code> or <code>FUNCTION</code></a> block too.
+could be a <a href="#sec-5_3_9"><code>BLOCK</code> or <code>FUNCTION</code></a> block too<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>.
 </p>
 <p>
 <code>VAR</code> does not accept a text argument, so it ends directly with a closing
@@ -1388,6 +1404,51 @@ renders the text, and <code>$(CONTENT)</code> simply calls this function.
 <a name="Correctness" id="Correctness"></a>
 </p>
 </div>
+
+</div>
+
+<div id="outline-container-5_3_11" class="outline-4">
+<h4 id="sec-5_3_11"><span class="section-number-4">5.3.11</span> Literal JavaScript with <code>$( ... )</code> </h4>
+<div class="outline-text-4" id="text-5_3_11">
+
+
+<p>
+Finally, you can include literal JavaScript code if you need to (but
+you <i>shouldn't</i> need this) by placing a space after the open bracket.
+The code inside <code>$( ... )</code> must be valid JavaScript and by this I mean
+properly balanced (you cannot open a paren in such a block and close
+it in another).
+</p>
+<p>
+For example, if you need to change the value of some variable which is
+already defined, you can do this:
+</p>
+
+
+
+<pre class="example">$( myVar = doSomething() )
+  ^-- note this space.
+</pre>
+
+
+
+<p>
+Unlike a <code>${ ... }</code> block, which would allow the above code as well,
+this one won't place the result into the template output.  Also,
+unlike a <code>${ ... }</code> block, this one allows multiple statements
+separated with a semicolon:
+</p>
+
+
+
+<pre class="example">$( foo = "bar";
+   someSideEffects();
+   i = 10 )
+</pre>
+
+
+
+</div>
 </div>
 </div>
 
@@ -1459,12 +1520,12 @@ The resulted code would be:
 
 
 <pre class="src src-espresso"><span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = 0; i &lt; <span style="color: #cd0000;">this</span>.getLinksFromServer().length; ++i) {
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = <span style="color: #cd0000;">this</span>.getLinksFromServer()[i];
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.text.length;
-    <span style="color: #8b0000;">if</span> (i &gt; 30) {
-        ... truncate text
-    }
-    ...
+  <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = <span style="color: #cd0000;">this</span>.getLinksFromServer()[i];
+  <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.text.length;
+  <span style="color: #8b0000;">if</span> (i &gt; 30) {
+    ... truncate text
+  }
+  ...
 }
 </pre>
 
@@ -1477,30 +1538,34 @@ a link whose text has more characters than the number of links.  That would
 break in unexpected and hard to debug ways.
 </p>
 <p>
-YAJET avoids this problem by creating temporary variables with (hopefully)
-unique names, so that template writes don't have to worry about it.  The
-actual generated code is more like this:
+What YAJET actually generates for the above case looks like this:
 </p>
 
 
 
-<pre class="src src-espresso"><span style="color: #8b0000;">var</span> <span style="color: #8b008b;">__GSY12</span> = <span style="color: #cd0000;">this</span>.getLinksFromServer();
-<span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">__GSY13</span> = 0; __GSY13 &lt; __GSY12.length; ++__GSY13) {
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = __GSY12[__GSY13];
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.text.length;
+<pre class="src src-espresso">(<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">__GSY12</span>){
+  <span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">__GSY13</span> = __GSY12.length, <span style="color: #8b008b;">__GSY14</span> = 0; __GSY14 &lt; __GSY13; ++__GSY14) {
+    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = __GSY12[__GSY14];
+    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.length;
     <span style="color: #8b0000;">if</span> (i &gt; 30) {
-        ... truncate text
+      ... truncate text
     }
     ...
-}
+  }
+}).call(<span style="color: #cd0000;">this</span>, <span style="color: #cd0000;">this</span>.getLinksFromServer());
 </pre>
 
 
 
 <p>
-The variables that are created get the prefix <code>__GSY</code> and a number which is
-unique per compilation, so you should be safe as long as you don't use the
-<code>__GSY</code> prefix yourself.  Hope you don't. :-)
+The variables that aren't explicitly named in the template get names
+with the prefix <code>__GSY</code> and a number which is unique per compilation,
+so you should be safe as long as you don't use the <code>__GSY</code> prefix
+yourself.  Hope you don't. :-)
+</p>
+<p>
+Also, the loop block is embedded in a function, so that it doesn't
+affect outside variables.
 </p>
 
 
@@ -1736,6 +1801,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
+
 </div>
 </div>
 <div id="footnotes">
@@ -1759,12 +1825,16 @@ I guess we truly live in a “worse is better” world, but I'm still trying to 
 s&hellip;l&hellip;o&hellip;w&hellip; &ndash; so, while this makes for a nice syntax, you should not
 use it where speed is critical.
 </p>
+<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
+completely, but it's useful for exporting an inner function from a
+<code>LET</code> block.
+</p>
 </div>
 </div>
 <div id="postamble">
 <p class="author"> Author: Mihai Bazon
 </p>
-<p class="date"> Date: 2010-05-05 20:01:31 CEST</p>
+<p class="date"> Date: 2010-05-06 08:16:15 CEST</p>
 <p class="creator">HTML generated by org-mode 6.35trans in emacs 23</p>
 </div>
 </div>

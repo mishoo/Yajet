@@ -5,3 +5,12 @@ $(MAP ([ 1, 2, 3 ]) $_ $)
 $(MAP (key, val => [ "foo", "bar", "baz" ]) $key = $val $)
 
 $(MAPHASH (key, val => { foo: "1", bar: "2" }) $key = $val $)
+
+$(REPEAT (0..4 => i) ${ i => plural("No items|One item|Two items|# items") } $)
+
+$(MAP ([ "foo", "bar", "baz" ])
+  $(MAP ([ 1, 2, 3 ])
+    inside: $_ $)
+  outside: $_ $)
+
+$(FOREACH ([{ prop: "foo" }, { prop: "bar" }, { prop: "baz" }]) $prop $)
