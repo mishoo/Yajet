@@ -744,8 +744,8 @@ thus emulating a =LET= block, but it's less efficient because it uses the
 *** =BLOCK= --- define reusable template blocks
 
 A =BLOCK= doesn't immediately print anything into the template output;
-instead it defines a function that prints its block of text when it's
-called.
+instead it defines a function that returns its processed block of
+text.
 
 The syntax is straightforward.  It expects a name for the function,
 followed by a list of arguments in parens (if there are no arguments,
@@ -758,18 +758,16 @@ $(BLOCK display_link(link)
 $)
 
 <!-- call it literally -->
-$( display_link({ address: "/", title: "Home page", text: "Home" }) )
+${ display_link({ address: "/", title: "Home page", text: "Home" }) }
 
 <!-- or call it for an object -->
 $(FOREACH (i IN links)
-  $( display_link(i) )
+  ${ display_link(i) }
 $)
 #+END_SRC
 
-As you see, using =BLOCK= you can split your template into small
-components.  Instead of having a big =FOREACH= loop that outputs a lot
-of stuff, we can separate logical parts in blocks and then just call
-them, so the loop itself becomes small.
+Note that the call to =display_link= is inside a =${...}= block, so
+that the returned value gets inserted into the output.
 
 Combining =BLOCK= and =LET= or =WITH= we can define closures:
 
@@ -778,9 +776,9 @@ $(WITH ({ value: 0 })
   $(BLOCK counter()
     <p>Counter is ${ ++value }</p> $) $)
 
-$( counter() ) -- now it's 1
-$( counter() ) -- now it's 2
-$( counter() ) -- now it's 3
+${ counter() } -- now it's 1
+${ counter() } -- now it's 2
+${ counter() } -- now it's 3
 #+END_SRC
 
 Doing the above with =LET= is a bit more tricky because =LET= creates its
@@ -792,7 +790,7 @@ $(LET ((value => 0))
   $(BLOCK counter()
     <p>Counter is ${ ++value }</p> $) $)
 
-$( counter() ) -- error, counter is not defined!
+${ counter() } -- error, counter is not defined!
 #+END_SRC
 
 It's easy to see why if you see the code that gets generated for the above.
@@ -806,7 +804,7 @@ It looks like the following:
     };
 })();
 
-counter(); // but there's no free lunch
+output( counter() ); // but there's no free lunch
 #+END_SRC
 
 To do this with a =LET= block we would have to export the function; we can
@@ -819,9 +817,10 @@ $(LET ((value => 0))
   $(BLOCK _counter()
     <p>Counter is ${ ++value }</p> $) $)
 
-$( counter() ) -- now it works.
+${ counter() } -- now it works.
 #+END_SRC
 
+# <<WRAP>>
 *** =WRAP=, =CONTENT= --- call a wrapper with an additional block of text
 
 =BLOCK= can be used to define wrappers.  A wrapper is a function that
@@ -858,13 +857,67 @@ which is expanded by =$(CONTENT)=.  For now this argument is a
 function that renders the text, and =$(CONTENT)= simply calls this
 function.
 
+*** =EXPORT= --- define a BLOCK that can be used in another template
+
+=EXPORT= is like =BLOCK=, but the function that it creates is
+“exported” and can be called from different templates.  The assumption
+for this to work is that all templates are compiled with the same
+YAJET object instance (since it will maintain some runtime environment
+for this case).
+
+Here's a quick example:
+
+#+BEGIN_SRC espresso
+var yajet = new YAJET();
+yajet.compile("$(EXPORT foo(arg) foo got $arg $)");
+var t1 = yajet.compile("$(IMPORT (foo)) ${ foo('bar') }");
+var t2 = yajet.compile("$(PROCESS foo('baz'))");
+alert(t1()); // displays "foo got bar"
+alert(t2()); // displays "foo got baz"
+#+END_SRC
+
+You can see above two ways of calling an exported block.  One is by
+calling =$(IMPORT (block_name))= first, which will actually make it
+available as a local function, which you can use as if it were defined
+with =BLOCK=.  The second way is using =$(PROCESS block_name())=.
+=PROCESS= expects that the name of the block that you type there is a
+function created with =EXPORT= and compiled /before/ the call to
+=PROCESS=.
+
+It might be important to understand that compile() actually runs your
+template once when it contains =EXPORT=-ed functions, so that they get
+into the YAJET instance.  This shouldn't be a problem---in practice,
+you will have templates that contain /only/ export blocks, where you
+will put utilities.  For example, above we don't store the result of
+yajet.compile for the first template, since all it does is just export
+the function.  The exported function gets into the YAJET object
+instance.
+
+Some notes:
+
+ - /the order/ in which you compile the templates is not important.
+   However, when you /execute/ a template you must make sure that any
+   dependencies were /already compiled/.
+
+ - there is no namespace support, so make sure that you don't export a
+   block with the same name in two templates.  Typically, the second
+   will overwrite the first (depending on the compilation order), but
+   you get no warning.
+
+ - within the template where they are defined, you can use exported
+   blocks as if they were local.  They can call each other if needed,
+   they can $(WRAP) each other, etc.
+
+ - if you need to call a block defined in another template as a
+   WRAPper, you need to $(IMPORT) it first.  Otherwise it's the same
+   as described in [[WRAP]].
+
 *** Literal JavaScript with =$( ... )=
 
-Finally, you can include literal JavaScript code if you need to (but
-you /shouldn't/ need this) by placing a space after the open bracket.
-The code inside =$( ... )= must be valid JavaScript and by this I mean
-properly balanced (you cannot open a paren in such a block and close
-it in another).
+Finally, you can include literal JavaScript code, if needed, by
+placing a space after the open bracket.  The code inside =$( ... )=
+must be valid JavaScript and by this I mean properly balanced (you
+cannot open a paren in such a block and close it in another).
 
 For example, if you need to change the value of some variable which is
 already defined, you can do this:

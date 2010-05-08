@@ -3,7 +3,7 @@ $(EXPORT exports_test1(data)
 $)$-
 
 $(EXPORT exports_test2(args, more)
-  *** FROM $this.template we got $args:
+  ${ exports_test1(this.template) }
   $(MAP (val => more.data)
     <li>$val</li> $)$)$-
 
@@ -22,3 +22,22 @@ $(EXPORT exports_table(cols)
       $(CONTENT)
     </tbody>
   </table> $)
+
+$(LET ((level1 => 0)
+       (level2 => 0)
+       (level3 => 0))
+
+  $(EXPORT newpage() $(
+    // reset counters
+    level1 = 0;
+    level2 = 0;
+    level3 = 0;
+  )$)
+
+  $(EXPORT section(label) <h1>${++level1} $label</h1> $-
+    $( level2 = 0; level3 = 0 ) $)
+
+  $(EXPORT subsection(label) <h2>${level1}.${++level2} $label</h2> $-
+    $( level3 = 0 ) $)
+
+  $(EXPORT subsubsection(label) <h2>${level1}.${level2}.${++level3} $label</h2> $)$)

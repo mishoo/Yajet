@@ -20,13 +20,14 @@ var yajet = new YAJET({
 });
 
 var TESTS = [
-        "basic.txt",
-        "vars.txt",
-        "map.txt",
-        "loop.txt",
-        "cond.txt",
+        // "basic.txt",
+        // "vars.txt",
+        // "map.txt",
+        // "loop.txt",
+        // "cond.txt",
+        // "blocks.txt",
         "exports.txt",
-        "blocks.txt"
+        "imports.txt"
 ];
 
 for (var i = 0; i < TESTS.length; ++i) {

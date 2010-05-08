@@ -76,11 +76,16 @@ function YAJET(yajet_args){
 
         this.X_CONT = {};
         this.X_BREK = {};
+        this.X_IMPORT = {};
 
-        var WRAP_OPEN = ( "var __BUF = '', VUT = OUT;" +
+        var MAIN_OPEN = "var __EXPORTS = {};";
+
+        var MAIN_CLOSE = "return (this === __YAJET.X_IMPORT) ? __EXPORTS : __BUF;";
+
+        var FUNC_OPEN = ( "var __BUF = '', VUT = OUT;" +
                           "function OUT(str) { if (str != null) __BUF += str };" );
 
-        var WRAP_CLOSE = "return __BUF";
+        var FUNC_CLOSE = "return __BUF";
 
         var EX_LOOP_HANDLERS = ( "} catch(ex) { " +
                                  "if (ex === __YAJET.X_CONT) continue;" +
@@ -88,13 +93,19 @@ function YAJET(yajet_args){
                                  "throw ex;" +
                                  "}" );
 
+        function MAKE_IMPORT(imp) {
+                imp = trim(imp);
+                return "function " + imp + "(){" +
+                        "return __YAJET.process(" + to_js_string(imp) + ", this, arguments)}";
+        };
+
         function compile(THE_STRING) {
                 var THE_CODE = [],
-                    THE_EXPORTS = [],
                     THE_CLOSING = [],
                     THE_INDEX = 0,
                     THE_LENGTH = THE_STRING.length,
-                    THE_TEXT = "";
+                    THE_TEXT = "",
+                    HAS_EXPORTS = [];
 
                 parse();
                 if (yajet_args.with_scope) {
@@ -102,17 +113,18 @@ function YAJET(yajet_args){
                         THE_CODE.push("}");
                 }
 
-                // compile exported templates
-                map(THE_EXPORTS, function(exp){
-                        TEMPLATES[exp.name] = exp;
-                        var args = exp.args;
-                        args.unshift("__YAJET");
-                        args.push(WRAP_OPEN + exp.code.join("\n") + WRAP_CLOSE);
-                        exp.func = Function.apply(Function, args); // I wonder if this works in IE :-/
-                });
+                if (HAS_EXPORTS.length > 0) {
+                        THE_CODE.unshift("var " + HAS_EXPORTS.join(", ") + ";");
+                }
 
-                // and the main one
-                return makeClosure.call(this, THE_CODE.join("\n"));
+                var func = makeClosure.call(this, THE_CODE.join("\n"));
+                if (HAS_EXPORTS.length > 0) {
+                        var exports = func(this.X_IMPORT);
+                        for (var i in exports)
+                                if (exports.hasOwnProperty(i))
+                                        TEMPLATES[i] = exports[i];
+                }
+                return func;
 
                 function peek() {
                         return THE_STRING.charAt(THE_INDEX);
@@ -441,38 +453,21 @@ function YAJET(yajet_args){
                         else if (skip(/^\(block\b/i)) {
                                 var name = trim(read_simple_token());
                                 var args = trim(read_balanced());
-                                block_open("function " + name + "(" + args + ") {" + WRAP_OPEN,
-                                           WRAP_CLOSE + "}");
+                                block_open("function " + name + "(" + args + ") {" + FUNC_OPEN,
+                                           FUNC_CLOSE + "}");
                         }
                         else if (skip(/^\(export\b/i)) {
-                                skip_ws();
                                 var name = trim(read_simple_token());
-                                var args = read_balanced(true);
-                                var exp = {
-                                        args: args,
-                                        name: name,
-                                        code: []
-                                };
-                                THE_EXPORTS.push(exp);
-                                var save = THE_CODE;
-                                THE_CODE = exp.code;
-                                block_open(
-                                        // open nothing
-                                        "",
-                                        // restore the context on close
-                                        function() {
-                                                THE_CODE = save;
-                                        }
-                                );
+                                var args = trim(read_balanced());
+                                block_open(name + " = __EXPORTS[" + to_js_string(name) + "] = function(" + args + ") {" + FUNC_OPEN,
+                                           FUNC_CLOSE + "}; ");
+                                HAS_EXPORTS.push(name);
                         }
                         else if (skip(/^\(import\b/i)) {
                                 var imp = read_balanced(true);
                                 skip_ws();
                                 assert_skip(")");
-                                out(map(imp, function(imp){
-                                        return "function " + imp + "(){" +
-                                                "return __YAJET.process(" + to_js_string(imp) + ", this, arguments)}";
-                                }).join(";\n") + ";");
+                                out(map(imp, MAKE_IMPORT).join(";\n") + ";");
                         }
                         else if (skip(/^\(process\b/i)) {
                                 var name = trim(read_simple_token());
@@ -548,7 +543,7 @@ function YAJET(yajet_args){
 
         function makeClosure(code) {
                 try {
-                        code = ( WRAP_OPEN + code + WRAP_CLOSE );
+                        code = ( MAIN_OPEN + FUNC_OPEN + code + MAIN_CLOSE );
                         var self = this,
                             compiled = new Function("__YAJET", code);
                         function ret(data) { return compiled.call(data, self) };
@@ -612,10 +607,10 @@ function YAJET(yajet_args){
         };
 
         this.process = function(tmpl, obj, args) {
-                var exp = TEMPLATES[tmpl];
-                args = Array$(args);
-                args.unshift(this);
-                return exp.func.apply(obj, args);
+                var func = TEMPLATES[tmpl];
+                if (!func)
+                        EX_RUNTIME("No exported function: " + tmpl);
+                return func.apply(obj, args);
         };
 
         /* -----[ utils ]----- */
