@@ -148,8 +148,14 @@ function YAJET(yajet_args){
                         THE_TEXT = "";
                 };
 
-                function skip_ws() {
-                        skip(/^\s+/);
+                function skip_ws(noComments) {
+                        var skipped = false;
+                        while (skip(/^\s+/) ||
+                               (!noComments && ( skip(/^\x2f\x2f.*?(\n|$)/) ||
+                                                 skip(/^\x2f\*(.|\n)*?\*\x2f/) ||
+                                                 skip(/^<!--(.|\n)*?-->/))))
+                                skipped = true;
+                        return skipped;
                 };
 
                 function assert(ch) {
@@ -160,6 +166,7 @@ function YAJET(yajet_args){
                 };
 
                 function assert_skip(ch) {
+                        skip_ws();
                         THE_INDEX += assert(ch).length;
                 };
 
@@ -238,31 +245,12 @@ function YAJET(yajet_args){
                                                 ret.push(expr);
                                                 expr = "";
                                         }
+                                        else if (skip_ws()) {
+                                                expr += " ";
+                                        }
                                         else {
-                                                // skip comments
-                                                if (looking_at("//")) {
-                                                        var pos = THE_STRING.indexOf("\n", THE_INDEX + 2);
-                                                        if (pos == -1)
-                                                                // no newline at EOF
-                                                                pos = THE_LENGTH;
-                                                        THE_INDEX = pos + 1;
-                                                }
-                                                else if (looking_at("/*")) {
-                                                        var pos = THE_STRING.indexOf("*/", THE_INDEX + 2);
-                                                        if (pos == -1)
-                                                                EX_PARSE("Unfinished comment at " + rest());
-                                                        THE_INDEX = pos + 2;
-                                                }
-                                                else if (looking_at("<!--")) {
-                                                        var pos = THE_STRING.indexOf("-->", THE_INDEX + 4);
-                                                        if (pos == -1)
-                                                                EX_PARSE("Unfinished comment at " + rest());
-                                                        THE_INDEX = pos + 3;
-                                                }
-                                                else {
-                                                        ++THE_INDEX;
-                                                        expr += ch;
-                                                }
+                                                ++THE_INDEX;
+                                                expr += ch;
                                         }
                                 }
                         }
@@ -290,6 +278,7 @@ function YAJET(yajet_args){
                 function read_string() {
                         var begc = peek();
                         if (begc == "'" || begc == '"') {
+                                var start = THE_INDEX;
                                 var esc = false, data = "";
                                 do {
                                         ++THE_INDEX;
@@ -308,12 +297,11 @@ function YAJET(yajet_args){
                                         data += ch;
                                 }
                                 while (THE_INDEX < THE_LENGTH);
-                                EX_PARSE("Unterminated string");
+                                EX_PARSE("Unterminated string at: " + THE_STRING.substr(start));
                         }
                 };
 
                 function read_simple_token() {
-                        skip_ws();
                         var token = "";
                         while (true) {
                                 while (looking_at(/^[a-z0-9_$]/i))
@@ -329,7 +317,6 @@ function YAJET(yajet_args){
                 };
 
                 function read_valist() {
-                        skip_ws();
                         var bindings = [];
                         assert_skip("(");
                         while (THE_INDEX < THE_LENGTH) {
@@ -354,7 +341,7 @@ function YAJET(yajet_args){
                                 out("VUT($_);"); // perlism
                         }
                         else if (skip("-")) {
-                                skip_ws();
+                                skip_ws(true);
                         }
                         else if (skip(/^\((if|when)\b/i)) {
                                 block_open("if (" + read_balanced() + ") {");
@@ -379,9 +366,8 @@ function YAJET(yajet_args){
                                 out("} else {"); // shortcut, no need for block_close / block_open here
                         }
                         else if (skip(/^\(elsif\b/i)) {
-                                skip_ws();
                                 out("} else if (" + read_balanced() + ") {"); // again
-                                skip(")");
+                                assert_skip(")");
                         }
                         else if (skip(/^\(maphash\b/i)) {
                                 var args = read_balanced(true);
@@ -452,20 +438,21 @@ function YAJET(yajet_args){
                         }
                         else if (skip(/^\(var\b/i)) {
                                 read_valist();
-                                skip_ws();
                                 assert_skip(")");
                         }
                         else if (skip(/^\(with\b/i)) {
                                 block_open("with (" + read_balanced() + ") {");
                         }
                         else if (skip(/^\(block\b/i)) {
-                                var name = trim(read_simple_token());
+                                skip_ws();
+                                var name = read_simple_token();
                                 var args = trim(read_balanced());
                                 block_open("function " + name + "(" + args + ") {" + FUNC_OPEN,
                                            FUNC_CLOSE + "}");
                         }
                         else if (skip(/^\(export\b/i)) {
-                                var name = trim(read_simple_token());
+                                skip_ws();
+                                var name = read_simple_token();
                                 var args = trim(read_balanced());
                                 block_open(name + " = __EXPORTS[" + to_js_string(name) + "] = function(" + args + ") {" + FUNC_OPEN,
                                            FUNC_CLOSE + "}; ");
@@ -473,19 +460,19 @@ function YAJET(yajet_args){
                         }
                         else if (skip(/^\(import\b/i)) {
                                 var imp = read_balanced(true);
-                                skip_ws();
                                 assert_skip(")");
                                 out(map(imp, MAKE_IMPORT).join(";\n") + ";");
                         }
                         else if (skip(/^\(process\b/i)) {
-                                var name = trim(read_simple_token());
-                                var args = read_balanced();
                                 skip_ws();
+                                var name = read_simple_token();
+                                var args = read_balanced();
                                 assert_skip(")");
                                 out("VUT(__YAJET.process(" + to_js_string(name) + ", this, [" + args + "]));");
                         }
                         else if (skip(/^\(wrap\b/i)) {
-                                var name = trim(read_simple_token());
+                                skip_ws();
+                                var name = read_simple_token();
                                 var args = trim(read_balanced());
                                 if (args)
                                         args += ", ";
@@ -527,7 +514,8 @@ function YAJET(yajet_args){
                                 }
                         }
                         else {
-                                var v = trim(read_simple_token()).split(/\s*\|\s*/);
+                                skip_ws();
+                                var v = read_simple_token().split(/\s*\|\s*/);
                                 var val = v.shift();
                                 while (v.length > 0) {
                                         val = "__YAJET.filter(" + to_js_string(v.shift()) + ", " + val + ")";
@@ -538,7 +526,7 @@ function YAJET(yajet_args){
         };
 
         function to_js_string(str) {
-                return '"' + str.replace(/\x5c/g, "\\\\").replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\x22/g, "\\\"") + '"';
+                return '"' + str.replace(/\x5c/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/\t/g, "\\t").replace(/\x22/g, "\\\"") + '"';
         };
 
         function EX_PARSE(error) {

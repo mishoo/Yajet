@@ -91,7 +91,7 @@ Other than the boring variable interpolation, we have the following:
 - variable definition (=LET=, =VAR= and =WITH=).  =LET= and =WITH= introduce
   new lexical scopes.
 
-- components (=BLOCK= and =TEMPLATE=).  Useful to declare blocks that
+- components (=BLOCK= and =EXPORT=).  Useful to declare blocks that
   can be called, multiple times, as a function.
 
 - components can be called using =WRAP=.  They receive some content and are
@@ -370,12 +370,12 @@ ${ if (link != null) { }
 ${ } }
 #+END_SRC
 
-I emphasize that the lack of support for partial expressions is a /feature/,
-not a limitation.  This will never be “fixed”.  To support constructs like
-the above but without encouraging poorly written templates that start a
-block on line 10 and end it on line 1000, we have a few special processing
-directives.  Let's call these the =$(BAR ... $)= construct.  To start with,
-here is how you would write the above code:
+I emphasize that the lack of support for partial expressions is a
+/feature/, not a limitation.  This will never be “fixed”.  To support
+constructs like the above but without encouraging poorly written
+templates we have a few special processing directives.  Let's call
+these the =$(BAR ... $)= construct.  To start with, here is how you
+would write the above code:
 
 #+BEGIN_SRC html
 $(IF (link != null)
@@ -383,13 +383,12 @@ $(IF (link != null)
 $)
 #+END_SRC
 
-Note that you still can start a block on one line and end it on another, but
-the style is a bit different.  Instead of inserting arbitrary code
-unconditionally, we simply end a known construct.  The condition that you
-pass to WHEN must be fully valid JavaScript (you cannot pass a partial
-expression there) and, if your editor does a good job about matching parens,
-then you can quickly see where the block begins/ends by moving the cursor to
-the parens.  I prefer this style.
+Instead of inserting arbitrary code unconditionally, we simply end a
+known construct.  The condition that you pass to WHEN must be fully
+valid JavaScript (you cannot pass a partial expression there) and, if
+your editor does a good job about matching parens, then you can
+quickly see where the block begins/ends by moving the cursor to the
+parens.  I prefer this style.
 
 Note that the processing instructions are not case-sensitive.  I prefer to
 use UPPERCASE for them so that they stand out visually.
@@ -677,7 +676,7 @@ only available in its block of text.  =VAR= on the other hand does something
 similar to the standard JavaScript =var= keyword.  Note that they are /still
 not global variables/---they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a [[reusable template blocks][=BLOCK= or =TEMPLATE=]] block too[fn:var].
+could be a [[reusable template blocks][=BLOCK= or =EXPORT=]] block too[fn:var].
 
 [fn:var] =VAR= is only marginally useful.  I would remove it
 completely, but it's useful for exporting an inner function from a

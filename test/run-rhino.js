@@ -20,12 +20,12 @@ var yajet = new YAJET({
 });
 
 var TESTS = [
-        // "basic.txt",
-        // "vars.txt",
-        // "map.txt",
-        // "loop.txt",
-        // "cond.txt",
-        // "blocks.txt",
+        "basic.txt",
+        "vars.txt",
+        "map.txt",
+        "loop.txt",
+        "cond.txt",
+        "blocks.txt",
         "exports.txt",
         "imports.txt"
 ];

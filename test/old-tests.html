@@ -48,13 +48,6 @@ $)
           <b>Wrapped $i time</b>
         $)$)
 
-$(BLOCK heading() <h1>$(CONTENT)</h1> $)
-$(WITH ({ count: 0 })
-  $(BLOCK numbered_heading(text)
-    $(WRAP heading() ${++count}. $text $) $) $)
-
-$( numbered_heading("Foo") )
-$( numbered_heading("Bar") )
 
       <div>${ display_sum(10, 20) }</div>
 
@@ -68,16 +61,6 @@ $( numbered_heading("Bar") )
       ${<!-- another one -->}
 
       Literal $$.
-
-      <!-- closure :-p -->
-      $(WITH ({ c : 0 })$-
-        $(BLOCK counter()$-
-          <b>Counter is: ${++c}</b>$-
-        $)$)
-
-      ${ counter() } -- should show 1
-      ${ counter() } -- should show 2
-      ${ counter() } -- should show 3
 
 $(VAR (counter2))
 $(LET ((value => 0))
@@ -218,10 +201,18 @@ var jst = new YAJET({
         }
     }
 });
-try {
+
+var template_code = document.getElementById("source").value;
+template_code = template_code + template_code; // x2
+template_code = template_code + template_code; // x4
+
+    // so that we test compilation speed.
+    // for now it's awfully slow.
+
+    // Chrome compiles it 6 TIMES FASTER than Firefox.
 
 window.console && console.time("compile");
-var template = jst.compile(document.getElementById("source").value);
+var template = jst.compile(template_code);
 window.console && console.timeEnd("compile");
 
 window.console && console.time("run");
@@ -236,14 +227,12 @@ var output = template({
        list: [ "a", "b", "c", "d", "e" ]
     }
 });
-
-document.getElementById("target").innerHTML = jst.filter("html", String(output + "\n\n\n" + template.orig.toString()));
 window.console && console.timeEnd("run");
 
-} catch(ex) {
-window.console && console.log(ex);
-alert(ex);
-}
+window.console && console.time("display HTML");
+document.getElementById("target").innerHTML = jst.filter("html", String(output + "\n\n\n" + template.orig.toString()));
+window.console && console.timeEnd("display HTML");
+
 
     //]]></script>
   </body>
