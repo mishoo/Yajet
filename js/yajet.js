@@ -315,8 +315,16 @@ function YAJET(yajet_args){
                 function read_simple_token() {
                         skip_ws();
                         var token = "";
-                        while (looking_at(/^[a-z0-9_$.\|]/i))
-                                token += next();
+                        while (true) {
+                                while (looking_at(/^[a-z0-9_$]/i))
+                                        token += next();
+                                if (looking_at(/^\|[a-z0-9_$]/i))
+                                        token += next();
+                                else if (looking_at(/^\.[a-z0-9_$]/i))
+                                        token += next();
+                                else
+                                        break;
+                        }
                         return token;
                 };
 
