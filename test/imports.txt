@@ -1,0 +1,36 @@
+$(PROCESS exports_test1("SoMeThInG"))
+
+$(PROCESS exports_test2("STUFF", {
+ data: [ "foo", "bar", "baz" ]
+}))
+
+$(IMPORT (exports_test3))
+
+${ exports_test3.call(this, "one", "two") }
+
+$(IMPORT (exports_table))
+
+$(WRAP exports_table([ "foo", "bar", "baz" ])
+  <tr>
+    <td>Foo</td>
+    <td>Bar</td>
+    <td>Baz</td>
+  </tr> $)
+
+$(IMPORT (section, subsection, subsubsection, newpage))
+
+${ section("First title") }
+${ section("Second title") }
+${ subsection("Subtitle") }
+${ subsubsection("Sub-sub-title") }
+${ subsection("Another subtitle") }
+${ subsubsection("And another sub-sub-title") }
+
+$( newpage() )
+
+${ section("First title") }
+${ section("Second title") }
+${ subsection("Subtitle") }
+${ subsubsection("Sub-sub-title") }
+${ subsection("Another subtitle") }
+${ subsubsection("And another sub-sub-title") }

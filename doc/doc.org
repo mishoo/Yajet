@@ -20,19 +20,10 @@ it rendered.
 
 * What makes it different
 
-I long wanted to write my own template tool so that I can invent the
-syntax.  I believe that all template languages have a creepy syntax; a
-non-creepy one is almost impossible, because you need to combine two
-languages---take PHP, for instance; it combines HTML (a creepy
-language in itself, which many times includes CSS and JavaScript code
-too) with a template engine which has its own creepy syntax and rules.
-The result is ugly to say the least.  I mean, creepy.
-
-YAJET makes no exception, being a template engine.  It's syntax is
-creepy.  But it's still better than others.  I believe that what I
-ended up with is quite nice.  All special stuff is triggered by a
-single character (“the reader char”, which by default is =$=), and
-simple stuff is kept simple:
+I long wanted to write my own template tool so that I can “invent” the
+syntax.  I believe that what I ended up with is quite nice.  All
+special stuff is triggered by a single character (“the reader char”,
+which by default is =$=), and simple stuff is kept simple:
 
   + =$foo= --- insert variable foo
   + =$foo|html= --- insert variable foo, HTML escaped
@@ -111,9 +102,10 @@ Other than the boring variable interpolation, we have the following:
 - it compiles the template into a runnable JavaScript function which is
   blazing fast.
 
-- the code is way shorter than the documentation (~600 lines of code, 6K
-  minified, 2.5K gzipped) and it's completely self-contained (no
-  library requirements, and it should not clash with any library).
+- the code is way shorter than the documentation (~650 lines of code,
+  7K minified, 3K gzipped) and it's completely self-contained (no
+  library requirements, and it should not clash with any library).  I
+  think it's pretty small for the number of features.
 
 - it's browser agnostic.  In fact, it works with standalone JavaScript engines too (such as [[http://code.google.com/p/v8/][Google's V8]]
   or [[http://www.mozilla.org/rhino/][Rhino]]).  I started a test suite based on Rhino.
@@ -253,6 +245,28 @@ this writing the filters available by default are:
 - =upcase= --- converts the string to uppercase
 - =downcase= --- lowercase the string
 - =trim= --- removes leading and trailing whitespace
+- =plural= --- useful for returning "no elements", "one element", "3 elements" depending on a numeric value.
+
+You would use “plural” like this:
+
+#+BEGIN_EXAMPLE
+1. We got ${ count => plural("no items", "one item", "two items", "# items") }
+2. We got ${ count => plural([ "no items", "one item", "two items", "# items" ]) }
+3. We got ${ count => plural("no items|one item|two items|# items") }
+#+END_EXAMPLE
+
+Besides the implicit argument (=count=) plural accepts multiple
+arguments (case 1 above), or a single array argument (case 2) or a
+string (case 3) that specifies the formats separated by a pipe
+character.  In all cases, the arguments specify how to display the
+numeric value.  If it's zero, it selects the first argument; if it's
+one, it selects the second, and so on.  If it's bigger than the number
+of arguments, it selects the last one.  =#= is replaced with the
+number.  So the above displays "We got no items" when count is zero,
+"We got one item" when count is 1, "We got two items" when count is 2
+and "We got # items" when count is bigger (where # is replaced with the value of count).
+
+
 
 It's easy to define custom filters when you construct the YAJET object:
 

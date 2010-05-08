@@ -1,5 +1,6 @@
 $(EXPORT exports_test1(data)
-  in test1: we got $data
+  in test1: we got $data.
+  again, we got |$data|
 $)$-
 
 $(EXPORT exports_test2(args, more)
