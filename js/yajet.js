@@ -33,6 +33,8 @@ function YAJET(yajet_args){
                 with_scope  : false
         });
 
+        var TEMPLATES = {};
+
         // special constructs:
         //
         // $foo, ${foo} -- output of variable foo
@@ -56,10 +58,10 @@ function YAJET(yajet_args){
                 return a[a.length - 1];
         };
 
-        function map(a, f) {
+        function map(a, f, obj) {
                 var i = 0, n = a.length, b = new Array(n);
                 while (--n >= 0)
-                        b[i] = f(a[i++]);
+                        b[i] = f.call(obj, a[i++]);
                 return b;
         };
 
@@ -72,12 +74,23 @@ function YAJET(yajet_args){
         var READER_CHAR = yajet_args.reader_char;
         var READER_CHAR_STR = to_js_string(READER_CHAR);
 
-        var BUFFER_DEF = ( "var __BUF = '';" +
-                           "function __OUT(str) { if (str != null) __BUF += str };" +
-                           "function __VUT(str) { if (str != null) __BUF += str };" );
+        this.X_CONT = {};
+        this.X_BREK = {};
+
+        var WRAP_OPEN = ( "var __BUF = '', VUT = OUT;" +
+                          "function OUT(str) { if (str != null) __BUF += str };" );
+
+        var WRAP_CLOSE = "return __BUF";
+
+        var EX_LOOP_HANDLERS = ( "} catch(ex) { " +
+                                 "if (ex === __YAJET.X_CONT) continue;" +
+                                 "if (ex === __YAJET.X_BREK) break;" +
+                                 "throw ex;" +
+                                 "}" );
 
         function compile(THE_STRING) {
                 var THE_CODE = [],
+                    THE_EXPORTS = [],
                     THE_CLOSING = [],
                     THE_INDEX = 0,
                     THE_LENGTH = THE_STRING.length,
@@ -88,6 +101,17 @@ function YAJET(yajet_args){
                         THE_CODE.unshift("with (this) {");
                         THE_CODE.push("}");
                 }
+
+                // compile exported templates
+                map(THE_EXPORTS, function(exp){
+                        TEMPLATES[exp.name] = exp;
+                        var args = exp.args;
+                        args.unshift("__YAJET");
+                        args.push(WRAP_OPEN + exp.code.join("\n") + WRAP_CLOSE);
+                        exp.func = Function.apply(Function, args); // I wonder if this works in IE :-/
+                });
+
+                // and the main one
                 return makeClosure.call(this, THE_CODE.join("\n"));
 
                 function peek() {
@@ -108,7 +132,7 @@ function YAJET(yajet_args){
 
                 function flush_text() {
                         if (THE_TEXT.length > 0)
-                                out("__OUT(" + to_js_string(THE_TEXT) + ");");
+                                out("OUT(" + to_js_string(THE_TEXT) + ");");
                         THE_TEXT = "";
                 };
 
@@ -236,8 +260,13 @@ function YAJET(yajet_args){
                         while (THE_INDEX < THE_LENGTH) {
                                 var ch = next();
                                 if (ch == READER_CHAR) {
-                                        flush_text();
-                                        read_code();
+                                        // double reader char means insert it literally
+                                        if (skip(ch)) {
+                                                THE_TEXT += ch;
+                                        } else {
+                                                flush_text();
+                                                read_code();
+                                        }
                                 }
                                 else {
                                         THE_TEXT += ch;
@@ -301,11 +330,8 @@ function YAJET(yajet_args){
                 };
 
                 function read_code() {
-                        if (skip(READER_CHAR)) {
-                                out("__OUT(" + READER_CHAR_STR + ")");
-                        }
-                        else if (skip("_")) {
-                                out("__VUT($_);"); // perlism
+                        if (skip("_")) {
+                                out("VUT($_);"); // perlism
                         }
                         else if (skip("-")) {
                                 skip_ws();
@@ -344,11 +370,11 @@ function YAJET(yajet_args){
                                         // open
                                         "(function(" + sym + ") {" +
                                                 "for (var " + key + " in " + sym + ") {" +
-                                                "if (" + sym + ".hasOwnProperty(" + key + ")) {" +
+                                                "if (" + sym + ".hasOwnProperty(" + key + ")) try {" +
                                                 "var " + val + " = " + sym + "[" + key + "];"
                                         ,
                                         // close
-                                        "}}}).call(this, " + hash + ");"
+                                        EX_LOOP_HANDLERS + "}}).call(this, " + hash + ");"
                                 );
                         }
                         else if (skip(/^\((map|foreach)\b/i)) {
@@ -364,28 +390,21 @@ function YAJET(yajet_args){
                                                 arr = args[0];
                                         }
                                 }
-
-                                // what happens next is a bit tricky. >-D
-                                // we open a block that has only one open bracked, but close two.
-                                // then, when args.length == 1 we put a second open bracked on the with block.
-                                // otherwise, we put it before the var (key) declaration.
-
                                 block_open(
                                         // open
-                                        "(function(" + sym + "){" +
+                                        "(function(" + sym + ") {" +
                                                 "for (var " +
                                                 (args.length == 1 ? "$_," : "") +
                                                 len + " = " + sym + ".length," +
-                                                idx + " = 0; " + idx + " < " + len + "; ++" + idx + ")"
+                                                idx + " = 0; " + idx + " < " + len + "; ++" + idx + ") try {" +
+                                                (args.length == 1
+                                                 ? "with ($_ = " + sym + "[" + idx + "]) {"
+                                                 : "var " + key + " = " + sym + "[" + idx + "];")
                                         ,
                                         // close
-                                        "}}).call(this, " + arr + ");"
+                                        (args.length == 1 ? "}" : "") +
+                                                EX_LOOP_HANDLERS + "}).call(this, " + arr + ");"
                                 );
-                                if (args.length == 1) {
-                                        out("with ($_ = " + sym + "[" + idx + "]) {");
-                                } else {
-                                        out("{ var " + key + " = " + sym + "[" + idx + "];");
-                                }
                         }
                         else if (skip(/^\((repeat|loop)\b/i)) {
                                 var args = read_balanced(true), count, start = 1, idx, sym = gensym();
@@ -396,16 +415,16 @@ function YAJET(yajet_args){
                                 block_open(
                                         // open
                                         "(function(" + sym + ") {" +
-                                                "for (var " + idx + " = " + start + "; " + idx + " <= " + sym + "; ++" + idx + ") {",
+                                                "for (var " + idx + " = " + start + "; " + idx + " <= " + sym + "; ++" + idx + ") try {",
                                         // close
-                                        "}}).call(this, " + count + ");"
+                                        EX_LOOP_HANDLERS + "}).call(this, " + count + ");"
                                 );
                         }
                         else if (skip(/^\(continue\)/i)) {
-                                out("continue;");
+                                out("throw __YAJET.X_CONT;");
                         }
                         else if (skip(/^\(break\)/i)) {
-                                out("break;");
+                                out("throw __YAJET.X_BREK;");
                         }
                         else if (skip(/^\(let\b/i)) {
                                 block_open("(function(){", "}).call(this);");
@@ -421,30 +440,56 @@ function YAJET(yajet_args){
                         }
                         else if (skip(/^\(block\b/i)) {
                                 var name = trim(read_simple_token());
-                                var args = read_balanced();
-                                block_open("function " + name + "(" + args + ") {");
+                                var args = trim(read_balanced());
+                                block_open("function " + name + "(" + args + ") {" + WRAP_OPEN,
+                                           WRAP_CLOSE + "}");
                         }
-                        else if (skip(/^\(function\b/i)) {
+                        else if (skip(/^\(export\b/i)) {
+                                skip_ws();
+                                var name = trim(read_simple_token());
+                                var args = read_balanced(true);
+                                var exp = {
+                                        args: args,
+                                        name: name,
+                                        code: []
+                                };
+                                THE_EXPORTS.push(exp);
+                                var save = THE_CODE;
+                                THE_CODE = exp.code;
+                                block_open(
+                                        // open nothing
+                                        "",
+                                        // restore the context on close
+                                        function() {
+                                                THE_CODE = save;
+                                        }
+                                );
+                        }
+                        else if (skip(/^\(import\b/i)) {
+                                var imp = read_balanced(true);
+                                skip_ws();
+                                assert_skip(")");
+                                out(map(imp, function(imp){
+                                        return "function " + imp + "(){" +
+                                                "return __YAJET.process(" + to_js_string(imp) + ", this, arguments)}";
+                                }).join(";\n") + ";");
+                        }
+                        else if (skip(/^\(process\b/i)) {
                                 var name = trim(read_simple_token());
                                 var args = read_balanced();
-                                block_open(
-                                        // open
-                                        "function " + name + "(" + args + ") {" + BUFFER_DEF,
-                                        // close
-                                        "return __BUF; }"
-                                );
+                                skip_ws();
+                                assert_skip(")");
+                                out("VUT(__YAJET.process(" + to_js_string(name) + ", this, [" + args + "]));");
                         }
                         else if (skip(/^\(wrap\b/i)) {
                                 var name = trim(read_simple_token());
-                                var args = read_balanced(true);
-                                if (args.length > 0)
-                                        args = args.join(", ") + ", ";
-                                else
-                                        args = "";
-                                block_open("__VUT(" + name + "(" + args + "function(__OUT, __VUT){", "}));");
+                                var args = trim(read_balanced());
+                                if (args)
+                                        args += ", ";
+                                block_open("VUT(" + name + ".call(this, " + args + "function(OUT, VUT){", "}));");
                         }
                         else if (skip(/^\(content\)/i)) {
-                                out("arguments[arguments.length - 1].call(this, __OUT, __VUT);");
+                                out("arguments[arguments.length - 1].call(this, OUT, VUT);");
                         }
                         else if (looking_at(/^\(\s/i)) {
                                 out(read_balanced() + ";");
@@ -475,7 +520,7 @@ function YAJET(yajet_args){
                                                 }
                                                 val = "__YAJET.filter(" + to_js_string(filter) + ", " + args + ")";
                                         }
-                                        out("__VUT(" + val + ");");
+                                        out("VUT(" + val + ");");
                                 }
                         }
                         else {
@@ -484,7 +529,7 @@ function YAJET(yajet_args){
                                 while (v.length > 0) {
                                         val = "__YAJET.filter(" + to_js_string(v.shift()) + ", " + val + ")";
                                 }
-                                out("__VUT(" + val + ");");
+                                out("VUT(" + val + ");");
                         }
                 };
         };
@@ -503,7 +548,7 @@ function YAJET(yajet_args){
 
         function makeClosure(code) {
                 try {
-                        code = ( BUFFER_DEF + code + "return __BUF;" );
+                        code = ( WRAP_OPEN + code + WRAP_CLOSE );
                         var self = this,
                             compiled = new Function("__YAJET", code);
                         function ret(data) { return compiled.call(data, self) };
@@ -511,7 +556,8 @@ function YAJET(yajet_args){
                         ret.code = code;
                         return ret;
                 } catch(ex) {
-                        EX_RUNTIME("Bad code: " + code);
+                        ex.yajetCode = code;
+                        throw ex;
                 }
         };
 
@@ -563,6 +609,13 @@ function YAJET(yajet_args){
                 if (filter)
                         return filter.apply(this, args);
                 EX_RUNTIME("No filter " + f);
+        };
+
+        this.process = function(tmpl, obj, args) {
+                var exp = TEMPLATES[tmpl];
+                args = Array$(args);
+                args.unshift(this);
+                return exp.func.apply(obj, args);
         };
 
         /* -----[ utils ]----- */

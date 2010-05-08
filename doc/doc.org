@@ -100,10 +100,8 @@ Other than the boring variable interpolation, we have the following:
 - variable definition (=LET=, =VAR= and =WITH=).  =LET= and =WITH= introduce
   new lexical scopes.
 
-- components (=BLOCK= and =FUNCTION=).  Useful to declare a block that can
-  be called as a function.  =BLOCK= will feed its output into the main
-  output stream, while =FUNCTION= will return it.  Both are closures within
-  their lexical context.
+- components (=BLOCK= and =TEMPLATE=).  Useful to declare blocks that
+  can be called, multiple times, as a function.
 
 - components can be called using =WRAP=.  They receive some content and are
   able to output something before and after it.
@@ -665,7 +663,7 @@ only available in its block of text.  =VAR= on the other hand does something
 similar to the standard JavaScript =var= keyword.  Note that they are /still
 not global variables/---they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a [[reusable template blocks][=BLOCK= or =FUNCTION=]] block too[fn:var].
+could be a [[reusable template blocks][=BLOCK= or =TEMPLATE=]] block too[fn:var].
 
 [fn:var] =VAR= is only marginally useful.  I would remove it
 completely, but it's useful for exporting an inner function from a
@@ -743,17 +741,16 @@ $)
 thus emulating a =LET= block, but it's less efficient because it uses the
 [[https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Statements/with][JavaScript with statement]].
 
-*** =BLOCK= and =FUNCTION= --- define reusable template blocks
+*** =BLOCK= --- define reusable template blocks
 
-Both of these constructs define a function (local to your template) which
-renders a text block.  The difference between them is that =BLOCK= will
-define a function that “prints” the text block into the template output (and
-returns nothing), while =FUNCTION= will just return it.
+A =BLOCK= doesn't immediately print anything into the template output;
+instead it defines a function that prints its block of text when it's
+called.
 
-The syntax is straightforward.  They expect a name for the function,
-followed by a list of arguments in parens (if there are no arguments, put
-=()= like you do for a plain JavaScript function).  Then continue with the
-block of text that the function should expand into:
+The syntax is straightforward.  It expects a name for the function,
+followed by a list of arguments in parens (if there are no arguments,
+put =()= like you do for a plain JavaScript function).  Then continue
+with the block of text that the function should expand into:
 
 #+BEGIN_SRC html
 $(BLOCK display_link(link)
@@ -769,10 +766,10 @@ $(FOREACH (i IN links)
 $)
 #+END_SRC
 
-As you see, using =BLOCK / FUNCTION= you can split your template into small
-components.  Instead of having a big =FOREACH= loop that outputs a lot of
-stuff, we can separate logical parts in blocks and then just call them, so
-the loop itself becomes small.
+As you see, using =BLOCK= you can split your template into small
+components.  Instead of having a big =FOREACH= loop that outputs a lot
+of stuff, we can separate logical parts in blocks and then just call
+them, so the loop itself becomes small.
 
 Combining =BLOCK= and =LET= or =WITH= we can define closures:
 
@@ -852,13 +849,14 @@ $(WRAP table([ "Name", "Phone", "Email" ])
 $)
 #+END_SRC
 
-You can note that a wrapper is a normal function defined with =BLOCK= or
-=FUNCTION=, and it can take arguments.  To send the arguments with a =WRAP=
-block, just make it look like a normal function call.  If there are no
-arguments, you still need to insert the parens =()=.  When it's calling your
-block, =WRAP= sends an additional hidden argument that contains the text
-which is expanded by =$(CONTENT)=.  For now this argument is a function that
-renders the text, and =$(CONTENT)= simply calls this function.
+You can note that a wrapper is a normal function (=BLOCK=) and it can
+take arguments.  To send the arguments with a =WRAP= block, just make
+it look like a normal function call.  If there are no arguments, you
+still need to insert the parens =()=.  When it's calling your block,
+=WRAP= sends an additional hidden argument that contains the text
+which is expanded by =$(CONTENT)=.  For now this argument is a
+function that renders the text, and =$(CONTENT)= simply calls this
+function.
 
 *** Literal JavaScript with =$( ... )=
 

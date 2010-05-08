@@ -2,4 +2,12 @@ $(REPEAT (3) foo $)
 
 $(LOOP (5 .. 10 => i) <page $i> $)
 
+$(REPEAT (10 => i) $(WHEN (i > 5) $(BREAK) $) $i $)
+
 $(REPEAT (Math.round(Math.random() * 10) => i) Random $i $)
+
+$(MAPHASH (key, val => { a: "foo", b: "bar", c: "caz" }) $key => $val $)
+
+$(MAP (i, val => [ "foo", "bar", "baz" ]) ${i}. $val $)
+
+$(FOREACH ([ "foo", "bar", "baz" ]) $_ $)

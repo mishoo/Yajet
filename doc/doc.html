@@ -6,7 +6,7 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Emplate Tengine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-07 19:21:59 CEST"/>
+<meta name="generated" content="2010-05-08 09:05:52 CEST"/>
 <meta name="author" content="Mihai Bazon <mihai.bazon@gmail.com>"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
@@ -99,7 +99,7 @@ lang="en" xml:lang="en">
 <li><a href="#sec-5.3.6">5.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </a></li>
 <li><a href="#sec-5.3.7">5.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </a></li>
 <li><a href="#sec-5.3.8">5.3.8 <code>WITH</code> &mdash; modify the scope chain </a></li>
-<li><a href="#sec-5.3.9">5.3.9 <code>BLOCK</code> and <code>FUNCTION</code> &mdash; define reusable template blocks </a></li>
+<li><a href="#sec-5.3.9">5.3.9 <code>BLOCK</code> &mdash; define reusable template blocks </a></li>
 <li><a href="#sec-5.3.10">5.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </a></li>
 <li><a href="#sec-5.3.11">5.3.11 Literal JavaScript with <code>$( ... )</code> </a></li>
 </ul></li>
@@ -267,10 +267,8 @@ new lexical scopes.
 
 </li>
 <li>
-components (<code>BLOCK</code> and <code>FUNCTION</code>).  Useful to declare a block that can
-be called as a function.  <code>BLOCK</code> will feed its output into the main
-output stream, while <code>FUNCTION</code> will return it.  Both are closures within
-their lexical context.
+components (<code>BLOCK</code> and <code>TEMPLATE</code>).  Useful to declare blocks that
+can be called, multiple times, as a function.
 
 </li>
 <li>
@@ -1241,7 +1239,7 @@ You can define new variables with <code>LET</code> and <code>VAR</code>.  They a
 only available in its block of text.  <code>VAR</code> on the other hand does something
 similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-5.3.9"><code>BLOCK</code> or <code>FUNCTION</code></a> block too<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>.
+could be a <a href="#sec-5.3.9"><code>BLOCK</code> or <code>TEMPLATE</code></a> block too<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>.
 </p>
 <p>
 <code>VAR</code> does not accept a text argument, so it ends directly with a closing
@@ -1359,21 +1357,20 @@ thus emulating a <code>LET</code> block, but it's less efficient because it uses
 </div>
 
 <div id="outline-container-5.3.9" class="outline-4">
-<h4 id="sec-5.3.9">5.3.9 <code>BLOCK</code> and <code>FUNCTION</code> &mdash; define reusable template blocks </h4>
+<h4 id="sec-5.3.9">5.3.9 <code>BLOCK</code> &mdash; define reusable template blocks </h4>
 <div id="text-5.3.9">
 
 
 <p>
-Both of these constructs define a function (local to your template) which
-renders a text block.  The difference between them is that <code>BLOCK</code> will
-define a function that “prints” the text block into the template output (and
-returns nothing), while <code>FUNCTION</code> will just return it.
+A <code>BLOCK</code> doesn't immediately print anything into the template output;
+instead it defines a function that prints its block of text when it's
+called.
 </p>
 <p>
-The syntax is straightforward.  They expect a name for the function,
-followed by a list of arguments in parens (if there are no arguments, put
-<code>()</code> like you do for a plain JavaScript function).  Then continue with the
-block of text that the function should expand into:
+The syntax is straightforward.  It expects a name for the function,
+followed by a list of arguments in parens (if there are no arguments,
+put <code>()</code> like you do for a plain JavaScript function).  Then continue
+with the block of text that the function should expand into:
 </p>
 
 
@@ -1396,10 +1393,10 @@ $)
 
 
 <p>
-As you see, using <code>BLOCK / FUNCTION</code> you can split your template into small
-components.  Instead of having a big <code>FOREACH</code> loop that outputs a lot of
-stuff, we can separate logical parts in blocks and then just call them, so
-the loop itself becomes small.
+As you see, using <code>BLOCK</code> you can split your template into small
+components.  Instead of having a big <code>FOREACH</code> loop that outputs a lot
+of stuff, we can separate logical parts in blocks and then just call
+them, so the loop itself becomes small.
 </p>
 <p>
 Combining <code>BLOCK</code> and <code>LET</code> or <code>WITH</code> we can define closures:
@@ -1522,13 +1519,14 @@ $)
 
 
 <p>
-You can note that a wrapper is a normal function defined with <code>BLOCK</code> or
-<code>FUNCTION</code>, and it can take arguments.  To send the arguments with a <code>WRAP</code>
-block, just make it look like a normal function call.  If there are no
-arguments, you still need to insert the parens <code>()</code>.  When it's calling your
-block, <code>WRAP</code> sends an additional hidden argument that contains the text
-which is expanded by <code>$(CONTENT)</code>.  For now this argument is a function that
-renders the text, and <code>$(CONTENT)</code> simply calls this function.
+You can note that a wrapper is a normal function (<code>BLOCK</code>) and it can
+take arguments.  To send the arguments with a <code>WRAP</code> block, just make
+it look like a normal function call.  If there are no arguments, you
+still need to insert the parens <code>()</code>.  When it's calling your block,
+<code>WRAP</code> sends an additional hidden argument that contains the text
+which is expanded by <code>$(CONTENT)</code>.  For now this argument is a
+function that renders the text, and <code>$(CONTENT)</code> simply calls this
+function.
 </p>
 </div>
 
@@ -1995,7 +1993,7 @@ the same.
 <div id="postamble"><p class="author"> Author: Mihai Bazon <mihai.bazon@gmail.com>
 <a href="mailto:mishoo@mihai-cn.corp.cnet">&lt;mishoo@mihai-cn.corp.cnet&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-07 19:21:59 CEST</p>
+<p class="date"> Date: 2010-05-08 09:05:52 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>

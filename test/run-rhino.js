@@ -20,10 +20,13 @@ var yajet = new YAJET({
 });
 
 var TESTS = [
+        "basic.txt",
         "vars.txt",
         "map.txt",
         "loop.txt",
-        "cond.txt"
+        "cond.txt",
+        "exports.txt",
+        "blocks.txt"
 ];
 
 for (var i = 0; i < TESTS.length; ++i) {
@@ -34,6 +37,7 @@ function run_test(file) {
         print("*** Trying " + file + "...");
         var tmpl = readFile(file);
         var func = compile(tmpl, file);
+        //print(yajet._templates.test1.orig);
         if (func) {
                 var output = execute(func, file);
                 print("---[ GENERATED CODE ]---");
@@ -52,18 +56,22 @@ function compile(tmpl, name) {
         }
         catch(ex) {
                 print("COMPILE ERROR: " + ex);
+                print("LINE: " + ex.lineNumber);
+                print("CODE: " + ex.yajetCode);
                 return null;
         }
 };
 
 function execute(func, name) {
         try {
+                ARGS.template = name;
                 return time_it("Executing " + name, function(){
                         return func(ARGS);
                 });
         }
         catch(ex) {
                 print("RUNTIME ERROR: " + ex);
+                print("LINE: " + ex.lineNumber);
         }
 };
 

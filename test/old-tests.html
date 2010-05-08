@@ -39,7 +39,7 @@ $(WRAP table([ "Name", "Phone", "Email" ])
   <tr> <td>Bar</td> <td>1234-123</td> <td>bar@bar.com</td> </tr>
 $)
 
-      $(FUNCTION wrapper()
+      $(BLOCK wrapper()
         <wrapper>$(CONTENT)</wrapper>
       $)
 
@@ -168,7 +168,7 @@ $)
         <p>Back: $v1</p>
       $)
 
-      $(FUNCTION this_is_a_function(a, b)
+      $(BLOCK this_is_a_function(a, b)
         <p>Got arguments: <b>$a</b> and <b>$b</b></p>
       $)
 

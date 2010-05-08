@@ -1,0 +1,24 @@
+$(EXPORT exports_test1(data)
+  in test1: we got $data
+$)$-
+
+$(EXPORT exports_test2(args, more)
+  *** FROM $this.template we got $args:
+  $(MAP (val => more.data)
+    <li>$val</li> $)$)$-
+
+$(EXPORT exports_test3(foo, bar)
+  *** FROM $this.template:
+  FOO is $foo and BAR is $bar $)
+
+$(EXPORT exports_table(cols)
+  <table title="$this.template">
+    <thead>
+      <tr>
+        $(MAP (label => cols) <td>$label|html</td> $)
+      </tr>
+    </thead>
+    <tbody>
+      $(CONTENT)
+    </tbody>
+  </table> $)
