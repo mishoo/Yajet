@@ -6,8 +6,8 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Emplate Tengine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-08 17:50:54 CEST"/>
-<meta name="author" content="Mihai Bazon <mihai.bazon@gmail.com>"/>
+<meta name="generated" content="2010-05-09 11:08:13 CEST"/>
+<meta name="author" content="Mihai Bazon"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   html { font-family: Times, serif; font-size: 12pt; }
@@ -73,49 +73,52 @@ lang="en" xml:lang="en">
 <div id="text-table-of-contents">
 <ul>
 <li><a href="#sec-1">1 Yet Another JavaScript Emplate Tengine[1] </a></li>
-<li><a href="#sec-2">2 What makes it different </a></li>
-<li><a href="#sec-3">3 Features </a></li>
-<li><a href="#sec-4">4 Usage </a>
+<li><a href="#sec-2">2 What makes it different </a>
 <ul>
-<li><a href="#sec-4.1">4.1 Template arguments </a></li>
-<li><a href="#sec-4.2">4.2 Reader char </a></li>
+<li><a href="#sec-2.1">2.1 Features </a></li>
 </ul>
 </li>
-<li><a href="#sec-5">5 Syntax </a>
+<li><a href="#sec-3">3 Usage </a>
 <ul>
-<li><a href="#sec-5.1">5.1 Simple interpolation (the <code>$foo</code> construct) </a></li>
-<li><a href="#sec-5.2">5.2 JavaScript expressions (the <code>${exp}</code> construct) </a>
-<ul>
-<li><a href="#sec-5.2.1">5.2.1 Filters </a></li>
+<li><a href="#sec-3.1">3.1 Template arguments </a></li>
+<li><a href="#sec-3.2">3.2 Reader char </a></li>
 </ul>
 </li>
-<li><a href="#sec-5.3">5.3 Directives </a>
+<li><a href="#sec-4">4 Syntax </a>
 <ul>
-<li><a href="#sec-5.3.1">5.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </a></li>
-<li><a href="#sec-5.3.2">5.3.2 <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </a></li>
-<li><a href="#sec-5.3.3">5.3.3 <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </a></li>
-<li><a href="#sec-5.3.4">5.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </a></li>
-<li><a href="#sec-5.3.5">5.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </a></li>
-<li><a href="#sec-5.3.6">5.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </a></li>
-<li><a href="#sec-5.3.7">5.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </a></li>
-<li><a href="#sec-5.3.8">5.3.8 <code>WITH</code> &mdash; modify the scope chain </a></li>
-<li><a href="#sec-5.3.9">5.3.9 <code>BLOCK</code> &mdash; define reusable template blocks </a></li>
-<li><a href="#sec-5.3.10">5.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </a></li>
-<li><a href="#sec-5.3.11">5.3.11 <code>EXPORT</code> &mdash; define a BLOCK that can be used in another template </a></li>
-<li><a href="#sec-5.3.12">5.3.12 Literal JavaScript with <code>$( ... )</code> </a></li>
+<li><a href="#sec-4.1">4.1 Simple interpolation (the <code>$foo</code> construct) </a></li>
+<li><a href="#sec-4.2">4.2 JavaScript expressions (the <code>${exp}</code> construct) </a>
+<ul>
+<li><a href="#sec-4.2.1">4.2.1 Filters </a></li>
+</ul>
+</li>
+<li><a href="#sec-4.3">4.3 Directives </a>
+<ul>
+<li><a href="#sec-4.3.1">4.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </a></li>
+<li><a href="#sec-4.3.2">4.3.2 <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </a></li>
+<li><a href="#sec-4.3.3">4.3.3 <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </a></li>
+<li><a href="#sec-4.3.4">4.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </a></li>
+<li><a href="#sec-4.3.5">4.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </a></li>
+<li><a href="#sec-4.3.6">4.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </a></li>
+<li><a href="#sec-4.3.7">4.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </a></li>
+<li><a href="#sec-4.3.8">4.3.8 <code>WITH</code> &mdash; modify the scope chain </a></li>
+<li><a href="#sec-4.3.9">4.3.9 <code>BLOCK</code> &mdash; define reusable template blocks </a></li>
+<li><a href="#sec-4.3.10">4.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </a></li>
+<li><a href="#sec-4.3.11">4.3.11 <code>EXPORT</code> &mdash; define a BLOCK that can be used in another template </a></li>
+<li><a href="#sec-4.3.12">4.3.12 Literal JavaScript with <code>$( ... )</code> </a></li>
 </ul></li>
 </ul>
 </li>
-<li><a href="#sec-6">6 Correctness </a></li>
-<li><a href="#sec-7">7 Known issues </a>
+<li><a href="#sec-5">5 Correctness </a></li>
+<li><a href="#sec-6">6 Known issues </a>
 <ul>
-<li><a href="#sec-7.1">7.1 Literal RegExp-s in JavaScript expressions </a></li>
-<li><a href="#sec-7.2">7.2 Error reporting is less than ideal </a></li>
-<li><a href="#sec-7.3">7.3 Whitespace handling </a></li>
+<li><a href="#sec-6.1">6.1 Literal RegExp-s in JavaScript expressions </a></li>
+<li><a href="#sec-6.2">6.2 Error reporting is less than ideal </a></li>
+<li><a href="#sec-6.3">6.3 Whitespace handling </a></li>
 </ul>
 </li>
-<li><a href="#sec-8">8 How to get help </a></li>
-<li><a href="#sec-9">9 License </a></li>
+<li><a href="#sec-7">7 How to get help </a></li>
+<li><a href="#sec-8">8 License </a></li>
 </ul>
 </div>
 </div>
@@ -146,10 +149,11 @@ it rendered.
 
 
 <p>
-I long wanted to write my own template tool so that I can “invent” the
-syntax.  I believe that what I ended up with is quite nice.  All
-special stuff is triggered by a single character (“the reader char”,
-which by default is <code>$</code>), and simple stuff is kept simple:
+I think that all template tools suck to some degree, and this has to
+be because they are bringing together two (or more) languages.  The
+syntax is always creepy.  YAJET is no exception from this fundamental
+rule, but I think that it's still better than others.  What I ended up
+with is actually quite nice:
 </p>
 <ul>
 <li>
@@ -173,11 +177,11 @@ which by default is <code>$</code>), and simple stuff is kept simple:
 </li>
 </ul>
 
-<p>Rather than taking pieces of literal JavaScript from your
-templates<sup><a class="footref" name="fnr.2" href="#fn.2">2</a></sup>, it defines some high-level directives that
-allow you to traverse lists, define blocks, conditionals and so on,
-and it translates them into running code in a <a href="#sec-6">proper</a> way.  So you
-don't write, for example:
+<p>Rather than encouraging you to write pieces of literal JavaScript in
+your templates<sup><a class="footref" name="fnr.2" href="#fn.2">2</a></sup>, YAJET defines some high-level directives
+that allow you to traverse lists, define blocks, conditionals and so
+on with a cleaner syntax; and it translates them into running
+JavaScript in a <a href="#sec-5">proper</a> way.  So you don't write, for example:
 </p>
 
 
@@ -216,13 +220,12 @@ variable <code>foo</code>.  I don't like this style.  YAJET is appropriate for
 any kind of text templates&mdash;it was not designed specifically for
 HTML, although that's mostly what I use it for.
 </p>
-</div>
 
 </div>
 
-<div id="outline-container-3" class="outline-2">
-<h2 id="sec-3">3 Features </h2>
-<div id="text-3">
+<div id="outline-container-2.1" class="outline-3">
+<h3 id="sec-2.1">2.1 Features </h3>
+<div id="text-2.1">
 
 
 <p>
@@ -268,7 +271,7 @@ able to output something before and after it.
 
 </li>
 <li>
-<a href="#sec-6">Correctness</a>.
+<a href="#sec-5">Correctness</a>.
 
 </li>
 <li>
@@ -291,12 +294,13 @@ or <a href="http://www.mozilla.org/rhino/">Rhino</a>).  I started a test suite b
 </li>
 </ul>
 </div>
+</div>
 
 </div>
 
-<div id="outline-container-4" class="outline-2">
-<h2 id="sec-4">4 Usage </h2>
-<div id="text-4">
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">3 Usage </h2>
+<div id="text-3">
 
 
 <p>
@@ -348,9 +352,9 @@ alert( func({ foo: <span style="color: #008b00;">"hello"</span>, bar: <span styl
 
 </div>
 
-<div id="outline-container-4.1" class="outline-3">
-<h3 id="sec-4.1">4.1 Template arguments </h3>
-<div id="text-4.1">
+<div id="outline-container-3.1" class="outline-3">
+<h3 id="sec-3.1">3.1 Template arguments </h3>
+<div id="text-3.1">
 
 
 <p>
@@ -387,9 +391,9 @@ its JavaScript console; Chrome is even slower than Firefox for the
 
 </div>
 
-<div id="outline-container-4.2" class="outline-3">
-<h3 id="sec-4.2">4.2 Reader char </h3>
-<div id="text-4.2">
+<div id="outline-container-3.2" class="outline-3">
+<h3 id="sec-3.2">3.2 Reader char </h3>
+<div id="text-3.2">
 
 
 <p>
@@ -415,9 +419,9 @@ character, for instance:
 
 </div>
 
-<div id="outline-container-5" class="outline-2">
-<h2 id="sec-5">5 Syntax </h2>
-<div id="text-5">
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">4 Syntax </h2>
+<div id="text-4">
 
 
 <p>
@@ -456,9 +460,9 @@ which are particular for INSTRUCTION.
 
 </div>
 
-<div id="outline-container-5.1" class="outline-3">
-<h3 id="sec-5.1">5.1 Simple interpolation (the <code>$foo</code> construct) </h3>
-<div id="text-5.1">
+<div id="outline-container-4.1" class="outline-3">
+<h3 id="sec-4.1">4.1 Simple interpolation (the <code>$foo</code> construct) </h3>
+<div id="text-4.1">
 
 
 <p>
@@ -477,18 +481,18 @@ uppercase, then apply the html filter to the upcased string.
 
 </div>
 
-<div id="outline-container-5.2" class="outline-3">
-<h3 id="sec-5.2">5.2 JavaScript expressions (the <code>${exp}</code> construct) </h3>
-<div id="text-5.2">
+<div id="outline-container-4.2" class="outline-3">
+<h3 id="sec-4.2">4.2 JavaScript expressions (the <code>${exp}</code> construct) </h3>
+<div id="text-4.2">
 
 
 <p>
-This is similar to the “simple interpolation” case, but it allows for more
-complicated expressions.  For example <code>${a+b}</code> will insert the sum of a and
-b.  Your expression can be arbitrarily complex, and the scanner is smart
-enough to read it, provided that it is valid JavaScript code (you need to be
-<b>careful about literal RegExp-s</b> though, for now; I'll fix this in a later
-release; more on this in <a href="#sec-7">Known issues</a>).
+This is similar to the “simple interpolation” case, but it allows for
+more complicated expressions.  For example <code>${a+b}</code> will insert the
+sum of a and b.  Your expression can be arbitrarily complex, and the
+scanner is smart enough to read it, provided that it is valid
+JavaScript code (you need to be <b>careful about literal RegExp-s</b>
+though, for now; more on this in <a href="#sec-6">Known issues</a>).
 </p>
 <p>
 So, an example of a perfectly valid call is:
@@ -520,9 +524,9 @@ template output only if it's not null.
 
 </div>
 
-<div id="outline-container-5.2.1" class="outline-4">
-<h4 id="sec-5.2.1">5.2.1 Filters </h4>
-<div id="text-5.2.1">
+<div id="outline-container-4.2.1" class="outline-4">
+<h4 id="sec-4.2.1">4.2.1 Filters </h4>
+<div id="text-4.2.1">
 
 
 <p>
@@ -727,9 +731,9 @@ arguments are passed following the filter name ("YYYY-MM-DD").
 
 </div>
 
-<div id="outline-container-5.3" class="outline-3">
-<h3 id="sec-5.3">5.3 Directives </h3>
-<div id="text-5.3">
+<div id="outline-container-4.3" class="outline-3">
+<h3 id="sec-4.3">4.3 Directives </h3>
+<div id="text-4.3">
 
 
 <p>
@@ -819,9 +823,9 @@ template in a simple and consistent manner.
 
 </div>
 
-<div id="outline-container-5.3.1" class="outline-4">
-<h4 id="sec-5.3.1">5.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </h4>
-<div id="text-5.3.1">
+<div id="outline-container-4.3.1" class="outline-4">
+<h4 id="sec-4.3.1">4.3.1 <code>IF</code> / <code>WHEN</code> / <code>UNLESS</code>, <code>ELSE</code> / <code>ELSIF</code> &mdash; conditional execution </h4>
+<div id="text-4.3.1">
 
 
 <p>
@@ -879,9 +883,9 @@ it, it seems to make sense this way.  The same applies to <code>$(BREAK)</code> 
 
 </div>
 
-<div id="outline-container-5.3.2" class="outline-4">
-<h4 id="sec-5.3.2">5.3.2 <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </h4>
-<div id="text-5.3.2">
+<div id="outline-container-4.3.2" class="outline-4">
+<h4 id="sec-4.3.2">4.3.2 <code>AIF</code> / <code>AWHEN</code> &mdash; like <code>IF</code> / <code>WHEN</code>, but store the condition in <code>$it</code> </h4>
+<div id="text-4.3.2">
 
 
 <p>
@@ -994,9 +998,9 @@ $)
 
 </div>
 
-<div id="outline-container-5.3.3" class="outline-4">
-<h4 id="sec-5.3.3">5.3.3 <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </h4>
-<div id="text-5.3.3">
+<div id="outline-container-4.3.3" class="outline-4">
+<h4 id="sec-4.3.3">4.3.3 <code>REPEAT</code> / <code>LOOP</code> &mdash; to repeat stuff </h4>
+<div id="text-4.3.3">
 
 
 <p>
@@ -1042,9 +1046,9 @@ would do).
 
 </div>
 
-<div id="outline-container-5.3.4" class="outline-4">
-<h4 id="sec-5.3.4">5.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </h4>
-<div id="text-5.3.4">
+<div id="outline-container-4.3.4" class="outline-4">
+<h4 id="sec-4.3.4">4.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </h4>
+<div id="text-4.3.4">
 
 
 <p>
@@ -1164,7 +1168,7 @@ $(FOREACH ([ <span style="color: #008b00;">"foo"</span>, <span style="color: #00
 
 <p>
 will output “&lt;b&gt;foo&lt;/b&gt; &lt;b&gt;bar&lt;/b&gt; &lt;b&gt;baz&lt;/b&gt;”.  The <code>$_</code> variable is
-bound to each element.  Note that because YAJET is doing <a href="#sec-6">The Right Thing</a>, the following will work as expected:
+bound to each element.  Note that because YAJET is doing <a href="#sec-5">The Right Thing</a>, the following will work as expected:
 </p>
 
 
@@ -1187,9 +1191,9 @@ will take "foo", "bar" then "baz".
 
 </div>
 
-<div id="outline-container-5.3.5" class="outline-4">
-<h4 id="sec-5.3.5">5.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </h4>
-<div id="text-5.3.5">
+<div id="outline-container-4.3.5" class="outline-4">
+<h4 id="sec-4.3.5">4.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </h4>
+<div id="text-4.3.5">
 
 
 <p>
@@ -1214,9 +1218,9 @@ $(MAPHASH (uid, obj =&gt; users)
 
 </div>
 
-<div id="outline-container-5.3.6" class="outline-4">
-<h4 id="sec-5.3.6">5.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </h4>
-<div id="text-5.3.6">
+<div id="outline-container-4.3.6" class="outline-4">
+<h4 id="sec-4.3.6">4.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </h4>
+<div id="text-4.3.6">
 
 
 <p>
@@ -1251,9 +1255,9 @@ The above will print numbers from 1 to 5.
 
 </div>
 
-<div id="outline-container-5.3.7" class="outline-4">
-<h4 id="sec-5.3.7">5.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </h4>
-<div id="text-5.3.7">
+<div id="outline-container-4.3.7" class="outline-4">
+<h4 id="sec-4.3.7">4.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </h4>
+<div id="text-4.3.7">
 
 
 <p>
@@ -1262,7 +1266,7 @@ You can define new variables with <code>LET</code> and <code>VAR</code>.  They a
 only available in its block of text.  <code>VAR</code> on the other hand does something
 similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-5.3.9"><code>BLOCK</code> or <code>EXPORT</code></a> block too<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>.
+could be a <a href="#sec-4.3.9"><code>BLOCK</code> or <code>EXPORT</code></a> block too<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>.
 </p>
 <p>
 <code>VAR</code> does not accept a text argument, so it ends directly with a closing
@@ -1332,9 +1336,9 @@ unfortunately no other browser has it at the moment<sup><a class="footref" name=
 
 </div>
 
-<div id="outline-container-5.3.8" class="outline-4">
-<h4 id="sec-5.3.8">5.3.8 <code>WITH</code> &mdash; modify the scope chain </h4>
-<div id="text-5.3.8">
+<div id="outline-container-4.3.8" class="outline-4">
+<h4 id="sec-4.3.8">4.3.8 <code>WITH</code> &mdash; modify the scope chain </h4>
+<div id="text-4.3.8">
 
 
 <p>
@@ -1379,9 +1383,9 @@ thus emulating a <code>LET</code> block, but it's less efficient because it uses
 
 </div>
 
-<div id="outline-container-5.3.9" class="outline-4">
-<h4 id="sec-5.3.9">5.3.9 <code>BLOCK</code> &mdash; define reusable template blocks </h4>
-<div id="text-5.3.9">
+<div id="outline-container-4.3.9" class="outline-4">
+<h4 id="sec-4.3.9">4.3.9 <code>BLOCK</code> &mdash; define reusable template blocks </h4>
+<div id="text-4.3.9">
 
 
 <p>
@@ -1502,9 +1506,9 @@ ${ counter() } -- now it works.
 
 </div>
 
-<div id="outline-container-5.3.10" class="outline-4">
-<h4 id="sec-5.3.10"><a name="WRAP" id="WRAP"></a>5.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </h4>
-<div id="text-5.3.10">
+<div id="outline-container-4.3.10" class="outline-4">
+<h4 id="sec-4.3.10"><a name="WRAP" id="WRAP"></a>4.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </h4>
+<div id="text-4.3.10">
 
 
 <p>
@@ -1553,9 +1557,9 @@ function.
 
 </div>
 
-<div id="outline-container-5.3.11" class="outline-4">
-<h4 id="sec-5.3.11">5.3.11 <code>EXPORT</code> &mdash; define a BLOCK that can be used in another template </h4>
-<div id="text-5.3.11">
+<div id="outline-container-4.3.11" class="outline-4">
+<h4 id="sec-4.3.11">4.3.11 <code>EXPORT</code> &mdash; define a BLOCK that can be used in another template </h4>
+<div id="text-4.3.11">
 
 
 <p>
@@ -1628,7 +1632,7 @@ they can $(WRAP) each other, etc.
 <li>
 if you need to call a block defined in another template as a
 WRAPper, you need to $(IMPORT) it first.  Otherwise it's the same
-as described in <a href="#sec-5.3.10">WRAP</a>.
+as described in <a href="#sec-4.3.10">WRAP</a>.
 
 </li>
 </ul>
@@ -1636,9 +1640,9 @@ as described in <a href="#sec-5.3.10">WRAP</a>.
 
 </div>
 
-<div id="outline-container-5.3.12" class="outline-4">
-<h4 id="sec-5.3.12">5.3.12 Literal JavaScript with <code>$( ... )</code> </h4>
-<div id="text-5.3.12">
+<div id="outline-container-4.3.12" class="outline-4">
+<h4 id="sec-4.3.12">4.3.12 Literal JavaScript with <code>$( ... )</code> </h4>
+<div id="text-4.3.12">
 
 
 <p>
@@ -1686,9 +1690,9 @@ $( foo = "bar";
 
 </div>
 
-<div id="outline-container-6" class="outline-2">
-<h2 id="sec-6"><a name="Correctness" id="Correctness"></a>6 Correctness </h2>
-<div id="text-6">
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5"><a name="Correctness" id="Correctness"></a>5 Correctness </h2>
+<div id="text-5">
 
 
 <p>
@@ -1817,26 +1821,26 @@ affect outside variables.
 
 </div>
 
-<div id="outline-container-7" class="outline-2">
-<h2 id="sec-7"><a name="Known==issues" id="Known==issues"></a>7 Known issues </h2>
-<div id="text-7">
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6"><a name="Known==issues" id="Known==issues"></a>6 Known issues </h2>
+<div id="text-6">
 
 
 
 </div>
 
-<div id="outline-container-7.1" class="outline-3">
-<h3 id="sec-7.1">7.1 Literal RegExp-s in JavaScript expressions </h3>
-<div id="text-7.1">
+<div id="outline-container-6.1" class="outline-3">
+<h3 id="sec-6.1">6.1 Literal RegExp-s in JavaScript expressions </h3>
+<div id="text-6.1">
 
 
 <p>
-The JavaScript scanner is not “complete”, although it's smart enough to skip
-comments and strings while looking for a closing paren.  Literal regexps are
-always tricky to parse, so I left this out for now, but I do plan to fix it.
-However, what this means for now is that you should be careful about parens
-in literal RegExp-s.  Since the parser does not allow for unbalanced parens,
-the following should <i>not</i> be a problem:
+The JavaScript scanner is not “complete”, although it's smart enough
+to skip comments and strings while looking for a closing paren.
+Literal regexps are tricky to figure out, so I left this out for now.
+What this means is that you should be careful about parens in literal
+RegExp-s.  Since the parser does not allow for unbalanced parens, the
+following should <i>not</i> be a problem:
 </p>
 
 
@@ -1878,18 +1882,18 @@ well (<code>\x28</code>), and same goes for all the other types of brackets such
 
 </div>
 
-<div id="outline-container-7.2" class="outline-3">
-<h3 id="sec-7.2">7.2 Error reporting is less than ideal </h3>
-<div id="text-7.2">
+<div id="outline-container-6.2" class="outline-3">
+<h3 id="sec-6.2">6.2 Error reporting is less than ideal </h3>
+<div id="text-6.2">
 
 
 </div>
 
 </div>
 
-<div id="outline-container-7.3" class="outline-3">
-<h3 id="sec-7.3">7.3 Whitespace handling </h3>
-<div id="text-7.3">
+<div id="outline-container-6.3" class="outline-3">
+<h3 id="sec-6.3">6.3 Whitespace handling </h3>
+<div id="text-6.3">
 
 
 <p>
@@ -1992,9 +1996,9 @@ is not too important.
 
 </div>
 
-<div id="outline-container-8" class="outline-2">
-<h2 id="sec-8">8 How to get help </h2>
-<div id="text-8">
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7">7 How to get help </h2>
+<div id="text-7">
 
 
 <p>
@@ -2004,9 +2008,9 @@ If you have any questions please post them on the <a href="http://groups.google.
 
 </div>
 
-<div id="outline-container-9" class="outline-2">
-<h2 id="sec-9">9 License </h2>
-<div id="text-9">
+<div id="outline-container-8" class="outline-2">
+<h2 id="sec-8">8 License </h2>
+<div id="text-8">
 
 
 <p>
@@ -2093,10 +2097,10 @@ the same.
 </p>
 </div>
 </div>
-<div id="postamble"><p class="author"> Author: Mihai Bazon <mihai.bazon@gmail.com>
-<a href="mailto:mishoo@mihai-cn.corp.cnet">&lt;mishoo@mihai-cn.corp.cnet&gt;</a>
+<div id="postamble"><p class="author"> Author: Mihai Bazon
+<a href="mailto:mihai.bazon@gmail.com">&lt;mihai.bazon@gmail.com&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-08 17:50:54 CEST</p>
+<p class="date"> Date: 2010-05-09 11:08:13 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>

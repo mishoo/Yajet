@@ -1,6 +1,9 @@
 #+TITLE: YAJET -- JavaScript Emplate Tengine
+#+KEYWORDS: javascript, js, template, engine, compiler, macro, text, html
+#+DESCRIPTION: YAJET is Another JavaScript Emplate Tengine
 #+STYLE: <link rel="stylesheet" type="text/css" href="docstyle.css" />
-#+AUTHOR: Mihai Bazon <mihai.bazon@gmail.com>
+#+AUTHOR: Mihai Bazon
+#+EMAIL: mihai.bazon@gmail.com
 
 * Yet Another JavaScript Emplate Tengine[fn:name]
 
@@ -20,10 +23,11 @@ it rendered.
 
 * What makes it different
 
-I long wanted to write my own template tool so that I can “invent” the
-syntax.  I believe that what I ended up with is quite nice.  All
-special stuff is triggered by a single character (“the reader char”,
-which by default is =$=), and simple stuff is kept simple:
+I think that all template tools suck to some degree, and this has to
+be because they are bringing together two (or more) languages.  The
+syntax is always creepy.  YAJET is no exception from this fundamental
+rule, but I think that it's still better than others.  What I ended up
+with is actually quite nice:
 
   + =$foo= --- insert variable foo
   + =$foo|html= --- insert variable foo, HTML escaped
@@ -32,11 +36,11 @@ which by default is =$=), and simple stuff is kept simple:
   + =${ a() + b() => html }= --- insert sum of a() and b(), HTML escaped
   + =$(REPEAT (3 => i) <li>Item $i</li> $)= --- display 3 items
 
-Rather than taking pieces of literal JavaScript from your
-templates[fn:literaljs], it defines some high-level directives that
-allow you to traverse lists, define blocks, conditionals and so on,
-and it translates them into running code in a [[Correctness][proper]] way.  So you
-don't write, for example:
+Rather than encouraging you to write pieces of literal JavaScript in
+your templates[fn:literaljs], YAJET defines some high-level directives
+that allow you to traverse lists, define blocks, conditionals and so
+on with a cleaner syntax; and it translates them into running
+JavaScript in a [[Correctness][proper]] way.  So you don't write, for example:
 
 [fn:literaljs] You can still put literal JavaScript inside using =$(
 ... )=, but it has to be properly balanced.
@@ -71,7 +75,7 @@ HTML, although that's mostly what I use it for.
 template engine”.  Have you notice how exaggeratedly creepy is the syntax for [[http://beebole.com/pure/documentation/iteration-with-directives/][rendering with directives]]?
 I guess we truly live in a “worse is better” world, but I'm still trying to do The Right Thing.
 
-* Features
+** Features
 
 Other than the boring variable interpolation, we have the following:
 
@@ -209,12 +213,12 @@ uppercase, then apply the html filter to the upcased string.
 
 ** JavaScript expressions (the =${exp}= construct)
 
-This is similar to the “simple interpolation” case, but it allows for more
-complicated expressions.  For example =${a+b}= will insert the sum of a and
-b.  Your expression can be arbitrarily complex, and the scanner is smart
-enough to read it, provided that it is valid JavaScript code (you need to be
-*careful about literal RegExp-s* though, for now; I'll fix this in a later
-release; more on this in [[Known issues]]).
+This is similar to the “simple interpolation” case, but it allows for
+more complicated expressions.  For example =${a+b}= will insert the
+sum of a and b.  Your expression can be arbitrarily complex, and the
+scanner is smart enough to read it, provided that it is valid
+JavaScript code (you need to be *careful about literal RegExp-s*
+though, for now; more on this in [[Known issues]]).
 
 So, an example of a perfectly valid call is:
 
@@ -1043,12 +1047,12 @@ affect outside variables.
 
 ** Literal RegExp-s in JavaScript expressions
 
-The JavaScript scanner is not “complete”, although it's smart enough to skip
-comments and strings while looking for a closing paren.  Literal regexps are
-always tricky to parse, so I left this out for now, but I do plan to fix it.
-However, what this means for now is that you should be careful about parens
-in literal RegExp-s.  Since the parser does not allow for unbalanced parens,
-the following should /not/ be a problem:
+The JavaScript scanner is not “complete”, although it's smart enough
+to skip comments and strings while looking for a closing paren.
+Literal regexps are tricky to figure out, so I left this out for now.
+What this means is that you should be careful about parens in literal
+RegExp-s.  Since the parser does not allow for unbalanced parens, the
+following should /not/ be a problem:
 
 #+BEGIN_SRC espresso
 $( if (/(a|b)/.test("bar")) {
