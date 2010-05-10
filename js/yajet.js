@@ -107,6 +107,161 @@ function YAJET(yajet_args){
                     THE_TEXT = "",
                     HAS_EXPORTS = [];
 
+                /* -----[ BEGIN directives ]----- */
+
+                var directives = {
+                        "if": function() {
+                                block_open("if (" + read_balanced() + ") {");
+                        },
+                        aif: function() {
+                                // from http://common-lisp.net/project/anaphora/
+                                // "the anaphoric macro collection from hell".
+                                // But here it's somewhat extended.
+                                var args = read_balanced(true);
+                                var sym = args.length > 1 ? args[1] : "it";
+                                var cond = args.length > 2
+                                        ? args[2]
+                                        : ( sym + " != null && " +
+                                            sym + " !== false && !(" + sym + " instanceof Array && " + sym + ".length == 0)" );
+                                block_open("(function(" + sym + ") { if (" + cond + ") {",
+                                           "}}).call(this, " + args[0] + ");");
+                        },
+                        unless: function() {
+                                block_open("if (!(" + read_balanced() + ")) {");
+                        },
+                        "else": function() {
+                                out("} else {"); // shortcut, no need for block_close / block_open here
+                                assert_skip(")");
+                        },
+                        elsif: function() {
+                                out("} else if (" + read_balanced() + ") {"); // again
+                                assert_skip(")");
+                        },
+                        maphash: function() {
+                                var args = read_balanced(true);
+                                var key = args[0], val = args[1], hash = args[2], sym = gensym();
+                                block_open(
+                                        // open
+                                        "(function(" + sym + ") {" +
+                                                "for (var " + key + " in " + sym + ") {" +
+                                                "if (" + sym + ".hasOwnProperty(" + key + ")) try {" +
+                                                "var " + val + " = " + sym + "[" + key + "];"
+                                        ,
+                                        // close
+                                        EX_LOOP_HANDLERS + "}}).call(this, " + hash + ");"
+                                );
+                        },
+                        map: function() {
+                                var args = read_balanced(true), idx, key, arr, sym = gensym(), len = gensym();
+                                if (args.length == 3) {
+                                        idx = args[0], key = args[1], arr = args[2];
+                                } else {
+                                        idx = gensym();
+                                        if (args.length == 2) {
+                                                key = args[0], arr = args[1];
+                                        }
+                                        else if (args.length == 1) {
+                                                arr = args[0];
+                                        }
+                                }
+                                block_open(
+                                        // open
+                                        "(function(" + sym + ") {" +
+                                                "for (var " +
+                                                (args.length == 1 ? "$_," : "") +
+                                                len + " = " + sym + ".length," +
+                                                idx + " = 0; " + idx + " < " + len + "; ++" + idx + ") try {" +
+                                                (args.length == 1
+                                                 ? "with ($_ = " + sym + "[" + idx + "]) {"
+                                                 : "var " + key + " = " + sym + "[" + idx + "];")
+                                        ,
+                                        // close
+                                        (args.length == 1 ? "}" : "") +
+                                                EX_LOOP_HANDLERS + "}).call(this, " + arr + ");"
+                                );
+                        },
+                        repeat: function() {
+                                var args = read_balanced(true), count, start = 1, idx, sym = gensym();
+                                if (args.length == 3)
+                                        start = args.shift();
+                                count = args.shift();
+                                idx = args.shift() || gensym();
+                                block_open(
+                                        // open
+                                        "(function(" + sym + ") {" +
+                                                "for (var " + idx + " = " + start + "; " + idx + " <= " + sym + "; ++" + idx + ") try {",
+                                        // close
+                                        EX_LOOP_HANDLERS + "}).call(this, " + count + ");"
+                                );
+                        },
+                        "continue": function() {
+                                out("throw __YAJET.X_CONT;");
+                                assert_skip(")");
+                        },
+                        "break": function() {
+                                out("throw __YAJET.X_BREK;");
+                                assert_skip(")");
+                        },
+                        "let": function() {
+                                block_open("(function(){", "}).call(this);");
+                                read_valist();
+                        },
+                        "var": function() {
+                                read_valist();
+                                assert_skip(")");
+                        },
+                        "with": function() {
+                                block_open("with (" + read_balanced() + ") {");
+                        },
+                        block: function() {
+                                skip_ws();
+                                var name = read_simple_token();
+                                var args = trim(read_balanced());
+                                block_open("function " + name + "(" + args + ") {" + FUNC_OPEN,
+                                           FUNC_CLOSE + "}");
+                        },
+                        "export": function() {
+                                skip_ws();
+                                var name = read_simple_token();
+                                var args = trim(read_balanced());
+                                block_open(name + " = __EXPORTS[" + to_js_string(name) + "] = function(" + args + ") {" + FUNC_OPEN,
+                                           FUNC_CLOSE + "}; ");
+                                HAS_EXPORTS.push(name);
+                        },
+                        "import": function() {
+                                var imp = read_balanced(true);
+                                assert_skip(")");
+                                out(map(imp, MAKE_IMPORT).join(";\n") + ";");
+                        },
+                        process: function() {
+                                skip_ws();
+                                var name = read_simple_token();
+                                var args = read_balanced();
+                                assert_skip(")");
+                                out("VUT(__YAJET.process(" + to_js_string(name) + ", this, [" + args + "]));");
+                        },
+                        wrap: function() {
+                                skip_ws();
+                                var name = read_simple_token();
+                                var args = trim(read_balanced());
+                                if (args)
+                                        args += ", ";
+                                block_open("VUT(" + name + ".call(this, " + args + "function(OUT, VUT){", "}));");
+                        },
+                        content: function() {
+                                out("arguments[arguments.length - 1].call(this, OUT, VUT);");
+                                assert_skip(")");
+                        }
+                };
+
+                // aliases
+                directives.when = directives["if"];
+                directives.awhen = directives.aif;
+                directives.foreach = directives.map;
+                directives.loop = directives.repeat;
+
+                /* -----[ END directives ]----- */
+
                 parse();
                 if (yajet_args.with_scope) {
                         THE_CODE.unshift("with (this) {");
@@ -350,154 +505,26 @@ function YAJET(yajet_args){
                         else if (skip("-")) {
                                 skip_ws(true);
                         }
-                        else if (skip(/^\((if|when)\b/i)) {
-                                block_open("if (" + read_balanced() + ") {");
-                        }
-                        else if (skip(/^\((aif|awhen)\b/i)) {
-                                // from http://common-lisp.net/project/anaphora/
-                                // "the anaphoric macro collection from hell".
-                                // But here it's somewhat extended.
-                                var args = read_balanced(true);
-                                var sym = args.length > 1 ? args[1] : "it";
-                                var cond = args.length > 2
-                                        ? args[2]
-                                        : ( sym + " != null && " +
-                                            sym + " !== false && !(" + sym + " instanceof Array && " + sym + ".length == 0)" );
-                                block_open("(function(" + sym + ") { if (" + cond + ") {",
-                                           "}}).call(this, " + args[0] + ");");
-                        }
-                        else if (skip(/^\(unless\b/i)) {
-                                block_open("if (!(" + read_balanced() + ")) {");
-                        }
-                        else if (skip(/^\(else\)/i)) {
-                                out("} else {"); // shortcut, no need for block_close / block_open here
-                        }
-                        else if (skip(/^\(elsif\b/i)) {
-                                out("} else if (" + read_balanced() + ") {"); // again
-                                assert_skip(")");
-                        }
-                        else if (skip(/^\(maphash\b/i)) {
-                                var args = read_balanced(true);
-                                var key = args[0], val = args[1], hash = args[2], sym = gensym();
-                                block_open(
-                                        // open
-                                        "(function(" + sym + ") {" +
-                                                "for (var " + key + " in " + sym + ") {" +
-                                                "if (" + sym + ".hasOwnProperty(" + key + ")) try {" +
-                                                "var " + val + " = " + sym + "[" + key + "];"
-                                        ,
-                                        // close
-                                        EX_LOOP_HANDLERS + "}}).call(this, " + hash + ");"
-                                );
-                        }
-                        else if (skip(/^\((map|foreach)\b/i)) {
-                                var args = read_balanced(true), idx, key, arr, sym = gensym(), len = gensym();
-                                if (args.length == 3) {
-                                        idx = args[0], key = args[1], arr = args[2];
-                                } else {
-                                        idx = gensym();
-                                        if (args.length == 2) {
-                                                key = args[0], arr = args[1];
-                                        }
-                                        else if (args.length == 1) {
-                                                arr = args[0];
-                                        }
+                        else if (skip("(")) {
+                                var m = skip(/^[a-z0-9_$]+/i);
+                                if (m) {
+                                        var handler = directives[m.match.toLowerCase()];
+                                        if (!handler)
+                                                EX_PARSE("Unknown directive: " + m.match);
+                                        handler();
                                 }
-                                block_open(
-                                        // open
-                                        "(function(" + sym + ") {" +
-                                                "for (var " +
-                                                (args.length == 1 ? "$_," : "") +
-                                                len + " = " + sym + ".length," +
-                                                idx + " = 0; " + idx + " < " + len + "; ++" + idx + ") try {" +
-                                                (args.length == 1
-                                                 ? "with ($_ = " + sym + "[" + idx + "]) {"
-                                                 : "var " + key + " = " + sym + "[" + idx + "];")
-                                        ,
-                                        // close
-                                        (args.length == 1 ? "}" : "") +
-                                                EX_LOOP_HANDLERS + "}).call(this, " + arr + ");"
-                                );
+                                else {
+                                        --THE_INDEX;
+                                        out(read_balanced() + ";");
+                                }
                         }
-                        else if (skip(/^\((repeat|loop)\b/i)) {
-                                var args = read_balanced(true), count, start = 1, idx, sym = gensym();
-                                if (args.length == 3)
-                                        start = args.shift();
-                                count = args.shift();
-                                idx = args.shift() || gensym();
-                                block_open(
-                                        // open
-                                        "(function(" + sym + ") {" +
-                                                "for (var " + idx + " = " + start + "; " + idx + " <= " + sym + "; ++" + idx + ") try {",
-                                        // close
-                                        EX_LOOP_HANDLERS + "}).call(this, " + count + ");"
-                                );
-                        }
-                        else if (skip(/^\(continue\)/i)) {
-                                out("throw __YAJET.X_CONT;");
-                        }
-                        else if (skip(/^\(break\)/i)) {
-                                out("throw __YAJET.X_BREK;");
-                        }
-                        else if (skip(/^\(let\b/i)) {
-                                block_open("(function(){", "}).call(this);");
-                                read_valist();
-                        }
-                        else if (skip(/^\(var\b/i)) {
-                                read_valist();
-                                assert_skip(")");
-                        }
-                        else if (skip(/^\(with\b/i)) {
-                                block_open("with (" + read_balanced() + ") {");
-                        }
-                        else if (skip(/^\(block\b/i)) {
-                                skip_ws();
-                                var name = read_simple_token();
-                                var args = trim(read_balanced());
-                                block_open("function " + name + "(" + args + ") {" + FUNC_OPEN,
-                                           FUNC_CLOSE + "}");
-                        }
-                        else if (skip(/^\(export\b/i)) {
-                                skip_ws();
-                                var name = read_simple_token();
-                                var args = trim(read_balanced());
-                                block_open(name + " = __EXPORTS[" + to_js_string(name) + "] = function(" + args + ") {" + FUNC_OPEN,
-                                           FUNC_CLOSE + "}; ");
-                                HAS_EXPORTS.push(name);
-                        }
-                        else if (skip(/^\(import\b/i)) {
-                                var imp = read_balanced(true);
-                                assert_skip(")");
-                                out(map(imp, MAKE_IMPORT).join(";\n") + ";");
-                        }
-                        else if (skip(/^\(process\b/i)) {
-                                skip_ws();
-                                var name = read_simple_token();
-                                var args = read_balanced();
-                                assert_skip(")");
-                                out("VUT(__YAJET.process(" + to_js_string(name) + ", this, [" + args + "]));");
-                        }
-                        else if (skip(/^\(wrap\b/i)) {
-                                skip_ws();
-                                var name = read_simple_token();
-                                var args = trim(read_balanced());
-                                if (args)
-                                        args += ", ";
-                                block_open("VUT(" + name + ".call(this, " + args + "function(OUT, VUT){", "}));");
-                        }
-                        else if (skip(/^\(content\)/i)) {
-                                out("arguments[arguments.length - 1].call(this, OUT, VUT);");
-                        }
-                        else if (looking_at(/^\(\s/i)) {
-                                out(read_balanced() + ";");
-                        }
-                        else if (skip(/^\)/i)) {
+                        else if (skip(")")) {
                                 block_close();
                         }
-                        else if (skip(/^\(/i)) {
+                        else if (skip("(")) {
                                 EX_PARSE("Unrecognized construct at " + rest());
                         }
-                        else if (looking_at(/^\{/i)) {
+                        else if (looking_at("{")) {
                                 var v = read_balanced(true);
                                 if (v.length > 0 && /\S/.test(v[0])) {
                                         var val = v.shift();
