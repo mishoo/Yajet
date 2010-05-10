@@ -65,6 +65,15 @@ function YAJET(yajet_args){
                 return b;
         };
 
+        function digit(ch) {
+                return ch >= "0" && ch <= "9";
+        };
+
+        function letter(ch) {
+                ch = ch.toLowerCase();
+                return ch >= "a" && ch <= "z";
+        };
+
         var PARENS = {
                 "(" : ")",
                 "{" : "}",
@@ -105,6 +114,7 @@ function YAJET(yajet_args){
                     THE_INDEX = 0,
                     THE_LENGTH = THE_STRING.length,
                     THE_TEXT = "",
+                    THE_SELF = this,
                     HAS_EXPORTS = [];
 
                 /* -----[ BEGIN directives ]----- */
@@ -259,6 +269,28 @@ function YAJET(yajet_args){
                 directives.awhen = directives.aif;
                 directives.foreach = directives.map;
                 directives.loop = directives.repeat;
+
+                var context = {
+                        peek              : peek,
+                        next              : next,
+                        rest              : rest,
+                        out               : out,
+                        skip_ws           : skip_ws,
+                        assert            : assert,
+                        assert_skip       : assert_skip,
+                        skip              : skip,
+                        looking_at        : looking_at,
+                        block_open        : block_open,
+                        block_close       : block_close,
+                        read_balanced     : read_balanced,
+                        read_string       : read_string,
+                        read_simple_token : read_simple_token,
+                        read_valist       : read_valist,
+                        to_js_string      : to_js_string,
+                        trim              : trim,
+                        map               : map,
+                        EX_PARSE          : EX_PARSE
+                };
 
                 /* -----[ END directives ]----- */
 
@@ -464,16 +496,20 @@ function YAJET(yajet_args){
                 };
 
                 function read_simple_token() {
-                        var token = "";
-                        while (true) {
-                                while (looking_at(/^[a-z0-9_$]/i))
-                                        token += next();
-                                if (looking_at(/^\|[a-z0-9_$]/i))
-                                        token += next();
-                                else if (looking_at(/^\.[a-z0-9_$]/i))
-                                        token += next();
+                        var token = "", discard = 0;
+                        var ch = peek();
+                        while (letter(ch) || digit(ch) || ch == "_" || ch == "$" || ch == "|" || ch == ".") {
+                                token += ch;
+                                if (ch == "." || ch == "|")
+                                        ++discard;
                                 else
-                                        break;
+                                        discard = 0;
+                                ++THE_INDEX;
+                                ch = peek();
+                        }
+                        if (discard > 0) {
+                                THE_INDEX -= discard;
+                                token = token.substr(0, token.length - discard);
                         }
                         return token;
                 };
@@ -506,12 +542,12 @@ function YAJET(yajet_args){
                                 skip_ws(true);
                         }
                         else if (skip("(")) {
-                                var m = skip(/^[a-z0-9_$]+/i);
+                                var m = read_simple_token();
                                 if (m) {
-                                        var handler = directives[m.match.toLowerCase()];
+                                        var handler = directives[m.toLowerCase()];
                                         if (!handler)
-                                                EX_PARSE("Unknown directive: " + m.match);
-                                        handler();
+                                                EX_PARSE("Unknown directive: " + m);
+                                        handler.call(THE_SELF, context);
                                 }
                                 else {
                                         --THE_INDEX;
