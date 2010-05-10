@@ -30,6 +30,7 @@ function YAJET(yajet_args){
         yajet_args = DEF(yajet_args || {}, {
                 reader_char : "$",
                 filters     : {},
+                directives  : {},
                 with_scope  : false
         });
 
@@ -132,7 +133,9 @@ function YAJET(yajet_args){
                                 var cond = args.length > 2
                                         ? args[2]
                                         : ( sym + " != null && " +
-                                            sym + " !== false && !(" + sym + " instanceof Array && " + sym + ".length == 0)" );
+                                            sym + " !== false && " +
+                                            "!(" + sym + " instanceof Array && " + sym + ".length == 0) && " +
+                                            "!(" + sym + " === '')" );
                                 block_open("(function(" + sym + ") { if (" + cond + ") {",
                                            "}}).call(this, " + args[0] + ");");
                         },
@@ -544,9 +547,10 @@ function YAJET(yajet_args){
                         else if (skip("(")) {
                                 var m = read_simple_token();
                                 if (m) {
-                                        var handler = directives[m.toLowerCase()];
+                                        m = m.toLowerCase();
+                                        var handler = yajet_args.directives[m] || directives[m];
                                         if (!handler)
-                                                EX_PARSE("Unknown directive: " + m);
+                                                EX_PARSE("Unknown directive: " + m.toUpperCase());
                                         handler.call(THE_SELF, context);
                                 }
                                 else {
