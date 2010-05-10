@@ -440,6 +440,7 @@ function YAJET(yajet_args){
                                         else if (wantList && open.length == 1 &&
                                                  ( skip(",") || skip(";") || skip("=>") || skip("..") || skip(/^\s+in\b/i)) ) {
                                                 ret.push(expr);
+                                                skip_ws();
                                                 expr = "";
                                         }
                                         else if (skip_ws()) {
