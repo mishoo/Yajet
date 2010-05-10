@@ -150,10 +150,10 @@ function YAJET(yajet_args){
 
                 function skip_ws(noComments) {
                         var skipped = false;
-                        while (skip(/^\s+/) ||
-                               (!noComments && ( skip(/^\x2f\x2f.*?(\n|$)/) ||
-                                                 skip(/^\x2f\*(.|\n)*?\*\x2f/) ||
-                                                 skip(/^<!--(.|\n)*?-->/))))
+                        while (skip(" ") || skip("\t") || skip("\n") || skip("\xa0") ||
+                               (!noComments && ( skip("//", "\n") ||
+                                                 skip("/*", "*/") ||
+                                                 skip("<!--", "-->"))))
                                 skipped = true;
                         return skipped;
                 };
@@ -170,10 +170,17 @@ function YAJET(yajet_args){
                         THE_INDEX += assert(ch).length;
                 };
 
-                function skip(ch) {
+                function skip(ch, end) {
                         var ret = looking_at(ch);
-                        if (ret)
+                        if (ret) {
                                 THE_INDEX += ret.length;
+                                if (end) {
+                                        var pos = THE_STRING.indexOf(end, THE_INDEX);
+                                        if (pos == -1)
+                                                throw EX_PARSE('Unterminated "' + ch + '" at ' + rest());
+                                        THE_INDEX = pos + end.length;
+                                }
+                        }
                         return ret;
                 };
 
