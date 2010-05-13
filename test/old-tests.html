@@ -176,9 +176,72 @@ $)
 
 
       $)
+
+      $(SWITCH ("f1")
+
+        <!-- note that SWITCH is a custom directive -->
+
+        $(CASE ("j1")
+          <b>yo yo, we don't get here</b> $)
+
+        $(CASE ("f1")
+          <b>but we get here</b> $)
+
+        $(DEFAULT
+          <b>not here this time</b> $)
+
+      $)
+
     </textarea>
 
     <script>//<![CDATA[
+var directives = {
+    "switch": function(c) {
+        // SWITCH expects one expression in parens:
+        var args = c.read_balanced(true);
+        var expr = args[0]; // here is the argument
+        var old_case = c.directives["case"];
+        var old_defa = c.directives["default"];
+
+        c.directives["case"] = function(c) {
+            var args = c.read_balanced(true);
+            var expr = args[0];
+            c.set_output(save);
+            c.block_open(
+                "case " + expr + ":",
+                function() {
+                    c.out("break;");
+                    c.set_output([]);
+                }
+            );
+        };
+
+        c.directives["default"] = function(c) {
+            c.set_output(save);
+            c.block_open(
+                "default:",
+                function() {
+                    c.out("break;");
+                    c.set_output([]);
+                }
+            );
+        };
+
+        c.block_open(
+            // open
+            "switch (" + expr + ") {",
+            // close
+            function() {
+                c.set_output(save);
+                c.directives["case"] = old_case;
+                c.directives["default"] = old_defa;
+                c.out("}");
+            }
+        );
+        var save = c.set_output([]);
+    }
+};
+
 var jst = new YAJET({
     syntax_char: "$",
     filters: {
@@ -197,12 +260,15 @@ var jst = new YAJET({
         embed: function(val, prefix, suffix) {
             return prefix + val + suffix;
         }
-    }
+    },
+    directives: directives
 });
 
 var template_code = document.getElementById("source").value;
-template_code = template_code + template_code; // x2
-template_code = template_code + template_code; // x4
+// template_code = template_code + template_code; // x2
+// template_code = template_code + template_code; // x4
+// template_code = template_code + template_code; // x8
+// template_code = template_code + template_code; // x16
 
     // so that we test compilation speed.
     // for now it's awfully slow.

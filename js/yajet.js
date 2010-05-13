@@ -292,6 +292,8 @@ function YAJET(yajet_args){
                         to_js_string      : to_js_string,
                         trim              : trim,
                         map               : map,
+                        set_output        : set_output,
+                        directives        : yajet_args.directives,
                         EX_PARSE          : EX_PARSE
                 };
 
@@ -402,6 +404,12 @@ function YAJET(yajet_args){
                                 end();
                         else
                                 out(end);
+                };
+
+                function set_output(out) {
+                        var old = THE_CODE;
+                        THE_CODE = out;
+                        return old;
                 };
 
                 function read_balanced(wantList) {
@@ -622,6 +630,7 @@ function YAJET(yajet_args){
                         ret.code = code;
                         return ret;
                 } catch(ex) {
+                        window.console && console.log("%s", code);
                         ex.yajetCode = code;
                         throw ex;
                 }
@@ -678,6 +687,10 @@ function YAJET(yajet_args){
         };
 
         this.process = function(tmpl, obj, args) {
+                if (args == null)
+                        args = [];
+                else if (!(args instanceof Array))
+                        args = [ args ];
                 var func = TEMPLATES[tmpl];
                 if (!func)
                         EX_RUNTIME("No exported function: " + tmpl);

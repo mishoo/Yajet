@@ -6,7 +6,7 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Emplate Tengine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-09 11:08:13 CEST"/>
+<meta name="generated" content="2010-05-13 08:52:21 CEST"/>
 <meta name="author" content="Mihai Bazon"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
@@ -110,15 +110,20 @@ lang="en" xml:lang="en">
 </ul>
 </li>
 <li><a href="#sec-5">5 Correctness </a></li>
-<li><a href="#sec-6">6 Known issues </a>
+<li><a href="#sec-6">6 Custom directives </a>
 <ul>
-<li><a href="#sec-6.1">6.1 Literal RegExp-s in JavaScript expressions </a></li>
-<li><a href="#sec-6.2">6.2 Error reporting is less than ideal </a></li>
-<li><a href="#sec-6.3">6.3 Whitespace handling </a></li>
+<li><a href="#sec-6.1">6.1 A more involved example &mdash; <code>SWITCH</code> </a></li>
 </ul>
 </li>
-<li><a href="#sec-7">7 How to get help </a></li>
-<li><a href="#sec-8">8 License </a></li>
+<li><a href="#sec-7">7 Known issues </a>
+<ul>
+<li><a href="#sec-7.1">7.1 Literal RegExp-s in JavaScript expressions </a></li>
+<li><a href="#sec-7.2">7.2 Error reporting is less than ideal </a></li>
+<li><a href="#sec-7.3">7.3 Whitespace handling </a></li>
+</ul>
+</li>
+<li><a href="#sec-8">8 How to get help </a></li>
+<li><a href="#sec-9">9 License </a></li>
 </ul>
 </div>
 </div>
@@ -203,7 +208,7 @@ JavaScript in a <a href="#sec-5">proper</a> way.  So you don't write, for exampl
 
 
 <pre class="src src-html">
-$(MAP (el =&gt; list)  &lt;<span style="color: #8b2323;">li</span>&gt;$ei&lt;/<span style="color: #8b2323;">li</span>&gt;  $)
+$(MAP (el =&gt; list)  &lt;<span style="color: #8b2323;">li</span>&gt;$el&lt;/<span style="color: #8b2323;">li</span>&gt;  $)
 </pre>
 
 
@@ -247,8 +252,8 @@ part of the template a few times. <code>LOOP</code> is a synonym to <code>REPEAT
 
 </li>
 <li>
-iterating array or hashes (<code>MAP</code> and <code>MAPHASH</code>) &ndash; <code>MAP</code> to traverse a
-list and <code>MAPHASH</code> to iterate an object (hash table).
+iterating arrays or hashes (<code>MAP</code> and <code>MAPHASH</code>) &ndash; <code>MAP</code> to
+traverse a list and <code>MAPHASH</code> to iterate an object (hash table).
 
 </li>
 <li>
@@ -266,8 +271,12 @@ can be called, multiple times, as a function.
 
 </li>
 <li>
-components can be called using <code>WRAP</code>.  They receive some content and are
-able to output something before and after it.
+components can be called as <code>WRAP</code>-pers.  They receive some content
+and are able to output something before and after it.
+
+</li>
+<li>
+you can easily define custom directives.
 
 </li>
 <li>
@@ -275,12 +284,13 @@ able to output something before and after it.
 
 </li>
 <li>
-it compiles the template into a runnable JavaScript function which is
-blazing fast.
+it compiles the template into a runnable JavaScript function which
+is blazing fast.  Compilation speed is quite good too, but of
+course, you only need to compile a template <i>once</i>.
 
 </li>
 <li>
-the code is way shorter than the documentation (~650 lines of code,
+the code is way shorter than the documentation (~700 lines of code,
 7K minified, 3K gzipped) and it's completely self-contained (no
 library requirements, and it should not clash with any library).  I
 think it's pretty small for the number of features.
@@ -492,7 +502,7 @@ more complicated expressions.  For example <code>${a+b}</code> will insert the
 sum of a and b.  Your expression can be arbitrarily complex, and the
 scanner is smart enough to read it, provided that it is valid
 JavaScript code (you need to be <b>careful about literal RegExp-s</b>
-though, for now; more on this in <a href="#sec-6">Known issues</a>).
+though, for now; more on this in <a href="#sec-7">Known issues</a>).
 </p>
 <p>
 So, an example of a perfectly valid call is:
@@ -925,30 +935,32 @@ $)
 
 <p>
 The variable <code>$it</code> is created by the macro and takes the value of the
-condition, and the text block is executed only if:
+condition, and the text block is executed only if<sup><a class="footref" name="fnr.5" href="#fn.5">5</a></sup>:
 </p>
 <ul>
 <li>
 <code>$it</code> is not <code>null</code> and not <code>undefined</code>
 </li>
 <li>
-<code>$it</code> is not <code>false</code> <sup><a class="footref" name="fnr.5" href="#fn.5">5</a></sup>
+<code>$it</code> is not <code>false</code> <sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>
 </li>
 <li>
 <code>$it</code> is not an empty array
+</li>
+<li>
+<code>$it</code> is not an empty string
 
 </li>
 </ul>
 
-<p>(Note that the JavaScript rules for falsity are different, but I think
-the Lisp rules are more useful).  It expands to this code:
+<p>It expands to this code:
 </p>
 
 
 
 <pre class="src src-espresso">
 (<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">it</span>){
-  <span style="color: #8b0000;">if</span> (it != <span style="color: #cd0000;">null</span> &amp;&amp; it !== <span style="color: #cd0000;">false</span> &amp;&amp; !(it <span style="color: #8b0000;">instanceof</span> <span style="color: #4682b4;">Array</span> &amp;&amp; it.length == 0)) {
+  <span style="color: #8b0000;">if</span> (it != <span style="color: #cd0000;">null</span> &amp;&amp; it !== <span style="color: #cd0000;">false</span> &amp;&amp; !(it <span style="color: #8b0000;">instanceof</span> <span style="color: #4682b4;">Array</span> &amp;&amp; it.length == 0) &amp;&amp; !(it === <span style="color: #008b00;">""</span>)) {
     <span style="color: #00008b;">// </span><span style="color: #00008b;">splice the block of code here
 </span>  }
 }).call(<span style="color: #cd0000;">this</span>, <span style="color: #cd0000;">this</span>.looongComputation());
@@ -1133,7 +1145,7 @@ no key or index variables.  In this case the special variable <code>$_</code> (w
 will call the Perlism) gets assigned to the current element, and <i>more</i>, the
 loop body is lexically scoped to each element using a JavaScript <code>with</code>
 block (I know, your mom told you not to play the <code>with</code> statement, but mine
-didn't<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup> :-p).
+didn't<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup> :-p).
 </p>
 <p>
 So using this style the first example would become:
@@ -1266,7 +1278,7 @@ You can define new variables with <code>LET</code> and <code>VAR</code>.  They a
 only available in its block of text.  <code>VAR</code> on the other hand does something
 similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-4.3.9"><code>BLOCK</code> or <code>EXPORT</code></a> block too<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>.
+could be a <a href="#sec-4.3.9"><code>BLOCK</code> or <code>EXPORT</code></a> block too<sup><a class="footref" name="fnr.8" href="#fn.8">8</a></sup>.
 </p>
 <p>
 <code>VAR</code> does not accept a text argument, so it ends directly with a closing
@@ -1330,7 +1342,7 @@ $x is "outside"
 <code>LET</code> operates by introducing an anonymous function, so it is compatible
 with all browsers.  JavaScript 1.7 introduced a <code>let</code> statement for
 declaring block-scoped variables, and it's supported by Firefox, but
-unfortunately no other browser has it at the moment<sup><a class="footref" name="fnr.8" href="#fn.8">8</a></sup>.
+unfortunately no other browser has it at the moment<sup><a class="footref" name="fnr.9" href="#fn.9">9</a></sup>.
 </p>
 </div>
 
@@ -1578,10 +1590,15 @@ Here's a quick example:
 <pre class="src src-espresso">
 <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>();
 yajet.compile(<span style="color: #008b00;">"$(EXPORT foo(arg) foo got $arg $)"</span>);
+
 <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">t1</span> = yajet.compile(<span style="color: #008b00;">"$(IMPORT (foo)) ${ foo('bar') }"</span>);
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">t2</span> = yajet.compile(<span style="color: #008b00;">"$(PROCESS foo('baz'))"</span>);
 alert(t1()); <span style="color: #00008b;">// </span><span style="color: #00008b;">displays "foo got bar"
-</span>alert(t2()); <span style="color: #00008b;">// </span><span style="color: #00008b;">displays "foo got baz"
+</span>
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">t2</span> = yajet.compile(<span style="color: #008b00;">"$(PROCESS foo('baz'))"</span>);
+alert(t2()); <span style="color: #00008b;">// </span><span style="color: #00008b;">displays "foo got baz"
+</span>
+<span style="color: #00008b;">// </span><span style="color: #00008b;">call the exported function directly
+</span>alert(yajet.process(<span style="color: #008b00;">"foo"</span>, <span style="color: #cd0000;">null</span>, [ <span style="color: #008b00;">"something"</span> ])); <span style="color: #00008b;">// </span><span style="color: #00008b;">displays "foo got something"
 </span></pre>
 
 
@@ -1630,9 +1647,18 @@ they can $(WRAP) each other, etc.
 
 </li>
 <li>
-if you need to call a block defined in another template as a
-WRAPper, you need to $(IMPORT) it first.  Otherwise it's the same
-as described in <a href="#sec-4.3.10">WRAP</a>.
+if you need to call a function <code>EXPORT</code>-ed from another template as
+a <code>WRAP</code>-per, you need to <code>$(IMPORT)</code> it first.  Other than this,
+it's the same as described in <a href="#sec-4.3.10">WRAP</a>.
+
+</li>
+<li>
+as you can see above, it is possible to call an exported block
+directly without using an intermediate template.  Use
+<code>yajet.process(exported_name, this_argument, [ more, args ])</code>.  The
+“this_argument” will be the value of the <b>this</b> keyword within the
+exported block, and the third is an array of more arguments that
+are passed to the function.
 
 </li>
 </ul>
@@ -1810,28 +1836,318 @@ don't use the <code>__GSY</code> prefix yourself.  Hope you don't. :-)
 Also, the loop block is embedded in a function, so that it doesn't
 affect outside variables.
 </p>
-
-
-
-
-
-
-
 </div>
 
 </div>
 
 <div id="outline-container-6" class="outline-2">
-<h2 id="sec-6"><a name="Known==issues" id="Known==issues"></a>6 Known issues </h2>
+<h2 id="sec-6">6 Custom directives </h2>
 <div id="text-6">
+
+
+<p>
+YAJET allows you to add custom directives fairly easily, but beware
+that you'll have to dig uncharted territory.  You need to pass a
+<code>directives</code> hash to the constructor, in which you map directive name
+to a parser function.  Note that your function is responsible for
+parsing any arguments that your directive allows, and generate any
+code that your directive should expand into.
+</p>
+<p>
+Let's start with an easy one:
+</p>
+
+
+
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+    directives: {
+        <span style="color: #8b2323;">author</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
+            c.out(<span style="color: #008b00;">"OUT('Mihai Bazon &lt;<a href="mailto:mihai.bazon&#64;gmail.com">mihai.bazon&#64;gmail.com</a>&gt;');"</span>);
+            c.assert_skip(<span style="color: #008b00;">")"</span>);
+        }
+    }
+});
+</pre>
+
+
+
+
+<p>
+The above defines a directive that doesn't take any arguments.  You
+can notice that your parser function receives one argument&mdash;it's an
+object that stores the current context and provides some helper API
+for you to do your stuff.  Above I used the <code>out</code> method, to output
+code that should be part of the compiled template, and <code>assert_skip</code>
+to force an error unless the template continues with a closing paren.
+</p>
+<p>
+In a template compiled with the above object instance, we can now type
+<code>$(AUTHOR)</code>, and it will expand into this:
+</p>
+
+
+
+<pre class="src src-espresso">
+OUT(<span style="color: #008b00;">'Mihai Bazon &lt;<a href="mailto:mihai.bazon&#64;gmail.com">mihai.bazon&#64;gmail.com</a>&gt;'</span>);
+</pre>
+
+
+
+
+<p>
+In turn, when the template is executed, <code>OUT</code> will put its argument
+into the output stream.
+</p>
+<p>
+Your directive handler is free to parse any syntax that you desire,
+but after it finishes the “normal” parser resumes execution for the
+remainder of the code.  The “normal” is: assume plain text until we
+meet the reader char, then parse according to the rules described in
+this document.
+</p>
+<p>
+Again, this isn't for everyone so I won't get into much
+detail&mdash;please feel free to <a href="../js/yajet.js">read the source</a> to figure out more.  I'll
+just summarize the API that the context object exposes:
+</p>
+<ul>
+<li>
+<code>peek()</code> &mdash; return the current character.
+</li>
+<li>
+<code>next()</code> &mdash; return the current character and skip to the next one.
+</li>
+<li>
+<code>rest()</code> &mdash; return the rest of the characters (thus, what's left to parse),
+</li>
+<li>
+<code>out(str)</code> &mdash; insert <code>str</code> into the generated JavaScript code.
+</li>
+<li>
+<code>set_output(array)</code> &mdash; set a new output array; subsequent <code>out()</code>
+calls will push data into this array.  Returns the previous output.
+</li>
+<li>
+<code>skip_ws(noComments)</code> &mdash; skip forward whitespace and comments.  The
+optional <code>noComments</code> argument can be used (pass <code>true</code>) to avoid
+skipping comments.
+</li>
+<li>
+<code>assert(str)</code> &mdash; throw an error if <code>rest()</code> does not start with
+<code>str</code> (when <code>str</code> is a string) or does not match <code>str</code> (when <code>str</code>
+is a RegExp).
+</li>
+<li>
+<code>assert_skip(str)</code> &mdash; like <code>assert(str)</code>, but call <code>skip_ws()</code>
+before checking, and skip <code>str</code> if it follows (otherwise throw
+exception like <code>assert</code>).
+</li>
+<li>
+<code>skip(str)</code> &mdash; if <code>rest()</code> starts with <code>str</code> or matches <code>str</code> (when
+it's a RegExp), skip the matched part.
+</li>
+<li>
+<code>looking_at(str)</code> &mdash; return <code>true</code> if <code>rest()</code> starts with <code>str</code> or
+matches <code>str</code> (when it's a RegExp).
+</li>
+<li>
+<code>block_open(open, close)</code> &mdash; call <code>out(open)</code> to start a new block,
+and push <code>close</code> so that it gets output when <code>$)</code> is encountered.
+</li>
+<li>
+<code>block_close()</code> &mdash; close the current block (you shouldn't need to
+call this manually).
+</li>
+<li>
+<code>read_balanced(wantList)</code> &mdash; read balanced expression.  The current
+character must be some open paren, and it will read, skipping
+strings, comments and whitespace, until the paren is closed.  The
+optional <code>wantList</code> argument specifies if the return value should be
+an array that contains the elements of the parsed list, or just a
+string.  Return <code>null</code> if no list starts now.
+</li>
+<li>
+<code>read_string()</code> &mdash; read and return a JavaScript string.  The
+current character must be a string quote.  Return the string if it
+was available, or null otherwise.
+</li>
+<li>
+<code>read_simple_token()</code> &mdash; try to read and return if available a
+JavaScript identifier.  Note that the syntax is somewhat extended in
+that it will return for instance "foo.bar|baz" as a single token.
+</li>
+<li>
+<code>read_valist()</code> &mdash; parse and return a variable list such as those
+used for <code>LET</code> or <code>VAR</code>.  A side effect is that this also outputs
+the <code>var</code> declaration.
+</li>
+<li>
+<code>to_js_string(str)</code> &mdash; adds quotes and escapes special characters
+(newlines, tabs, quotes and backslashes) in <code>str</code> to form a
+JavaScript string.
+</li>
+<li>
+<code>trim(str)</code> &mdash; remove leading and trailing whitespace from <code>str</code> and
+return the trimmed string.
+</li>
+<li>
+<code>map(a, f, obj)</code> &mdash; for each element of array <code>a</code> call function <code>f</code> in
+the context of <code>obj</code> and collect the returned values.
+</li>
+<li>
+<code>EX_PARSE(error_str)</code> &mdash; throw a parse exception.
+</li>
+<li>
+<code>directives</code> &mdash; a hash containing the <code>directives</code> that you passed
+in constructor.  You can insert new directives at “compile-time”
+into this hash.  This hack is used in the <code>SWITCH</code> example below.
+
+</li>
+</ul>
+
+<p>You should understand that your custom directives run at <i>compile time</i>.  So “c.out” does not produce the final template result;
+instead, it should produce JavaScript <i>code</i> that generates the final
+result when executed.  This is why our sample above doesn't simply say
+<code>c.out("author...")</code>, instead it has to say
+<code>c.out("OUT('author...');")</code>.  The <code>OUT</code> function is available at
+run-time and inserts text as part of the final result.
+</p>
+
+</div>
+
+<div id="outline-container-6.1" class="outline-3">
+<h3 id="sec-6.1">6.1 A more involved example &mdash; <code>SWITCH</code> </h3>
+<div id="text-6.1">
+
+
+<p>
+For a non-trivial example, here's how to implement a <code>SWITCH</code>
+directive.  It has the same semantics as the standard JavaScript
+<code>SWITCH</code> &mdash; that is, depending on the value of some expression, it
+selects and executes a <code>CASE</code>.  The <code>DEFAULT</code> case is executed when no
+other case matches the expression.  We will in fact make use of the
+standard JavaScript <code>switch</code> for this.
+</p>
+
+
+
+<pre class="src src-espresso">
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">directives</span> = {
+    <span style="color: #008b00;">"switch"</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
+        <span style="color: #00008b;">// </span><span style="color: #00008b;">SWITCH expects one expression in parens:
+</span>        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">args</span> = c.read_balanced(<span style="color: #cd0000;">true</span>);
+        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">expr</span> = args[0]; <span style="color: #00008b;">// </span><span style="color: #00008b;">here is the argument
+</span>
+        <span style="color: #00008b;">// </span><span style="color: #00008b;">save old meaning of CASE and DEFAULT, if any
+</span>        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">old_case</span> = c.directives[<span style="color: #008b00;">"case"</span>];
+        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">old_defa</span> = c.directives[<span style="color: #008b00;">"default"</span>];
+
+        <span style="color: #00008b;">// </span><span style="color: #00008b;">inject the CASE directive
+</span>        c.directives[<span style="color: #008b00;">"case"</span>] = <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
+            <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">args</span> = c.read_balanced(<span style="color: #cd0000;">true</span>);
+            <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">expr</span> = args[0];
+            c.set_output(save);
+            c.block_open(
+                <span style="color: #008b00;">"case "</span> + expr + <span style="color: #008b00;">":"</span>,
+                <span style="color: #8b0000;">function</span>() {
+                    c.out(<span style="color: #008b00;">"break;"</span>);
+                    c.set_output([]);
+                }
+            );
+        };
+
+        <span style="color: #00008b;">// </span><span style="color: #00008b;">and the DEFAULT directive
+</span>        c.directives[<span style="color: #008b00;">"default"</span>] = <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
+            c.set_output(save);
+            c.block_open(
+                <span style="color: #008b00;">"default:"</span>,
+                <span style="color: #8b0000;">function</span>() {
+                    c.out(<span style="color: #008b00;">"break;"</span>);
+                    c.set_output([]);
+                }
+            );
+        };
+
+        <span style="color: #00008b;">// </span><span style="color: #00008b;">finally, open the switch block and prepare to close
+</span>        <span style="color: #00008b;">// </span><span style="color: #00008b;">and restore everything when the block ends.
+</span>        c.block_open(
+            <span style="color: #00008b;">// </span><span style="color: #00008b;">open
+</span>            <span style="color: #008b00;">"switch ("</span> + expr + <span style="color: #008b00;">") {"</span>,
+            <span style="color: #00008b;">// </span><span style="color: #00008b;">close
+</span>            <span style="color: #8b0000;">function</span>() {
+                c.set_output(save);
+                c.directives[<span style="color: #008b00;">"case"</span>] = old_case;
+                c.directives[<span style="color: #008b00;">"default"</span>] = old_defa;
+                c.out(<span style="color: #008b00;">"}"</span>);
+            }
+        );
+
+        <span style="color: #00008b;">// </span><span style="color: #00008b;">any text between these directives is not interesting.
+</span>        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">save</span> = c.set_output([]);
+    }
+};
+<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+    directives: directives
+});
+</pre>
+
+
+
+
+<p>
+And now, you can use <code>SWITCH</code> in your templates:
+</p>
+
+
+
+<pre class="example">
+$(SWITCH ("foo")
+   $(CASE ("bar") This won't be written. $)
+   $(CASE ("foo") But this will. $)
+   $(DEFAULT And this not. $)
+$)
+</pre>
+
+
+
+
+<p>
+Note that the implementation of this seems rather complicated.  We
+insert the <code>CASE</code> and <code>DEFAULT</code> directives at “run-time”, and remove
+them once the <code>SWITCH</code> block is ended (since they don't make sense
+outside <code>SWITCH</code>).  We need to use <code>set_output</code> to change the output
+array to some temporary one which we will discard, because otherwise
+the whitespace between <code>$(SWITCH (...)</code> and the first <code>$(CASE)</code> will
+be transformed into code, and it won't be valid JavaScript syntax.
+And we need to be careful to set the output back to the saved value
+when needed.
+</p>
+<p>
+This topic is quite advanced so I will stop here.  If you want to
+write your own directives, you are assumed to have a good
+understanding on JavaScript (particularly on “closures”) and dig
+through the code for more (and/or ask on the <a href="http://groups.google.com/group/yajet">YAJET group</a>, but
+preferably after you have something to show us).
+</p>
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7"><a name="Known==issues" id="Known==issues"></a>7 Known issues </h2>
+<div id="text-7">
 
 
 
 </div>
 
-<div id="outline-container-6.1" class="outline-3">
-<h3 id="sec-6.1">6.1 Literal RegExp-s in JavaScript expressions </h3>
-<div id="text-6.1">
+<div id="outline-container-7.1" class="outline-3">
+<h3 id="sec-7.1">7.1 Literal RegExp-s in JavaScript expressions </h3>
+<div id="text-7.1">
 
 
 <p>
@@ -1882,18 +2198,18 @@ well (<code>\x28</code>), and same goes for all the other types of brackets such
 
 </div>
 
-<div id="outline-container-6.2" class="outline-3">
-<h3 id="sec-6.2">6.2 Error reporting is less than ideal </h3>
-<div id="text-6.2">
+<div id="outline-container-7.2" class="outline-3">
+<h3 id="sec-7.2">7.2 Error reporting is less than ideal </h3>
+<div id="text-7.2">
 
 
 </div>
 
 </div>
 
-<div id="outline-container-6.3" class="outline-3">
-<h3 id="sec-6.3">6.3 Whitespace handling </h3>
-<div id="text-6.3">
+<div id="outline-container-7.3" class="outline-3">
+<h3 id="sec-7.3">7.3 Whitespace handling </h3>
+<div id="text-7.3">
 
 
 <p>
@@ -1996,9 +2312,9 @@ is not too important.
 
 </div>
 
-<div id="outline-container-7" class="outline-2">
-<h2 id="sec-7">7 How to get help </h2>
-<div id="text-7">
+<div id="outline-container-8" class="outline-2">
+<h2 id="sec-8">8 How to get help </h2>
+<div id="text-8">
 
 
 <p>
@@ -2008,9 +2324,9 @@ If you have any questions please post them on the <a href="http://groups.google.
 
 </div>
 
-<div id="outline-container-8" class="outline-2">
-<h2 id="sec-8">8 License </h2>
-<div id="text-8">
+<div id="outline-container-9" class="outline-2">
+<h2 id="sec-9">9 License </h2>
+<div id="text-9">
 
 
 <p>
@@ -2059,6 +2375,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
+
 </div>
 </div>
 <div id="footnotes">
@@ -2079,17 +2396,22 @@ lines.
 template engine”.  Have you notice how exaggeratedly creepy is the syntax for <a href="http://beebole.com/pure/documentation/iteration-with-directives/">rendering with directives</a>?
 I guess we truly live in a “worse is better” world, but I'm still trying to do The Right Thing.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.5" href="#fnr.5">5</a></sup> BTW, did you know that in JavaScript the expression <b>(0 == false)</b> evaluates to <b>true</b> in conditionals?
+<p class="footnote"><sup><a class="footnum" name="fn.5" href="#fnr.5">5</a></sup> Note that the JavaScript rules for falsity are
+different; an empty array will stand <code>true</code>, while the number 0 (zero)
+is <code>false</code>.  But I think these ones are more useful when you're
+writing a html/text template.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> Seriously though, everything under an <code>with</code> block is
+<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> BTW, did you know that in JavaScript the expression <b>(0 == false)</b> evaluates to <b>true</b> in conditionals?
+</p>
+<p class="footnote"><sup><a class="footnum" name="fn.7" href="#fnr.7">7</a></sup> Seriously though, everything under an <code>with</code> block is
 s&hellip;l&hellip;o&hellip;w&hellip; &ndash; so, while this makes for a nice syntax, you should not
 use it where speed is critical.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.7" href="#fnr.7">7</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
+<p class="footnote"><sup><a class="footnum" name="fn.8" href="#fnr.8">8</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
 completely, but it's useful for exporting an inner function from a
 <code>LET</code> block.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.8" href="#fnr.8">8</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
+<p class="footnote"><sup><a class="footnum" name="fn.9" href="#fnr.9">9</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
 keyword from JavaScript 1.7 compared to using an anonymous function, I
 decided not to add a browser check for this.  When more browsers will
 support it I'll change my mind.  But the template syntax will remain
@@ -2100,7 +2422,7 @@ the same.
 <div id="postamble"><p class="author"> Author: Mihai Bazon
 <a href="mailto:mihai.bazon@gmail.com">&lt;mihai.bazon@gmail.com&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-09 11:08:13 CEST</p>
+<p class="date"> Date: 2010-05-13 08:52:21 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>
