@@ -1300,6 +1300,21 @@ well (=\x28=), and same goes for all the other types of brackets such as
 
 ** Error reporting is less than ideal
 
+While YAJET is smart enough to scan complicated constructs, it will
+not do any syntax checking on its own.  It just scans your template
+and generates JS code.  Then it compiles a function (using the
+[[https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Function][Function]] constructor).  At this point the browser (its JavaScript
+engine) does the proper syntax checking and error reporting.  If
+anything goes wrong, you do get an error, but it's less informative
+than it could be.  If you're using Firebug or Google Chrome, the
+generated code will show up in the console so you get a chance to see
+what's wrong, but don't trust the line number or file that it displays
+there.
+
+I don't see me writing a full JavaScript parser anytime soon, so for
+the time being we will have to live with this.  It's still pretty
+good. ;-)
+
 ** Whitespace handling
 
 Currently YAJET keeps all whitespace in the generated source.  There is a
