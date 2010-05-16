@@ -60,6 +60,13 @@ h1.title { border-bottom: 4px solid #000; padding-bottom: 5px; margin-bottom: 2e
 
 #footnotes { border-top: 1px solid #000; }
 
+h1 { font-size: 200% }
+h2 { font-size: 175% }
+h3 { font-size: 150% }
+h4 { font-size: 125% }
+
+h1, h2, h3, h4 { font-family: "Bookman",Georgia,"Times New Roman",serif; font-weight: normal; }
+
 @media print {
   html { font-size: 11pt; }
 }

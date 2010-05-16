@@ -230,8 +230,7 @@ So, an example of a perfectly valid call is:
 
 #+BEGIN_SRC espresso
 ${
-   // Comments are allowed and can even contain the closing bracket: }
-   // it's ignored, since it is in a comment.
+   // Comments are ignored, so they can contain the closing bracket: }
    (function(arg){
      // you can use the brackets in your expression too,
      // because the scanner won't stop until it's properly balanced
@@ -1308,8 +1307,8 @@ engine) does the proper syntax checking and error reporting.  If
 anything goes wrong, you do get an error, but it's less informative
 than it could be.  If you're using Firebug or Google Chrome, the
 generated code will show up in the console so you get a chance to see
-what's wrong, but don't trust the line number or file that it displays
-there.
+what's wrong, but don't trust the line number or file that its
+displayed there.
 
 I don't see me writing a full JavaScript parser anytime soon, so for
 the time being we will have to live with this.  It's still pretty
