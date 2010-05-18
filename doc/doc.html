@@ -3,10 +3,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
 lang="en" xml:lang="en">
 <head>
-<title>YAJET &ndash; JavaScript Emplate Tengine</title>
+<title>YAJET &ndash; JavaScript Template Engine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-13 23:28:22 CEST"/>
+<meta name="generated" content="2010-05-18 22:41:24 CEST"/>
 <meta name="author" content="Mihai Bazon"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
@@ -65,7 +65,7 @@ lang="en" xml:lang="en">
 /*]]>*/-->
 </script>
 </head><body>
-<h1 class="title">YAJET &ndash; JavaScript Emplate Tengine</h1>
+<h1 class="title">YAJET &ndash; JavaScript Template Engine</h1>
 
 
 <div id="table-of-contents">
@@ -157,8 +157,10 @@ it rendered.
 I think that all template tools suck to some degree, and this has to
 be because they are bringing together two (or more) languages.  The
 syntax is always creepy.  YAJET is no exception from this fundamental
-rule, but I think that it's still better than others.  What I ended up
-with is actually quite nice:
+rule, but I think that it's still better than others.  It has a nice
+Lispy syntax that feels much better than the sheer ugliness that other
+template toolkits propose.  But it also strives to keep simple things
+simple:
 </p>
 <ul>
 <li>
@@ -290,10 +292,11 @@ course, you only need to compile a template <i>once</i>.
 
 </li>
 <li>
-the code is way shorter than the documentation (~700 lines of code,
-7K minified, 3K gzipped) and it's completely self-contained (no
-library requirements, and it should not clash with any library).  I
-think it's pretty small for the number of features.
+the code is way shorter than the documentation<sup><a class="footref" name="fnr.5" href="#fn.5">5</a></sup> (~700
+lines of code, 7K minified, 3K gzipped) and it's completely
+self-contained (no library requirements, and it should not clash
+with any library).  I think it's pretty small for the number of
+features.
 
 </li>
 <li>
@@ -445,11 +448,11 @@ reader character (the default).  A few types of constructs are recognized:
 
 </li>
 <li>
-<code>$-</code> &mdash; kills the following whitespace.
+<code>$-</code> &mdash; skips the following whitespace.
 
 </li>
 <li>
-<code>$foo</code> &mdash; inserts the value of the variable foo.
+<code>$foo</code>, <code>$foo.bar</code> &mdash; inserts the value of the variable foo, foo.bar etc.
 
 </li>
 <li>
@@ -458,8 +461,8 @@ inserts the return value, if any.
 
 </li>
 <li>
-<code>$(INSTRUCTION ... $)</code> &mdash; processes the contents according to some rules
-which are particular for INSTRUCTION.
+<code>$(DIRECTIVE ... $)</code> &mdash; processes the contents according to some
+rules which are particular for <code>DIRECTIVE</code>.
 
 </li>
 <li>
@@ -478,8 +481,9 @@ which are particular for INSTRUCTION.
 <p>
 To insert a variable you can say <code>$foo</code>, <code>$foo.bar</code>, etc.  This case
 is quite simple.  The parser will stop at a character which isn't a
-letter, a digit, an underscore a dot or a pipe.  It supports filtering
-the values with a convenient syntax: <code>$foo|html</code>.
+letter, a digit, an underscore, a dot or a pipe.  The pipe is for
+conveniently filtering the value: <code>$foo|html</code> will HTML-escape the
+value of foo before inserting it into the output.
 </p>
 <p>
 Note that when the dot or pipe is followed by a non-word character,
@@ -502,10 +506,12 @@ uppercase, then apply the html filter to the upcased string.
 
 
 <p>
-This is similar to “simple interpolation”, but it allows arbitrarily
-complex expressions.  For example <code>${a+b}</code> will insert the sum of a
-and b.  The scanner is smart enough to read various expressions,
-provided that they are properly balanced (you need to be <b>careful about literal RegExp-s</b> for now; more on this in <a href="#sec-7">Known issues</a>).
+This is similar to “simple interpolation”, in that the value of the
+expression gets inserted into the output.  For example <code>${a+b}</code> will
+insert the sum of a and b.  The scanner is smart enough to read
+arbitrarily complex expressions, provided that they are properly
+balanced (you need to be <b>careful about literal RegExp-s</b> for now;
+more on this in <a href="#sec-7">Known issues</a>).
 </p>
 <p>
 So, an example of a perfectly valid call is:
@@ -521,6 +527,7 @@ ${
 </span>     <span style="color: #00008b;">// </span><span style="color: #00008b;">because the scanner won't stop until it's properly balanced
 </span>     <span style="color: #8b0000;">return</span> arg.a + arg.b + arg.text;
    })({
+     &lt;!-- as a bonus, you can have HTML comments too --&gt;
      a: 5,
      b: 10,
      text: <span style="color: #008b00;">"(foo}"</span> <span style="color: #00008b;">// </span><span style="color: #00008b;">strings too
@@ -532,8 +539,9 @@ ${
 
 
 <p>
-The expression is evaluated at runtime and its value is inserted into the
-template output only if it's not null.
+The expression is evaluated at runtime and its value is inserted into
+the template output only if it's not null.  The above would output
+"<code>15(foo}</code>".
 </p>
 
 </div>
@@ -567,36 +575,7 @@ this writing the filters available by default are:
 </li>
 </ul>
 
-<p>You would use “plural” like this:
-</p>
-
-
-
-<pre class="example">
-1. We got ${ count =&gt; plural("no items", "one item", "two items", "# items") }
-2. We got ${ count =&gt; plural([ "no items", "one item", "two items", "# items" ]) }
-3. We got ${ count =&gt; plural("no items|one item|two items|# items") }
-</pre>
-
-
-
-
-<p>
-Besides the implicit argument (<code>count</code>) plural accepts multiple
-arguments (case 1 above), or a single array argument (case 2) or a
-string (case 3) that specifies the formats separated by a pipe
-character.  In all cases, the arguments specify how to display the
-numeric value.  If it's zero, it selects the first argument; if it's
-one, it selects the second, and so on.  If it's bigger than the number
-of arguments, it selects the last one.  <code>#</code> is replaced with the
-number.  So the above displays "We got no items" when count is zero,
-"We got one item" when count is 1, "We got two items" when count is 2
-and "We got # items" when count is bigger (where # is replaced with the value of count).
-</p>
-
-
-<p>
-It's easy to define custom filters when you construct the YAJET object:
+<p>It's easy to define custom filters when you construct the YAJET object:
 </p>
 
 
@@ -740,6 +719,36 @@ The first argument of your filter is always the value from the template (in
 the above case, the Date object created with <code>new Date()</code>), and the other
 arguments are passed following the filter name ("YYYY-MM-DD").
 </p>
+
+<hr/>
+
+<p>
+You would use “plural” like this:
+</p>
+
+
+
+<pre class="example">
+1. We got ${ count =&gt; plural("no items", "one item", "two items", "# items") }
+2. We got ${ count =&gt; plural([ "no items", "one item", "two items", "# items" ]) }
+3. We got ${ count =&gt; plural("no items|one item|two items|# items") }
+</pre>
+
+
+
+
+<p>
+Besides the implicit argument (<code>count</code>) plural accepts multiple
+arguments (case 1 above), or a single array argument (case 2) or a
+string (case 3) that specifies the formats separated by a pipe
+character.  In all cases, the arguments specify how to display the
+numeric value.  If it's zero, it selects the first argument; if it's
+one, it selects the second, and so on.  If it's bigger than the number
+of arguments, it selects the last one.  <code>#</code> is replaced with the
+number.  So the above displays "We got no items" when count is zero,
+"We got one item" when count is 1, "We got two items" when count is 2
+and "We got # items" when count is bigger (where # is replaced with the value of count).
+</p>
 </div>
 </div>
 
@@ -791,11 +800,11 @@ $)
 
 <p>
 Instead of inserting arbitrary code unconditionally, we simply end a
-known construct.  The condition that you pass to WHEN must be fully
-valid JavaScript (you cannot pass a partial expression there) and, if
-your editor does a good job about matching parens, then you can
-quickly see where the block begins/ends by moving the cursor to the
-parens.  I prefer this style.
+known construct.  The condition that you pass to <code>IF</code> must be proper
+JavaScript (you cannot pass a partial expression there) and, if your
+editor does a good job about matching parens, then you can quickly see
+where the block begins/ends by moving the cursor to the parens.  I
+prefer this style.
 </p>
 <p>
 Note that the processing instructions are not case-sensitive.  I prefer to
@@ -806,21 +815,21 @@ The <code>$(BAR ... $)</code> construct has the following properties:
 </p>
 <ul>
 <li>
-it starts with <code>$(</code> (so it's a normal paren, not a bracket).
+it starts with <code>$(</code> (so it's a normal paren, not a bracket)
 </li>
 <li>
 it continues with a special instruction (again, I prefer uppercase for
-this but it's not required).
+this but it's not required)
 </li>
 <li>
-depending on the instruction, certain arguments may follow.
+depending on the instruction, certain arguments may follow
 </li>
 <li>
-it <i>should</i> end with <code>$)</code>.
+it <i>usually</i> ends with <code>$)</code>
 </li>
 <li>
 it may contain a <i>block of text</i> between the arguments and the <code>$)</code>
-terminator.
+terminator
 
 </li>
 </ul>
@@ -939,14 +948,14 @@ $)
 
 <p>
 The variable <code>$it</code> is created by the macro and takes the value of the
-condition, and the text block is executed only if<sup><a class="footref" name="fnr.5" href="#fn.5">5</a></sup>:
+condition, and the text block is executed only if<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>:
 </p>
 <ul>
 <li>
 <code>$it</code> is not <code>null</code> and not <code>undefined</code>
 </li>
 <li>
-<code>$it</code> is not <code>false</code> <sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>
+<code>$it</code> is not <code>false</code> <sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>
 </li>
 <li>
 <code>$it</code> is not an empty array
@@ -993,7 +1002,7 @@ $)
 
 <p>
 Also, for cases when you are unhappy with the default falsity rules,
-you can state the condition as well:
+you can state the full condition as well:
 </p>
 
 
@@ -1149,7 +1158,7 @@ no key or index variables.  In this case the special variable <code>$_</code> (w
 will call the Perlism) gets assigned to the current element, and <i>more</i>, the
 loop body is lexically scoped to each element using a JavaScript <code>with</code>
 block (I know, your mom told you not to play the <code>with</code> statement, but mine
-didn't<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup> :-p).
+didn't<sup><a class="footref" name="fnr.8" href="#fn.8">8</a></sup> :-p).
 </p>
 <p>
 So using this style the first example would become:
@@ -1282,7 +1291,7 @@ You can define new variables with <code>LET</code> and <code>VAR</code>.  They a
 only available in its block of text.  <code>VAR</code> on the other hand does something
 similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
 contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-4.3.9"><code>BLOCK</code> or <code>EXPORT</code></a> block too<sup><a class="footref" name="fnr.8" href="#fn.8">8</a></sup>.
+could be a <a href="#sec-4.3.9"><code>BLOCK</code> or <code>EXPORT</code></a> block too<sup><a class="footref" name="fnr.9" href="#fn.9">9</a></sup>.
 </p>
 <p>
 <code>VAR</code> does not accept a text argument, so it ends directly with a closing
@@ -1346,7 +1355,7 @@ $x is "outside"
 <code>LET</code> operates by introducing an anonymous function, so it is compatible
 with all browsers.  JavaScript 1.7 introduced a <code>let</code> statement for
 declaring block-scoped variables, and it's supported by Firefox, but
-unfortunately no other browser has it at the moment<sup><a class="footref" name="fnr.9" href="#fn.9">9</a></sup>.
+unfortunately no other browser has it at the moment<sup><a class="footref" name="fnr.10" href="#fn.10">10</a></sup>.
 </p>
 </div>
 
@@ -1609,13 +1618,12 @@ alert(t2()); <span style="color: #00008b;">// </span><span style="color: #00008b
 
 
 <p>
-You can see above two ways of calling an exported block.  One is by
+Above you can see a few ways to call an exported block.  One is by
 calling <code>$(IMPORT (block_name))</code> first, which will actually make it
-available as a local function, which you can use as if it were defined
-with <code>BLOCK</code>.  The second way is using <code>$(PROCESS block_name())</code>.
-<code>PROCESS</code> expects that the name of the block that you type there is a
-function created with <code>EXPORT</code> and compiled <i>before</i> the call to
-<code>PROCESS</code>.
+available as a local function, which you can then use as if it were
+defined with <code>BLOCK</code>.  The second way is using <code>$(PROCESS block_name())</code>.  <code>PROCESS</code> expects that the name of the block that you
+type there is a function created with <code>EXPORT</code> and compiled <i>before</i>
+the call to <code>PROCESS</code>.
 </p>
 <p>
 It might be important to understand that compile() actually runs your
@@ -1707,7 +1715,7 @@ separated with a semicolon:
 
 <pre class="example">
 $( foo = "bar";
-   someSideEffects();
+   moreSideEffects();
    i = 10 )
 </pre>
 
@@ -1839,6 +1847,75 @@ don't use the <code>__GSY</code> prefix yourself.  Hope you don't. :-)
 <p>
 Also, the loop block is embedded in a function, so that it doesn't
 affect outside variables.
+</p>
+
+<hr/>
+
+<p>
+Also because we're striving for correctness, I had to figure out what
+to do on <code>$(BREAK)</code> or <code>$(CONTINUE)</code> in certain situations.  For
+example imagine this loop:
+</p>
+
+
+
+<pre class="example">
+$(MAP (a =&gt; [1, 2, 3, 4, 5])
+  $(LET ((b =&gt; a))
+    $(WHEN (b &gt; 3) $(BREAK) $)
+    $b
+  $)
+$)
+</pre>
+
+
+
+
+<p>
+If <code>$(BREAK)</code> would translate into the plain JavaScript <code>break</code>
+statement, it would be a syntax error because <code>LET</code> introduces an
+anonymous function (in order not to mess with outer variables).  The
+above block expands into something like the following, which <i>is</i> the
+right thing:
+</p>
+
+
+
+<pre class="src src-espresso">
+(<span style="color: #8b0000;">function</span> (<span style="color: #8b008b;">__GSY31</span>) {
+    <span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">__GSY32</span> = __GSY31.length, <span style="color: #8b008b;">__GSY33</span> = 0; __GSY33 &lt; __GSY32; ++__GSY33) {
+        <span style="color: #8b0000;">try</span> {
+            <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">a</span> = __GSY31[__GSY33];
+            (<span style="color: #8b0000;">function</span> () {
+                <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">b</span> = a;
+                <span style="color: #8b0000;">if</span> (b &gt; 3) {
+                    <span style="color: #8b0000;">throw</span> __YAJET.X_BREK; <span style="color: #00008b;">// </span><span style="color: #00008b;">this is BREAK
+</span>                }
+                VUT(b);
+            }).call(<span style="color: #cd0000;">this</span>);
+        }
+        <span style="color: #8b0000;">catch</span> (ex) {
+            <span style="color: #8b0000;">if</span> (ex === __YAJET.X_CONT) { <span style="color: #00008b;">// </span><span style="color: #00008b;">here we handle CONTINUE
+</span>                <span style="color: #8b0000;">continue</span>;
+            }
+            <span style="color: #8b0000;">if</span> (ex === __YAJET.X_BREK) { <span style="color: #00008b;">// </span><span style="color: #00008b;">and here we handle BREAK
+</span>                <span style="color: #8b0000;">break</span>;
+            }
+            <span style="color: #8b0000;">throw</span> ex;
+        }
+    }
+}).call(<span style="color: #cd0000;">this</span>, [1, 2, 3, 4, 5]);
+</pre>
+
+
+
+
+<p>
+So <code>BREAK</code> and <code>CONTINUE</code> are handled with exceptions, which has an
+interesting implication: if you <i>know</i> that some function will <i>only</i>
+be called from loops, <i>then</i> you can safely use <code>BREAK</code> and <code>CONTINUE</code>
+within it.  But only <i>if you know that</i>.  It's not always a good
+practice. ;-)
 </p>
 </div>
 
@@ -2118,21 +2195,22 @@ $)
 
 <p>
 Note that the implementation of this seems rather complicated.  We
-insert the <code>CASE</code> and <code>DEFAULT</code> directives at “run-time”, and remove
-them once the <code>SWITCH</code> block is ended (since they don't make sense
-outside <code>SWITCH</code>).  We need to use <code>set_output</code> to change the output
-array to some temporary one which we will discard, because otherwise
-the whitespace between <code>$(SWITCH (...)</code> and the first <code>$(CASE)</code> will
-be transformed into code, and it won't be valid JavaScript syntax.
-And we need to be careful to set the output back to the saved value
-when needed.
+insert the <code>CASE</code> and <code>DEFAULT</code> directives when our <code>SWITCH</code> directive
+runs (that is, when the template is compiled), but remove them once
+the <code>SWITCH</code> block is ended (since they don't make sense outside
+<code>SWITCH</code>).  We need to use <code>set_output</code> to change the output array to
+some temporary one which we will discard, because otherwise the
+whitespace between <code>$(SWITCH (...)</code> and the first <code>$(CASE)</code> will be
+transformed into code, and it won't be valid JavaScript syntax.  And
+we need to be careful to set the output back to the saved value when
+needed.
 </p>
 <p>
-This topic is quite advanced so I will stop here.  If you want to
-write your own directives, you are assumed to have a good
-understanding on JavaScript (particularly on “closures”) and dig
-through the code for more (and/or ask on the <a href="http://groups.google.com/group/yajet">YAJET group</a>, but
-preferably after you have something to show us).
+This topic is advanced so I will stop here.  If you want to write your
+own directives, you are assumed to have a good understanding on
+JavaScript (particularly on “closures”) and dig through the code for
+more (and/or ask on the <a href="http://groups.google.com/group/yajet">YAJET group</a>, but preferably after you have
+something to show us).
 </p>
 
 
@@ -2397,6 +2475,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
+
 </div>
 </div>
 <div id="footnotes">
@@ -2417,22 +2496,25 @@ lines.
 template engine”.  Have you notice how exaggeratedly creepy is the syntax for <a href="http://beebole.com/pure/documentation/iteration-with-directives/">rendering with directives</a>?
 I guess we truly live in a “worse is better” world, but I'm still trying to do The Right Thing.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.5" href="#fnr.5">5</a></sup> Note that the JavaScript rules for falsity are
+<p class="footnote"><sup><a class="footnum" name="fn.5" href="#fnr.5">5</a></sup> This is a double-feature: we have good documentation and
+lots of features for small code. ;-)
+</p>
+<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> Note that the JavaScript rules for falsity are
 different; an empty array will stand <code>true</code>, while the number 0 (zero)
 is <code>false</code>.  But I think these ones are more useful when you're
 writing a html/text template.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> BTW, did you know that in JavaScript the expression <b>(0 == false)</b> evaluates to <b>true</b> in conditionals?
+<p class="footnote"><sup><a class="footnum" name="fn.7" href="#fnr.7">7</a></sup> BTW, did you know that in JavaScript the expression <b>(0 == false)</b> evaluates to <b>true</b> in conditionals?
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.7" href="#fnr.7">7</a></sup> Seriously though, everything under an <code>with</code> block is
+<p class="footnote"><sup><a class="footnum" name="fn.8" href="#fnr.8">8</a></sup> Seriously though, everything under an <code>with</code> block is
 s&hellip;l&hellip;o&hellip;w&hellip; &ndash; so, while this makes for a nice syntax, you should not
 use it where speed is critical.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.8" href="#fnr.8">8</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
+<p class="footnote"><sup><a class="footnum" name="fn.9" href="#fnr.9">9</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
 completely, but it's useful for exporting an inner function from a
 <code>LET</code> block.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.9" href="#fnr.9">9</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
+<p class="footnote"><sup><a class="footnum" name="fn.10" href="#fnr.10">10</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
 keyword from JavaScript 1.7 compared to using an anonymous function, I
 decided not to add a browser check for this.  When more browsers will
 support it I'll change my mind.  But the template syntax will remain
@@ -2443,7 +2525,7 @@ the same.
 <div id="postamble"><p class="author"> Author: Mihai Bazon
 <a href="mailto:mihai.bazon@gmail.com">&lt;mihai.bazon@gmail.com&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-13 23:28:22 CEST</p>
+<p class="date"> Date: 2010-05-18 22:41:24 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>

@@ -1,4 +1,4 @@
-#+TITLE: YAJET -- JavaScript Emplate Tengine
+#+TITLE: YAJET -- JavaScript Template Engine
 #+KEYWORDS: javascript, js, template, engine, compiler, macro, text, html
 #+DESCRIPTION: YAJET is Another JavaScript Emplate Tengine
 #+STYLE: <link rel="stylesheet" type="text/css" href="docstyle.css" />
@@ -26,8 +26,10 @@ it rendered.
 I think that all template tools suck to some degree, and this has to
 be because they are bringing together two (or more) languages.  The
 syntax is always creepy.  YAJET is no exception from this fundamental
-rule, but I think that it's still better than others.  What I ended up
-with is actually quite nice:
+rule, but I think that it's still better than others.  It has a nice
+Lispy syntax that feels much better than the sheer ugliness that other
+template toolkits propose.  But it also strives to keep simple things
+simple:
 
   + =$foo= --- insert variable foo
   + =$foo|html= --- insert variable foo, HTML escaped
@@ -109,10 +111,14 @@ Other than the boring variable interpolation, we have the following:
   is blazing fast.  Compilation speed is quite good too, but of
   course, you only need to compile a template /once/.
 
-- the code is way shorter than the documentation (~700 lines of code,
-  7K minified, 3K gzipped) and it's completely self-contained (no
-  library requirements, and it should not clash with any library).  I
-  think it's pretty small for the number of features.
+- the code is way shorter than the documentation[fn:codesize] (~700
+  lines of code, 7K minified, 3K gzipped) and it's completely
+  self-contained (no library requirements, and it should not clash
+  with any library).  I think it's pretty small for the number of
+  features.
+
+[fn:codesize] This is a double-feature: we have good documentation and
+lots of features for small code. ;-)
 
 - it's browser agnostic.  In fact, it works with standalone JavaScript engines too (such as [[http://code.google.com/p/v8/][Google's V8]]
   or [[http://www.mozilla.org/rhino/][Rhino]]).  I started a test suite based on Rhino.
@@ -190,15 +196,15 @@ reader character (the default).  A few types of constructs are recognized:
 
 - =$$= --- inserts a literal $ character.
 
-- =$-= --- kills the following whitespace.
+- =$-= --- skips the following whitespace.
 
-- =$foo= --- inserts the value of the variable foo.
+- =$foo=, =$foo.bar= --- inserts the value of the variable foo, foo.bar etc.
 
 - =${ foo.bar.baz() }= --- evaluates the given JavaScript expression and
   inserts the return value, if any.
 
-- =$(INSTRUCTION ... $)= --- processes the contents according to some rules
-  which are particular for INSTRUCTION.
+- =$(DIRECTIVE ... $)= --- processes the contents according to some
+  rules which are particular for =DIRECTIVE=.
 
 - =$( ... )= --- inserts literal JavaScript code (must not be ill-formed!).
 
@@ -206,8 +212,9 @@ reader character (the default).  A few types of constructs are recognized:
 
 To insert a variable you can say =$foo=, =$foo.bar=, etc.  This case
 is quite simple.  The parser will stop at a character which isn't a
-letter, a digit, an underscore a dot or a pipe.  It supports filtering
-the values with a convenient syntax: =$foo|html=.
+letter, a digit, an underscore, a dot or a pipe.  The pipe is for
+conveniently filtering the value: =$foo|html= will HTML-escape the
+value of foo before inserting it into the output.
 
 Note that when the dot or pipe is followed by a non-word character,
 then they are not considered part of the token and are left as is.
@@ -220,11 +227,12 @@ uppercase, then apply the html filter to the upcased string.
 
 ** JavaScript expressions (the =${exp}= construct)
 
-This is similar to “simple interpolation”, but it allows arbitrarily
-complex expressions.  For example =${a+b}= will insert the sum of a
-and b.  The scanner is smart enough to read various expressions,
-provided that they are properly balanced (you need to be *careful
-about literal RegExp-s* for now; more on this in [[Known issues]]).
+This is similar to “simple interpolation”, in that the value of the
+expression gets inserted into the output.  For example =${a+b}= will
+insert the sum of a and b.  The scanner is smart enough to read
+arbitrarily complex expressions, provided that they are properly
+balanced (you need to be *careful about literal RegExp-s* for now;
+more on this in [[Known issues]]).
 
 So, an example of a perfectly valid call is:
 
@@ -236,6 +244,7 @@ ${
      // because the scanner won't stop until it's properly balanced
      return arg.a + arg.b + arg.text;
    })({
+     <!-- as a bonus, you can have HTML comments too -->
      a: 5,
      b: 10,
      text: "(foo}" // strings too
@@ -243,8 +252,9 @@ ${
 }
 #+END_SRC
 
-The expression is evaluated at runtime and its value is inserted into the
-template output only if it's not null.
+The expression is evaluated at runtime and its value is inserted into
+the template output only if it's not null.  The above would output
+"=15(foo}=".
 
 *** Filters
 
@@ -257,27 +267,6 @@ this writing the filters available by default are:
 - =downcase= --- lowercase the string
 - =trim= --- removes leading and trailing whitespace
 - =plural= --- useful for returning "no elements", "one element", "3 elements" depending on a numeric value.
-
-You would use “plural” like this:
-
-#+BEGIN_EXAMPLE
-1. We got ${ count => plural("no items", "one item", "two items", "# items") }
-2. We got ${ count => plural([ "no items", "one item", "two items", "# items" ]) }
-3. We got ${ count => plural("no items|one item|two items|# items") }
-#+END_EXAMPLE
-
-Besides the implicit argument (=count=) plural accepts multiple
-arguments (case 1 above), or a single array argument (case 2) or a
-string (case 3) that specifies the formats separated by a pipe
-character.  In all cases, the arguments specify how to display the
-numeric value.  If it's zero, it selects the first argument; if it's
-one, it selects the second, and so on.  If it's bigger than the number
-of arguments, it selects the last one.  =#= is replaced with the
-number.  So the above displays "We got no items" when count is zero,
-"We got one item" when count is 1, "We got two items" when count is 2
-and "We got # items" when count is bigger (where # is replaced with the value of count).
-
-
 
 It's easy to define custom filters when you construct the YAJET object:
 
@@ -367,6 +356,27 @@ The first argument of your filter is always the value from the template (in
 the above case, the Date object created with =new Date()=), and the other
 arguments are passed following the filter name ("YYYY-MM-DD").
 
+------
+
+You would use “plural” like this:
+
+#+BEGIN_EXAMPLE
+1. We got ${ count => plural("no items", "one item", "two items", "# items") }
+2. We got ${ count => plural([ "no items", "one item", "two items", "# items" ]) }
+3. We got ${ count => plural("no items|one item|two items|# items") }
+#+END_EXAMPLE
+
+Besides the implicit argument (=count=) plural accepts multiple
+arguments (case 1 above), or a single array argument (case 2) or a
+string (case 3) that specifies the formats separated by a pipe
+character.  In all cases, the arguments specify how to display the
+numeric value.  If it's zero, it selects the first argument; if it's
+one, it selects the second, and so on.  If it's bigger than the number
+of arguments, it selects the last one.  =#= is replaced with the
+number.  So the above displays "We got no items" when count is zero,
+"We got one item" when count is 1, "We got two items" when count is 2
+and "We got # items" when count is bigger (where # is replaced with the value of count).
+
 ** Directives
 
 So far we are able to introduce arbitrary JavaScript variables and
@@ -395,24 +405,24 @@ $)
 #+END_SRC
 
 Instead of inserting arbitrary code unconditionally, we simply end a
-known construct.  The condition that you pass to WHEN must be fully
-valid JavaScript (you cannot pass a partial expression there) and, if
-your editor does a good job about matching parens, then you can
-quickly see where the block begins/ends by moving the cursor to the
-parens.  I prefer this style.
+known construct.  The condition that you pass to =IF= must be proper
+JavaScript (you cannot pass a partial expression there) and, if your
+editor does a good job about matching parens, then you can quickly see
+where the block begins/ends by moving the cursor to the parens.  I
+prefer this style.
 
 Note that the processing instructions are not case-sensitive.  I prefer to
 use UPPERCASE for them so that they stand out visually.
 
 The =$(BAR ... $)= construct has the following properties:
 
-- it starts with =$(= (so it's a normal paren, not a bracket).
+- it starts with =$(= (so it's a normal paren, not a bracket)
 - it continues with a special instruction (again, I prefer uppercase for
-  this but it's not required).
-- depending on the instruction, certain arguments may follow.
-- it /should/ end with =$)=.
+  this but it's not required)
+- depending on the instruction, certain arguments may follow
+- it /usually/ ends with =$)=
 - it may contain a /block of text/ between the arguments and the =$)=
-  terminator.
+  terminator
 
 The /block of text/ is parsed normally, so it's interpreted as plain text
 until =$= (the reader char) is encountered, then what follows the reader
@@ -521,7 +531,7 @@ $)
 #+END_SRC
 
 Also, for cases when you are unhappy with the default falsity rules,
-you can state the condition as well:
+you can state the full condition as well:
 
 #+BEGIN_EXAMPLE
 $(AIF (this.looongComputation() => foo, foo > 5)
@@ -910,13 +920,13 @@ alert(t2()); // displays "foo got baz"
 alert(yajet.process("foo", null, [ "something" ])); // displays "foo got something"
 #+END_SRC
 
-You can see above two ways of calling an exported block.  One is by
+Above you can see a few ways to call an exported block.  One is by
 calling =$(IMPORT (block_name))= first, which will actually make it
-available as a local function, which you can use as if it were defined
-with =BLOCK=.  The second way is using =$(PROCESS block_name())=.
-=PROCESS= expects that the name of the block that you type there is a
-function created with =EXPORT= and compiled /before/ the call to
-=PROCESS=.
+available as a local function, which you can then use as if it were
+defined with =BLOCK=.  The second way is using =$(PROCESS
+block_name())=.  =PROCESS= expects that the name of the block that you
+type there is a function created with =EXPORT= and compiled /before/
+the call to =PROCESS=.
 
 It might be important to understand that compile() actually runs your
 template once when it contains =EXPORT=-ed functions, so that they get
@@ -975,7 +985,7 @@ separated with a semicolon:
 
 #+BEGIN_EXAMPLE
 $( foo = "bar";
-   someSideEffects();
+   moreSideEffects();
    i = 10 )
 #+END_EXAMPLE
 
@@ -1058,6 +1068,59 @@ don't use the =__GSY= prefix yourself.  Hope you don't. :-)
 
 Also, the loop block is embedded in a function, so that it doesn't
 affect outside variables.
+
+------
+
+Also because we're striving for correctness, I had to figure out what
+to do on =$(BREAK)= or =$(CONTINUE)= in certain situations.  For
+example imagine this loop:
+
+#+BEGIN_EXAMPLE
+$(MAP (a => [1, 2, 3, 4, 5])
+  $(LET ((b => a))
+    $(WHEN (b > 3) $(BREAK) $)
+    $b
+  $)
+$)
+#+END_EXAMPLE
+
+If =$(BREAK)= would translate into the plain JavaScript =break=
+statement, it would be a syntax error because =LET= introduces an
+anonymous function (in order not to mess with outer variables).  The
+above block expands into something like the following, which /is/ the
+right thing:
+
+#+BEGIN_SRC espresso
+(function (__GSY31) {
+    for (var __GSY32 = __GSY31.length, __GSY33 = 0; __GSY33 < __GSY32; ++__GSY33) {
+        try {
+            var a = __GSY31[__GSY33];
+            (function () {
+                var b = a;
+                if (b > 3) {
+                    throw __YAJET.X_BREK; // this is BREAK
+                }
+                VUT(b);
+            }).call(this);
+        }
+        catch (ex) {
+            if (ex === __YAJET.X_CONT) { // here we handle CONTINUE
+                continue;
+            }
+            if (ex === __YAJET.X_BREK) { // and here we handle BREAK
+                break;
+            }
+            throw ex;
+        }
+    }
+}).call(this, [1, 2, 3, 4, 5]);
+#+END_SRC
+
+So =BREAK= and =CONTINUE= are handled with exceptions, which has an
+interesting implication: if you /know/ that some function will /only/
+be called from loops, /then/ you can safely use =BREAK= and =CONTINUE=
+within it.  But only /if you know that/.  It's not always a good
+practice. ;-)
 
 * Custom directives
 
@@ -1246,20 +1309,21 @@ $)
 #+END_EXAMPLE
 
 Note that the implementation of this seems rather complicated.  We
-insert the =CASE= and =DEFAULT= directives at “run-time”, and remove
-them once the =SWITCH= block is ended (since they don't make sense
-outside =SWITCH=).  We need to use =set_output= to change the output
-array to some temporary one which we will discard, because otherwise
-the whitespace between =$(SWITCH (...)= and the first =$(CASE)= will
-be transformed into code, and it won't be valid JavaScript syntax.
-And we need to be careful to set the output back to the saved value
-when needed.
+insert the =CASE= and =DEFAULT= directives when our =SWITCH= directive
+runs (that is, when the template is compiled), but remove them once
+the =SWITCH= block is ended (since they don't make sense outside
+=SWITCH=).  We need to use =set_output= to change the output array to
+some temporary one which we will discard, because otherwise the
+whitespace between =$(SWITCH (...)= and the first =$(CASE)= will be
+transformed into code, and it won't be valid JavaScript syntax.  And
+we need to be careful to set the output back to the saved value when
+needed.
 
-This topic is quite advanced so I will stop here.  If you want to
-write your own directives, you are assumed to have a good
-understanding on JavaScript (particularly on “closures”) and dig
-through the code for more (and/or ask on the [[http://groups.google.com/group/yajet][YAJET group]], but
-preferably after you have something to show us).
+This topic is advanced so I will stop here.  If you want to write your
+own directives, you are assumed to have a good understanding on
+JavaScript (particularly on “closures”) and dig through the code for
+more (and/or ask on the [[http://groups.google.com/group/yajet][YAJET group]], but preferably after you have
+something to show us).
 
 
 

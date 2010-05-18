@@ -11,3 +11,10 @@ $(MAPHASH (key, val => { a: "foo", b: "bar", c: "caz" }) $key => $val $)
 $(MAP (i, val => [ "foo", "bar", "baz" ]) ${i}. $val $)
 
 $(FOREACH ([ "foo", "bar", "baz" ]) $_ $)
+
+$(MAP (a => [1, 2, 3, 4, 5])
+  $(LET ((b => a))
+    $(WHEN (b > 3) $(BREAK) $)
+    $b
+  $)
+$)
