@@ -6,7 +6,7 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Template Engine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-18 22:41:24 CEST"/>
+<meta name="generated" content="2010-05-18 23:30:52 CEST"/>
 <meta name="author" content="Mihai Bazon"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
@@ -157,8 +157,8 @@ it rendered.
 I think that all template tools suck to some degree, and this has to
 be because they are bringing together two (or more) languages.  The
 syntax is always creepy.  YAJET is no exception from this fundamental
-rule, but I think that it's still better than others.  It has a nice
-Lispy syntax that feels much better than the sheer ugliness that other
+rule, but still I think it's better than others.  It has a nice Lispy
+syntax that feels much better than the sheer ugliness that other
 template toolkits propose.  But it also strives to keep simple things
 simple:
 </p>
@@ -1095,8 +1095,8 @@ $(MAP (link =&gt; links)
 
 <p>
 That's assuming that <code>links</code> is an array of objects, each containing
-<code>address</code>, <code>tooltip</code> and <code>text</code>.  You could also use a literal object (the
-parser is smart enough for this):
+<code>address</code>, <code>tooltip</code> and <code>text</code>.  You could of course use a literal
+object:
 </p>
 
 
@@ -1927,11 +1927,11 @@ practice. ;-)
 
 
 <p>
-YAJET allows you to add custom directives fairly easily, but beware
-that you'll have to dig uncharted territory.  You need to pass a
+YAJET allows you to add custom directives fairly easily, though you'll
+have to dig somewhat uncharted territory.  You need to pass a
 <code>directives</code> hash to the constructor, in which you map directive name
-to a parser function.  Note that your function is responsible for
-parsing any arguments that your directive allows, and generate any
+to a parser function.  Your function is responsible for parsing any
+arguments that you want your directive to support, and to generate any
 code that your directive should expand into.
 </p>
 <p>
@@ -2035,6 +2035,11 @@ matches <code>str</code> (when it's a RegExp).
 <li>
 <code>block_open(open, close)</code> &mdash; call <code>out(open)</code> to start a new block,
 and push <code>close</code> so that it gets output when <code>$)</code> is encountered.
+<code>close</code> is an optional argument (it defaults to "}" when not passed,
+since it's the usual JS block terminator).  It can be a function, in
+which case it's simply called when <code>$)</code> is found, and it's
+responsible for pushing any required code to end the current block
+using <code>c.out</code>.
 </li>
 <li>
 <code>block_close()</code> &mdash; close the current block (you shouldn't need to
@@ -2194,23 +2199,22 @@ $)
 
 
 <p>
-Note that the implementation of this seems rather complicated.  We
-insert the <code>CASE</code> and <code>DEFAULT</code> directives when our <code>SWITCH</code> directive
-runs (that is, when the template is compiled), but remove them once
-the <code>SWITCH</code> block is ended (since they don't make sense outside
+The implementation of <code>SWITCH</code> needs to be a bit complex.  We insert
+the <code>CASE</code> and <code>DEFAULT</code> directives when our <code>SWITCH</code> directive runs
+(that is, when the template is compiled), but remove them once the
+<code>SWITCH</code> block is ended (since they don't make sense outside
 <code>SWITCH</code>).  We need to use <code>set_output</code> to change the output array to
 some temporary one which we will discard, because otherwise the
 whitespace between <code>$(SWITCH (...)</code> and the first <code>$(CASE)</code> will be
 transformed into code, and it won't be valid JavaScript syntax.  And
 we need to be careful to set the output back to the saved value when
-needed.
+needed<sup><a class="footref" name="fnr.11" href="#fn.11">11</a></sup>.
 </p>
 <p>
 This topic is advanced so I will stop here.  If you want to write your
-own directives, you are assumed to have a good understanding on
-JavaScript (particularly on “closures”) and dig through the code for
-more (and/or ask on the <a href="http://groups.google.com/group/yajet">YAJET group</a>, but preferably after you have
-something to show us).
+own directives, you are assumed to have some good JavaScript knowledge
+and dig through the code for more (and/or ask on the <a href="http://groups.google.com/group/yajet">YAJET group</a>, but
+preferably after you have something to show us).
 </p>
 
 
@@ -2476,6 +2480,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
+
 </div>
 </div>
 <div id="footnotes">
@@ -2520,12 +2525,16 @@ decided not to add a browser check for this.  When more browsers will
 support it I'll change my mind.  But the template syntax will remain
 the same.
 </p>
+<p class="footnote"><sup><a class="footnum" name="fn.11" href="#fnr.11">11</a></sup> The fact that JavaScript properly supports closures
+plays a key role into all this, but <a href="http://mihai.bazon.net/blog/the-buzz-of-closures">I'm tired</a> of saying this all
+over. :-)
+</p>
 </div>
 </div>
 <div id="postamble"><p class="author"> Author: Mihai Bazon
 <a href="mailto:mihai.bazon@gmail.com">&lt;mihai.bazon@gmail.com&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-18 22:41:24 CEST</p>
+<p class="date"> Date: 2010-05-18 23:30:52 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>

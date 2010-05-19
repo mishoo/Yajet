@@ -26,8 +26,8 @@ it rendered.
 I think that all template tools suck to some degree, and this has to
 be because they are bringing together two (or more) languages.  The
 syntax is always creepy.  YAJET is no exception from this fundamental
-rule, but I think that it's still better than others.  It has a nice
-Lispy syntax that feels much better than the sheer ugliness that other
+rule, but still I think it's better than others.  It has a nice Lispy
+syntax that feels much better than the sheer ugliness that other
 template toolkits propose.  But it also strives to keep simple things
 simple:
 
@@ -582,8 +582,8 @@ $(MAP (link => links)
 #+END_SRC
 
 That's assuming that =links= is an array of objects, each containing
-=address=, =tooltip= and =text=.  You could also use a literal object (the
-parser is smart enough for this):
+=address=, =tooltip= and =text=.  You could of course use a literal
+object:
 
 #+BEGIN_SRC html
 $(MAP (link => [ { address : "http://www.google.com/",
@@ -1124,11 +1124,11 @@ practice. ;-)
 
 * Custom directives
 
-YAJET allows you to add custom directives fairly easily, but beware
-that you'll have to dig uncharted territory.  You need to pass a
+YAJET allows you to add custom directives fairly easily, though you'll
+have to dig somewhat uncharted territory.  You need to pass a
 =directives= hash to the constructor, in which you map directive name
-to a parser function.  Note that your function is responsible for
-parsing any arguments that your directive allows, and generate any
+to a parser function.  Your function is responsible for parsing any
+arguments that you want your directive to support, and to generate any
 code that your directive should expand into.
 
 Let's start with an easy one:
@@ -1192,6 +1192,11 @@ just summarize the API that the context object exposes:
   matches =str= (when it's a RegExp).
 - =block_open(open, close)= --- call =out(open)= to start a new block,
   and push =close= so that it gets output when =$)= is encountered.
+  =close= is an optional argument (it defaults to "}" when not passed,
+  since it's the usual JS block terminator).  It can be a function, in
+  which case it's simply called when =$)= is found, and it's
+  responsible for pushing any required code to end the current block
+  using =c.out=.
 - =block_close()= --- close the current block (you shouldn't need to
   call this manually).
 - =read_balanced(wantList)= --- read balanced expression.  The current
@@ -1308,22 +1313,25 @@ $(SWITCH ("foo")
 $)
 #+END_EXAMPLE
 
-Note that the implementation of this seems rather complicated.  We
-insert the =CASE= and =DEFAULT= directives when our =SWITCH= directive
-runs (that is, when the template is compiled), but remove them once
-the =SWITCH= block is ended (since they don't make sense outside
+The implementation of =SWITCH= needs to be a bit complex.  We insert
+the =CASE= and =DEFAULT= directives when our =SWITCH= directive runs
+(that is, when the template is compiled), but remove them once the
+=SWITCH= block is ended (since they don't make sense outside
 =SWITCH=).  We need to use =set_output= to change the output array to
 some temporary one which we will discard, because otherwise the
 whitespace between =$(SWITCH (...)= and the first =$(CASE)= will be
 transformed into code, and it won't be valid JavaScript syntax.  And
 we need to be careful to set the output back to the saved value when
-needed.
+needed[fn:closures].
+
+[fn:closures] The fact that JavaScript properly supports closures
+plays a key role into all this, but [[http://mihai.bazon.net/blog/the-buzz-of-closures][I'm tired]] of saying this all
+over. :-)
 
 This topic is advanced so I will stop here.  If you want to write your
-own directives, you are assumed to have a good understanding on
-JavaScript (particularly on “closures”) and dig through the code for
-more (and/or ask on the [[http://groups.google.com/group/yajet][YAJET group]], but preferably after you have
-something to show us).
+own directives, you are assumed to have some good JavaScript knowledge
+and dig through the code for more (and/or ask on the [[http://groups.google.com/group/yajet][YAJET group]], but
+preferably after you have something to show us).
 
 
 
