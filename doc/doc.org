@@ -198,6 +198,8 @@ reader character (the default).  A few types of constructs are recognized:
 
 - =$-= --- skips the following whitespace.
 
+- =$#= --- comment (ignore) until the end of the line.
+
 - =$foo=, =$foo.bar= --- inserts the value of the variable foo, foo.bar etc.
 
 - =${ foo.bar.baz() }= --- evaluates the given JavaScript expression and
