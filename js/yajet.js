@@ -271,7 +271,6 @@ function YAJET(yajet_args){
                 directives.when = directives["if"];
                 directives.awhen = directives.aif;
                 directives.foreach = directives.map;
-                directives.loop = directives.repeat;
 
                 var context = {
                         peek              : peek,

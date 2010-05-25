@@ -86,8 +86,8 @@ Other than the boring variable interpolation, we have the following:
 
 - conditionals (=IF= / =WHEN= / =UNLESS=, =ELSE=, =ELSIF=).
 
-- repetitive constructs (=REPEAT= / =LOOP=).  They allow you to repeat a
-  part of the template a few times. =LOOP= is a synonym to =REPEAT=.
+- repetitive constructs (=REPEAT=).  They allow you to repeat a part
+  of the template a few times.
 
 - iterating arrays or hashes (=MAP= and =MAPHASH=) -- =MAP= to
   traverse a list and =MAPHASH= to iterate an object (hash table).
@@ -544,12 +544,12 @@ $(ELSE)
 $)
 #+END_EXAMPLE
 
-*** =REPEAT= / =LOOP= --- to repeat stuff
+*** =REPEAT= --- to repeat stuff
 
-To repeat a part of the template you can use =REPEAT= or =LOOP= (they are
-synonyms).  For example, the following outputs “foo” 3 times: =$(REPEAT (3)
-foo $)=.  In various cases you might need to know the current iteration too,
-so you can pass a variable name for it:
+To repeat a part of the template you can use =REPEAT=.  For example,
+the following outputs “foo” 3 times: =$(REPEAT (3) foo $)=.  In
+various cases you might need to know the current iteration too, so you
+can pass a variable name for it:
 
 #+BEGIN_EXAMPLE
 $(REPEAT (5, i)
@@ -562,14 +562,13 @@ interval (so that you start from something else than 1), so the following is
 allowed:
 
 #+BEGIN_SRC html
-$(LOOP (5 .. 10 => i)
+$(REPEAT (5 .. 10 => i)
   <a href="/page$i">Page $i</a> $)
 #+END_SRC
 
-The =LOOP= keyword seems to be nicer in this case, but again, they are
-synonyms.  Also note that the arguments are parsed using the “list reader”,
-so you can use syntactic sugar to separate them (although a simple comma
-would do).
+Note that the arguments are parsed using the “list reader”, so you can
+use syntactic sugar to separate them (although a simple comma would
+do).
 
 *** =MAP= / =FOREACH= --- iterate an array
 
@@ -677,13 +676,13 @@ $(MAPHASH (uid, obj => users)
 
 *** =CONTINUE= and =BREAK= --- for loop control
 
-These don't take any arguments, and also don't take a block of text, so the
-expected syntax is =$(CONTINUE)= and =$(BREAK)=.  They can appear in the
-text block of some looping construct, be it =REPEAT=, =LOOP=, =MAP=,
-=FOREACH= or =MAPHASH=, and they do the same as their JavaScript
-counterparts, that is: =CONTINUE= will go to the next iteration, skipping
-any code between it and the end of the loop, and =BREAK= will immediately
-end the loop.
+These don't take any arguments, and also don't take a block of text,
+so the expected syntax is =$(CONTINUE)= and =$(BREAK)=.  They can
+appear in the text block of some looping construct, be it =REPEAT=,
+=MAP=, =FOREACH= or =MAPHASH=, and they do the same as their
+JavaScript counterparts, that is: =CONTINUE= will go to the next
+iteration, skipping any code between it and the end of the loop, and
+=BREAK= will immediately end the loop.
 
 I'm giving an example just to illustrate the syntax:
 
