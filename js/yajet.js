@@ -90,7 +90,7 @@ function YAJET(yajet_args){
 
         var MAIN_OPEN = "var __EXPORTS = {};";
 
-        var MAIN_CLOSE = "return (this === __YAJET.X_IMPORT) ? __EXPORTS : __BUF;";
+        var MAIN_CLOSE = "return (this === YAJET.X_IMPORT) ? __EXPORTS : __BUF;";
 
         var FUNC_OPEN = ( "var __BUF = '', VUT = OUT;" +
                           "function OUT(str) { if (str != null) __BUF += str };" );
@@ -98,15 +98,15 @@ function YAJET(yajet_args){
         var FUNC_CLOSE = "return __BUF";
 
         var EX_LOOP_HANDLERS = ( "} catch(ex) { " +
-                                 "if (ex === __YAJET.X_CONT) continue;" +
-                                 "if (ex === __YAJET.X_BREK) break;" +
+                                 "if (ex === YAJET.X_CONT) continue;" +
+                                 "if (ex === YAJET.X_BREK) break;" +
                                  "throw ex;" +
                                  "}" );
 
         function MAKE_IMPORT(imp) {
                 imp = trim(imp);
                 return "function " + imp + "(){" +
-                        "return __YAJET.process(" + to_js_string(imp) + ", this, arguments)}";
+                        "return YAJET.process(" + to_js_string(imp) + ", this, arguments)}";
         };
 
         function compile(THE_STRING) {
@@ -208,11 +208,11 @@ function YAJET(yajet_args){
                                 );
                         },
                         "continue": function() {
-                                out("throw __YAJET.X_CONT;");
+                                out("throw YAJET.X_CONT;");
                                 assert_skip(")");
                         },
                         "break": function() {
-                                out("throw __YAJET.X_BREK;");
+                                out("throw YAJET.X_BREK;");
                                 assert_skip(")");
                         },
                         "let": function() {
@@ -251,7 +251,7 @@ function YAJET(yajet_args){
                                 var name = read_simple_token();
                                 var args = read_balanced();
                                 assert_skip(")");
-                                out("VUT(__YAJET.process(" + to_js_string(name) + ", this, [" + args + "]));");
+                                out("VUT(YAJET.process(" + to_js_string(name) + ", this, [" + args + "]));");
                         },
                         wrap: function() {
                                 skip_ws();
@@ -469,7 +469,16 @@ function YAJET(yajet_args){
                                         // double reader char means insert it literally
                                         if (skip(ch)) {
                                                 THE_TEXT += ch;
-                                        } else {
+                                        }
+                                        // a following sharp sign (#) means comment out the rest of the line
+                                        else if (skip("#")) {
+                                                var pos = THE_STRING.indexOf("\n", THE_INDEX);
+                                                if (pos == -1)
+                                                        pos = THE_LENGTH;
+                                                THE_INDEX = pos;
+                                        }
+                                        // else: code follows
+                                        else {
                                                 flush_text();
                                                 read_code();
                                         }
@@ -512,7 +521,7 @@ function YAJET(yajet_args){
                         var ch = peek();
                         while (letter(ch) || digit(ch) || ch == "_" || ch == "$" || ch == "|" || ch == ".") {
                                 token += ch;
-                                if (ch == "." || ch == "|")
+                                if (ch == "." || ch == "|" || ch == "$")
                                         ++discard;
                                 else
                                         discard = 0;
@@ -591,7 +600,7 @@ function YAJET(yajet_args){
                                                 } else {
                                                         args = val + ", " + args;
                                                 }
-                                                val = "__YAJET.filter(" + to_js_string(filter) + ", " + args + ")";
+                                                val = "YAJET.filter(" + to_js_string(filter) + ", " + args + ")";
                                         }
                                         out("VUT(" + val + ");");
                                 }
@@ -601,7 +610,7 @@ function YAJET(yajet_args){
                                 var v = read_simple_token().split(/\s*\|\s*/);
                                 var val = v.shift();
                                 while (v.length > 0) {
-                                        val = "__YAJET.filter(" + to_js_string(v.shift()) + ", " + val + ")";
+                                        val = "YAJET.filter(" + to_js_string(v.shift()) + ", " + val + ")";
                                 }
                                 out("VUT(" + val + ");");
                         }
@@ -624,7 +633,7 @@ function YAJET(yajet_args){
                 try {
                         code = ( MAIN_OPEN + FUNC_OPEN + code + MAIN_CLOSE );
                         var self = this,
-                            compiled = new Function("__YAJET", code);
+                            compiled = new Function("YAJET", code);
                         function ret(data) { return compiled.call(data, self) };
                         ret.orig = compiled; // these serve debugging
                         ret.code = code;
@@ -640,7 +649,7 @@ function YAJET(yajet_args){
                 return v.replace(/^\s+|\s+$/g, "");
         };
 
-        var FILTERS = {
+        var FILTERS = YAJET.FILTERS = {
                 html: function(v) {
                         return String(v).replace(/&/g, "&amp;")
                                 .replace(/\x22/g, "&quot;")
@@ -660,7 +669,7 @@ function YAJET(yajet_args){
                                 if (arguments.length > 2) {
                                         fmt = Array.$(arguments, 1);
                                 } else {
-                                        fmt = fmt.split(/\s*\|\s*/);
+                                        fmt = fmt.split("|");
                                 }
                         }
                         fmt = n < fmt.length ? fmt[n] : fmt[fmt.length - 1];
@@ -671,16 +680,12 @@ function YAJET(yajet_args){
                 trim: trim
         };
 
-        for (var i in yajet_args.filters)
-                if (yajet_args.filters.hasOwnProperty(i))
-                        FILTERS[i] = yajet_args.filters[i];
-
         // API
 
         this.compile = compile;
         this.filter = function(f) {
                 var args = Array$(arguments, 1);
-                var filter = FILTERS[f];
+                var filter = yajet_args.filters[f] || FILTERS[f];
                 if (filter)
                         return filter.apply(this, args);
                 EX_RUNTIME("No filter " + f);

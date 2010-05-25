@@ -184,7 +184,7 @@ character, for instance:
 
 #+BEGIN_SRC espresso
 var yajet = new YAJET({ reader_char: "•" });
-var tmpl = yajet.compile("You said •foo •bar");
+var tmpl = yajet.compile("You said •this.foo •this.bar");
 #+END_SRC
 
 
@@ -716,8 +716,15 @@ $(VAR ((a => 10) (b => 20)))
 $a + $b = ${ a + b }
 #+END_EXAMPLE
 
-If variables with the same name were previously defined, they are replaced
-with the new ones.
+If variables with the same name were previously defined, they are
+replaced with the new ones.  Note that the effect of =VAR= can be
+obtained by using literal JavaScript:
+
+#+BEGIN_SRC espresso
+$(
+    var foo = "text", bar = this.getSomething();
+)
+#+END_SRC
 
 =LET= introduces variables that are local to its block.  If variables with
 the same name already exist, they are shadowed while the =LET= block is
