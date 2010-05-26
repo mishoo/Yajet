@@ -27,9 +27,9 @@ I think that all template tools suck to some degree, and this has to
 be because they are bringing together two (or more) languages.  The
 syntax is always creepy.  YAJET is no exception from this fundamental
 rule, but still I think it's better than others.  It has a nice Lispy
-syntax that feels much better than the sheer ugliness that other
-template toolkits propose.  But it also strives to keep simple things
-simple:
+syntax for directives, that feels much better than the sheer ugliness
+that other template toolkits propose.  But it also strives to keep
+simple things simple:
 
   + =$foo= --- insert variable foo
   + =$foo|html= --- insert variable foo, HTML escaped
