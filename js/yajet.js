@@ -262,8 +262,26 @@ function YAJET(yajet_args){
                                 block_open("VUT(" + name + ".call(this, " + args + "function(OUT, VUT){", "}));");
                         },
                         content: function() {
-                                out("arguments[arguments.length - 1].call(this, OUT, VUT);");
+                                out("if (arguments[arguments.length - 1] instanceof Function) arguments[arguments.length - 1].call(this, OUT, VUT);");
                                 assert_skip(")");
+                        },
+                        literal: function() {
+                                var end, pos, text;
+                                skip_ws();
+                                end = read_string() + ")";
+                                skip(/^[ \t\xA0]*\n/);
+                                pos = THE_STRING.indexOf(end, THE_INDEX);
+                                if (pos < 0)
+                                        EX_PARSE("Unfinished LITERAL (was looking for " + end);
+                                text = THE_STRING.substring(THE_INDEX, pos);
+                                THE_INDEX = pos + end.length;
+                                out("OUT(" + to_js_string(text) + ")");
+                        },
+                        syntax: function() {
+                                var save = READER_CHAR;
+                                skip_ws();
+                                READER_CHAR = next();
+                                block_open("", function(){ READER_CHAR = save });
                         }
                 };
 
@@ -506,6 +524,20 @@ function YAJET(yajet_args){
                                                         ++THE_INDEX;
                                                         return data;
                                                 }
+                                        } else switch (ch) {
+                                            case "b": ch = "\b"; break;
+                                            case "f": ch = "\f"; break;
+                                            case "n": ch = "\n"; break;
+                                            case "t": ch = "\t"; break;
+                                            case "r": continue; // no carriage return, thank you.
+                                            case "u":
+                                                ++THE_INDEX;
+                                                ch = parseInt(rest(4), 16);
+                                                if (isNaN(ch))
+                                                        EX_PARSE("Expecting an Unicode character code at: " + THE_INDEX);
+                                                ch = String.fromCharCode(ch);
+                                                THE_INDEX += 4;
+                                                break;
                                         }
                                         esc = false;
                                         data += ch;

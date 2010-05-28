@@ -94,7 +94,7 @@ Other than the boring variable interpolation, we have the following:
 
 - all loops can be controlled by =BREAK= or =CONTINUE=.
 
-- variable definition (=LET=, =VAR= and =WITH=).  =LET= and =WITH= introduce
+- variable definition (=LET= and =WITH=).  =LET= and =WITH= introduce
   new lexical scopes.
 
 - components (=BLOCK= and =EXPORT=).  Useful to declare blocks that
@@ -222,10 +222,22 @@ Note that when the dot or pipe is followed by a non-word character,
 then they are not considered part of the token and are left as is.
 Thus you can safely say =“Your name is |$user.name| and score is $score.”=
 
-Filters are functions that take one argument and should return the modified
-value.  You can easily define your own filters (but later on this).  Filters
-can be combined, for example: =$foo|upcase|html= will first make foo
-uppercase, then apply the html filter to the upcased string.
+Filters are functions that take one argument and should return the
+modified value.  You can easily define your own filters (more on this
+later).  Filters can be combined, for example: =$foo|upcase|html= will
+first make foo uppercase, then apply the html filter to the upcased
+string.
+
+*** Concessions
+
+- In order to insert literally the reader character in the template
+  output you have to put it twice, i.e. =$$=.
+
+- Because the pipe character is used for filtering, you cannot write
+  the following: =$foo|bar= to get the value of “foo”, followed by a
+  literal pipe, followed by the text "bar".  Instead you should write
+  it like this: =${foo}|bar= (the next session discusses the =${foo}=
+  construct).
 
 ** JavaScript expressions (the =${exp}= construct)
 
@@ -695,41 +707,13 @@ $)
 
 The above will print numbers from 1 to 5.
 
-*** =LET= and =VAR= --- define variables
+*** =LET= --- define variables
 
-You can define new variables with =LET= and =VAR=.  They are not equivalent:
-=LET= introduces a new lexical scope, so the variables that you define are
-only available in its block of text.  =VAR= on the other hand does something
-similar to the standard JavaScript =var= keyword.  Note that they are /still
-not global variables/---they are local to the innermost function that
-contains the declaration, which in many cases is your template itself, but
-could be a [[reusable template blocks][=BLOCK= or =EXPORT=]] block too[fn:var].
-
-[fn:var] =VAR= is only marginally useful.  I would remove it
-completely, but it's useful for exporting an inner function from a
-=LET= block.
-
-=VAR= does not accept a text argument, so it ends directly with a closing
-paren (no need for =$)=).  Example:
-
-#+BEGIN_EXAMPLE
-$(VAR ((a => 10) (b => 20)))
-$a + $b = ${ a + b }
-#+END_EXAMPLE
-
-If variables with the same name were previously defined, they are
-replaced with the new ones.  Note that the effect of =VAR= can be
-obtained by using literal JavaScript:
-
-#+BEGIN_SRC espresso
-$(
-    var foo = "text", bar = this.getSomething();
-)
-#+END_SRC
-
-=LET= introduces variables that are local to its block.  If variables with
-the same name already exist, they are shadowed while the =LET= block is
-in effect.  After the =LET= block ends, previous bindings come back to life.
+You can define new variables with =LET=.  It introduces a new lexical
+scope, so the variables that you define are only available in its
+block of text.  If variables with the same name already exist, they
+are shadowed while the =LET= block is in effect.  After the =LET=
+block ends, previous bindings come back to life.
 
 #+BEGIN_EXAMPLE
 $(LET ((a => 10) (b => 20))
@@ -740,8 +724,8 @@ $)
 Since =LET= takes a block of text, it ends with the normal block terminator
 =$)=.  Here's an example to demonstrate scope:
 
-#+BEGIN_EXAMPLE
-$(VAR ((x => "outside")))
+#+BEGIN_SRC espresso
+$( var x = "outside" /* literal JS block, described later */ )
 $(LET ((x => 10))
   $x is 10
   $(LET ((x => 20))
@@ -750,12 +734,13 @@ $(LET ((x => 10))
   $x is back 10
 $)
 $x is "outside"
-#+END_EXAMPLE
+#+END_SRC
 
-=LET= operates by introducing an anonymous function, so it is compatible
-with all browsers.  JavaScript 1.7 introduced a =let= statement for
-declaring block-scoped variables, and it's supported by Firefox, but
-unfortunately no other browser has it at the moment[fn:no-true-let].
+=LET= operates by introducing an anonymous function, so it's
+compatible with all browsers.  JavaScript 1.7 introduced a =let=
+statement for declaring block-scoped variables, and it's supported by
+Firefox, but unfortunately no other browser has it at the
+moment[fn:no-true-let].
 
 [fn:no-true-let] Since I'm not sure what are the benefits of the =let=
 keyword from JavaScript 1.7 compared to using an anonymous function, I
@@ -858,9 +843,9 @@ To do this with a =LET= block we would have to export the function; we can
 use an outside variable for that:
 
 #+BEGIN_SRC html
-$(VAR (counter))
+$( var counter )
 $(LET ((value => 0))
-  $( counter = _counter /* export it */ )
+  $( counter = _counter <!-- export it --> )
   $(BLOCK _counter()
     <p>Counter is ${ ++value }</p> $) $)
 
@@ -870,9 +855,9 @@ ${ counter() } -- now it works.
 # <<WRAP>>
 *** =WRAP=, =CONTENT= --- call a wrapper with an additional block of text
 
-=BLOCK= can be used to define wrappers.  A wrapper is a function that
-receives a bit of text and puts something before and after it.  For example,
-to define a wrapper that creates a table we can say:
+=BLOCK=-s can be used as wrappers.  A wrapper is a function that
+receives a bit of text and puts something before and after it.  For
+example, to define a wrapper that creates a table we can say:
 
 #+BEGIN_SRC html
 <!-- define our wrapper -->
@@ -895,12 +880,12 @@ $(WRAP table([ "Name", "Phone", "Email" ])
 $)
 #+END_SRC
 
-You can note that a wrapper is a normal function (=BLOCK=) and it can
-take arguments.  To send the arguments with a =WRAP= block, just make
-it look like a normal function call.  If there are no arguments, you
-still need to insert the parens =()=.  When it's calling your block,
-=WRAP= sends an additional hidden argument that contains the text
-which is expanded by =$(CONTENT)=.  For now this argument is a
+You can note that the wrapper is a normal function (=BLOCK=) and it
+can take arguments.  To send the arguments with a =WRAP= block, just
+make it look like a normal function call.  If there are no arguments,
+you still need to insert the parens =()=.  When it's calling your
+block, =WRAP= sends an additional hidden argument that contains the
+text which is expanded by =$(CONTENT)=.  For now this argument is a
 function that renders the text, and =$(CONTENT)= simply calls this
 function.
 
@@ -966,10 +951,63 @@ Some notes:
 
  - as you can see above, it is possible to call an exported block
    directly without using an intermediate template.  Use
-   =yajet.process(exported_name, this_argument, [ more, args ])=.  The
-   “this\_argument” will be the value of the *this* keyword within the
-   exported block, and the third is an array of more arguments that
-   are passed to the function.
+   =yajet.process(exported_name, self, [ more, args ])=.  The =self=
+   argument will be the value of the *this* keyword within the
+   exported block, and the last is an array of more arguments that are
+   passed to the function.
+
+*** =LITERAL= --- include literal text
+
+With this directive you can include a literal block of text.  No
+constructs within it are expanded.  Example:
+
+#+BEGIN_EXAMPLE
+$this.foo -- here it's replaced with the value of the variable
+$(LITERAL "STOP"
+  $this.foo -- here it's left untouched
+STOP)
+#+END_EXAMPLE
+
+The =LITERAL= directive takes one string as an argument.  That string
+immediately followed by a closing paren is expected to end the literal
+block of text.  In the above example we state that “STOP)” should end
+the text.  Note that the closing paren is implied, and required:
+
+#+BEGIN_EXAMPLE
+$(LITERAL "FOO"
+  The following doesn't end the block:
+  FOO
+  but the following does:
+  FOO)
+#+END_EXAMPLE
+
+*** =SYNTAX= --- temporarily change the reader character
+
+When you need to display the current reader char literally, many times
+in a block of text, rather than typing it twice each time it's
+sometimes more convenient to temporarily change it to something
+different.  Example:
+
+#+BEGIN_SRC html
+Price: $$ $this.price
+TAX:   $$ $this.tax
+This is a dollar sign: $$
+
+<!-- here's another way: -->
+$(SYNTAX #
+  Price: $ #this.price
+  TAX:   $ #this.tax
+  This is a dollar sign: $
+#)
+
+$this.tax -- back to previous reader char
+#+END_SRC
+
+=SYNTAX= takes a single char argument (the first non-white-space
+character that follows the directive) and that char becomes the
+=reader_char= while its block of text is in effect.  Note that to end
+the block of text you need to include the normal block terminator, but
+using the new reader char---so we need =#)= instead of =$)= in the above sample.
 
 *** Literal JavaScript with =$( ... )=
 
@@ -1029,7 +1067,7 @@ sample would suffer from both problems:
 
 #+BEGIN_EXAMPLE
 $(FOREACH (link => this.getLinksFromServer())
-  $(VAR ((i => link.text.length)))
+  $( var i = link.text.length )
   $(WHEN (i > 30)
     ... truncate text
   $)
@@ -1220,8 +1258,8 @@ just summarize the API that the context object exposes:
   JavaScript identifier.  Note that the syntax is somewhat extended in
   that it will return for instance "foo.bar|baz" as a single token.
 - =read_valist()= --- parse and return a variable list such as those
-  used for =LET= or =VAR=.  A side effect is that this also outputs
-  the =var= declaration.
+  used for =LET=.  A side effect is that this also outputs the =var=
+  declaration.
 - =to_js_string(str)= --- adds quotes and escapes special characters
   (newlines, tabs, quotes and backslashes) in =str= to form a
   JavaScript string.
@@ -1396,12 +1434,13 @@ good. ;-)
 
 ** Whitespace handling
 
-Currently YAJET keeps all whitespace in the generated source.  There is a
-directive that allows you to say “kill following whitespace” (=$-=, that is,
-the reader char followed by a minus sign) but it's not very convenient.
-What should probably be done is that it should, by default, eat all
-whitespace that occurs on lines which don't include literal text.  For
-example the following:
+Currently YAJET keeps all whitespace in the generated
+source[fn:whitespace].  There is a directive that allows you to say
+“kill following whitespace” (=$-=, that is, the reader char followed
+by a minus sign) but it's not very convenient.  For example:
+
+[fn:whitespace] Speaking of it, most (all?) template engines do the
+same.
 
 #+BEGIN_SRC html
 <p>
@@ -1423,8 +1462,8 @@ results in this output:
 </p>
 #+END_SRC
 
-Generally, it's not what one would expect.  What's worse, we can make it
-look better but it's totally unintuitive:
+Generally, it's not what one would expect.  We can make it look better
+with the “kill whitespace” directive, but it's totally unintuitive:
 
 #+BEGIN_SRC html
 <p>$-

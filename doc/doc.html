@@ -6,7 +6,7 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Template Engine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-25 20:11:42 CEST"/>
+<meta name="generated" content="2010-05-29 00:06:22 CEST"/>
 <meta name="author" content="Mihai Bazon"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
@@ -86,7 +86,11 @@ lang="en" xml:lang="en">
 </li>
 <li><a href="#sec-4">4 Syntax </a>
 <ul>
-<li><a href="#sec-4.1">4.1 Simple interpolation (the <code>$foo</code> construct) </a></li>
+<li><a href="#sec-4.1">4.1 Simple interpolation (the <code>$foo</code> construct) </a>
+<ul>
+<li><a href="#sec-4.1.1">4.1.1 Concessions </a></li>
+</ul>
+</li>
 <li><a href="#sec-4.2">4.2 JavaScript expressions (the <code>${exp}</code> construct) </a>
 <ul>
 <li><a href="#sec-4.2.1">4.2.1 Filters </a></li>
@@ -100,12 +104,14 @@ lang="en" xml:lang="en">
 <li><a href="#sec-4.3.4">4.3.4 <code>MAP</code> / <code>FOREACH</code> &mdash; iterate an array </a></li>
 <li><a href="#sec-4.3.5">4.3.5 <code>MAPHASH</code> &mdash; iterate an object (hash) </a></li>
 <li><a href="#sec-4.3.6">4.3.6 <code>CONTINUE</code> and <code>BREAK</code> &mdash; for loop control </a></li>
-<li><a href="#sec-4.3.7">4.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </a></li>
+<li><a href="#sec-4.3.7">4.3.7 <code>LET</code> &mdash; define variables </a></li>
 <li><a href="#sec-4.3.8">4.3.8 <code>WITH</code> &mdash; modify the scope chain </a></li>
 <li><a href="#sec-4.3.9">4.3.9 <code>BLOCK</code> &mdash; define reusable template blocks </a></li>
 <li><a href="#sec-4.3.10">4.3.10 <code>WRAP</code>, <code>CONTENT</code> &mdash; call a wrapper with an additional block of text </a></li>
 <li><a href="#sec-4.3.11">4.3.11 <code>EXPORT</code> &mdash; define a BLOCK that can be used in another template </a></li>
-<li><a href="#sec-4.3.12">4.3.12 Literal JavaScript with <code>$( ... )</code> </a></li>
+<li><a href="#sec-4.3.12">4.3.12 <code>LITERAL</code> &mdash; include literal text </a></li>
+<li><a href="#sec-4.3.13">4.3.13 <code>SYNTAX</code> &mdash; temporarily change the reader character </a></li>
+<li><a href="#sec-4.3.14">4.3.14 Literal JavaScript with <code>$( ... )</code> </a></li>
 </ul></li>
 </ul>
 </li>
@@ -194,10 +200,10 @@ JavaScript in a <a href="#sec-5">proper</a> way.  So you don't write, for exampl
 
 
 <pre class="src src-html">
-&lt;<span style="color: #8b0000;">?js</span> for (var i = 0; i &lt; list.length; ++i) { ?&gt;
-&lt;<span style="color: #8b0000;">?js</span>     var el = list[i] ?&gt;
-     &lt;<span style="color: #8b2323;">li</span>&gt;#{el}&lt;/<span style="color: #8b2323;">li</span>&gt;
-&lt;<span style="color: #8b0000;">?js</span> } ?&gt;
+&lt;<span style="color: #a020f0;">?js</span> for (var i = 0; i &lt; list.length; ++i) { ?&gt;
+&lt;<span style="color: #a020f0;">?js</span>     var el = list[i] ?&gt;
+     &lt;<span style="color: #0000ff;">li</span>&gt;#{el}&lt;/<span style="color: #0000ff;">li</span>&gt;
+&lt;<span style="color: #a020f0;">?js</span> } ?&gt;
 </pre>
 
 
@@ -210,7 +216,7 @@ JavaScript in a <a href="#sec-5">proper</a> way.  So you don't write, for exampl
 
 
 <pre class="src src-html">
-$(MAP (el =&gt; list)  &lt;<span style="color: #8b2323;">li</span>&gt;$el&lt;/<span style="color: #8b2323;">li</span>&gt;  $)
+$(MAP (el =&gt; list)  &lt;<span style="color: #0000ff;">li</span>&gt;$el&lt;/<span style="color: #0000ff;">li</span>&gt;  $)
 </pre>
 
 
@@ -263,7 +269,7 @@ all loops can be controlled by <code>BREAK</code> or <code>CONTINUE</code>.
 
 </li>
 <li>
-variable definition (<code>LET</code>, <code>VAR</code> and <code>WITH</code>).  <code>LET</code> and <code>WITH</code> introduce
+variable definition (<code>LET</code> and <code>WITH</code>).  <code>LET</code> and <code>WITH</code> introduce
 new lexical scopes.
 
 </li>
@@ -323,12 +329,12 @@ You need to load <a href="../js/yajet.js">yajet.js</a>, and to create an instanc
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
-    reader_char : <span style="color: #008b00;">"$"</span>,
-    with_scope  : <span style="color: #cd0000;">false</span>,
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>({
+    reader_char : <span style="color: #bc8f8f;">"$"</span>,
+    with_scope  : <span style="color: #5f9ea0;">false</span>,
     filters     : {
-        <span style="color: #8b2323;">foo</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">val</span>) { <span style="color: #00008b;">/*</span><span style="color: #00008b;">...*/</span> },
-        <span style="color: #8b2323;">bar</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">val</span>) { <span style="color: #00008b;">/*</span><span style="color: #00008b;">...*/</span> }
+        <span style="color: #0000ff;">foo</span>: <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">val</span>) { <span style="color: #b22222;">/*</span><span style="color: #b22222;">...*/</span> },
+        <span style="color: #0000ff;">bar</span>: <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">val</span>) { <span style="color: #b22222;">/*</span><span style="color: #b22222;">...*/</span> }
     }
 });
 </pre>
@@ -343,7 +349,7 @@ All arguments are optional.  Then to compile a template, you do this:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">func</span> = yajet.compile(<span style="color: #008b00;">"You said: $this.foo $this.bar"</span>);
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">func</span> = yajet.compile(<span style="color: #bc8f8f;">"You said: $this.foo $this.bar"</span>);
 </pre>
 
 
@@ -356,7 +362,7 @@ and to execute it:
 
 
 <pre class="src src-espresso">
-alert( func({ foo: <span style="color: #008b00;">"hello"</span>, bar: <span style="color: #008b00;">"world!"</span> }) );
+alert( func({ foo: <span style="color: #bc8f8f;">"hello"</span>, bar: <span style="color: #bc8f8f;">"world!"</span> }) );
 </pre>
 
 
@@ -382,10 +388,10 @@ function in a <code>with(this) { ... }</code> block, so the above would become:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({ with_scope: <span style="color: #cd0000;">true</span> });
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">func</span> = yajet.compile(<span style="color: #008b00;">"You said: $foo $bar"</span>);
-<span style="color: #00008b;">// </span><span style="color: #00008b;">and call it the same way:
-</span>alert( func({ foo: <span style="color: #008b00;">"hello"</span>, bar: <span style="color: #008b00;">"world!"</span> }) );
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>({ with_scope: <span style="color: #5f9ea0;">true</span> });
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">func</span> = yajet.compile(<span style="color: #bc8f8f;">"You said: $foo $bar"</span>);
+<span style="color: #b22222;">// </span><span style="color: #b22222;">and call it the same way:
+</span>alert( func({ foo: <span style="color: #bc8f8f;">"hello"</span>, bar: <span style="color: #bc8f8f;">"world!"</span> }) );
 </pre>
 
 
@@ -419,8 +425,8 @@ character, for instance:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({ reader_char: <span style="color: #008b00;">"&#8226;"</span> });
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">tmpl</span> = yajet.compile(<span style="color: #008b00;">"You said &#8226;this.foo &#8226;this.bar"</span>);
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>({ reader_char: <span style="color: #bc8f8f;">"&#8226;"</span> });
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">tmpl</span> = yajet.compile(<span style="color: #bc8f8f;">"You said &#8226;this.foo &#8226;this.bar"</span>);
 </pre>
 
 
@@ -495,11 +501,36 @@ then they are not considered part of the token and are left as is.
 Thus you can safely say <code>“Your name is |$user.name| and score is $score.”</code>
 </p>
 <p>
-Filters are functions that take one argument and should return the modified
-value.  You can easily define your own filters (but later on this).  Filters
-can be combined, for example: <code>$foo|upcase|html</code> will first make foo
-uppercase, then apply the html filter to the upcased string.
+Filters are functions that take one argument and should return the
+modified value.  You can easily define your own filters (more on this
+later).  Filters can be combined, for example: <code>$foo|upcase|html</code> will
+first make foo uppercase, then apply the html filter to the upcased
+string.
 </p>
+
+</div>
+
+<div id="outline-container-4.1.1" class="outline-4">
+<h4 id="sec-4.1.1">4.1.1 Concessions </h4>
+<div id="text-4.1.1">
+
+
+<ul>
+<li>
+In order to insert literally the reader character in the template
+output you have to put it twice, i.e. <code>$$</code>.
+
+</li>
+<li>
+Because the pipe character is used for filtering, you cannot write
+the following: <code>$foo|bar</code> to get the value of “foo”, followed by a
+literal pipe, followed by the text "bar".  Instead you should write
+it like this: <code>${foo}|bar</code> (the next session discusses the <code>${foo}</code>
+construct).
+
+</li>
+</ul>
+</div>
 </div>
 
 </div>
@@ -525,16 +556,16 @@ So, an example of a perfectly valid call is:
 
 <pre class="src src-espresso">
 ${
-   <span style="color: #00008b;">// </span><span style="color: #00008b;">Comments are ignored, so they can contain the closing bracket: }
-</span>   (<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">arg</span>){
-     <span style="color: #00008b;">// </span><span style="color: #00008b;">you can use the brackets in your expression too,
-</span>     <span style="color: #00008b;">// </span><span style="color: #00008b;">because the scanner won't stop until it's properly balanced
-</span>     <span style="color: #8b0000;">return</span> arg.a + arg.b + arg.text;
+   <span style="color: #b22222;">// </span><span style="color: #b22222;">Comments are ignored, so they can contain the closing bracket: }
+</span>   (<span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">arg</span>){
+     <span style="color: #b22222;">// </span><span style="color: #b22222;">you can use the brackets in your expression too,
+</span>     <span style="color: #b22222;">// </span><span style="color: #b22222;">because the scanner won't stop until it's properly balanced
+</span>     <span style="color: #a020f0;">return</span> arg.a + arg.b + arg.text;
    })({
      &lt;!-- as a bonus, you can have HTML comments too --&gt;
      a: 5,
      b: 10,
-     text: <span style="color: #008b00;">"(foo}"</span> <span style="color: #00008b;">// </span><span style="color: #00008b;">strings too
+     text: <span style="color: #bc8f8f;">"(foo}"</span> <span style="color: #b22222;">// </span><span style="color: #b22222;">strings too
 </span>   })
 }
 </pre>
@@ -585,10 +616,10 @@ this writing the filters available by default are:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>({
     filters: {
-        <span style="color: #8b2323;">md5</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">value</span>) {
-            <span style="color: #8b0000;">return</span> md5_hex_of(value); <span style="color: #00008b;">// </span><span style="color: #00008b;">return the modified value
+        <span style="color: #0000ff;">md5</span>: <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">value</span>) {
+            <span style="color: #a020f0;">return</span> md5_hex_of(value); <span style="color: #b22222;">// </span><span style="color: #b22222;">return the modified value
 </span>        }
     }
 });
@@ -612,7 +643,7 @@ additional elements are filters.  For example:
 
 
 <pre class="src src-espresso">
-${ <span style="color: #cd0000;">this</span>.getLabel(), upcase, html }
+${ <span style="color: #5f9ea0;">this</span>.getLabel(), upcase, html }
 </pre>
 
 
@@ -628,7 +659,7 @@ will convert into something like this:
 output_string(
   apply_html_filter(
     apply_upcase_filter(
-      <span style="color: #cd0000;">this</span>.getLabel()
+      <span style="color: #5f9ea0;">this</span>.getLabel()
     )
   )
 )
@@ -667,10 +698,10 @@ use:
 
 
 <pre class="src src-espresso">
-${ <span style="color: #cd0000;">this</span>.getLabel() IN upcase, html }
-${ <span style="color: #cd0000;">this</span>.getLabel() =&gt; upcase =&gt; html }
-${ <span style="color: #cd0000;">this</span>.getLabel() =&gt; upcase, html }
-${ <span style="color: #cd0000;">this</span>.getLabel() .. upcase; html }
+${ <span style="color: #5f9ea0;">this</span>.getLabel() IN upcase, html }
+${ <span style="color: #5f9ea0;">this</span>.getLabel() =&gt; upcase =&gt; html }
+${ <span style="color: #5f9ea0;">this</span>.getLabel() =&gt; upcase, html }
+${ <span style="color: #5f9ea0;">this</span>.getLabel() .. upcase; html }
 </pre>
 
 
@@ -693,10 +724,10 @@ arguments:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>({
     filters: {
-        <span style="color: #8b2323;">format_date</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">date</span>, <span style="color: #8b008b;">format</span>) {
-            <span style="color: #00008b;">// </span><span style="color: #00008b;">... now return the *date* formatted according to *format*
+        <span style="color: #0000ff;">format_date</span>: <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">date</span>, <span style="color: #b8860b;">format</span>) {
+            <span style="color: #b22222;">// </span><span style="color: #b22222;">... now return the *date* formatted according to *format*
 </span>        }
     }
 });
@@ -775,7 +806,7 @@ obvious reasons:
 
 <pre class="src src-html">
 ${ if (link != null) { }
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link|html"</span>&gt;$link&lt;/<span style="color: #8b2323;">a</span>&gt;
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$link|html"</span>&gt;$link&lt;/<span style="color: #0000ff;">a</span>&gt;
 ${ } }
 </pre>
 
@@ -795,7 +826,7 @@ would write the above code:
 
 <pre class="src src-html">
 $(IF (link != null)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link|html"</span>&gt;$link&lt;/<span style="color: #8b2323;">a</span>&gt;
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$link|html"</span>&gt;$link&lt;/<span style="color: #0000ff;">a</span>&gt;
 $)
 </pre>
 
@@ -865,17 +896,17 @@ argument which must be a condition enclosed in parens.  Examples:
 
 <pre class="src src-html">
 $(WHEN (user_id == null)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"..."</span>&gt;Please login&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"..."</span>&gt;Please login&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 
 $(UNLESS (user_id != null)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"..."</span>&gt;Please login&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"..."</span>&gt;Please login&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 
 $(IF (a &lt; b)
-  &lt;<span style="color: #8b2323;">p</span>&gt;A is smaller&lt;/<span style="color: #8b2323;">p</span>&gt;
+  &lt;<span style="color: #0000ff;">p</span>&gt;A is smaller&lt;/<span style="color: #0000ff;">p</span>&gt;
 $(ELSIF (a &gt; b))
-  &lt;<span style="color: #8b2323;">p</span>&gt;B is smaller&lt;/<span style="color: #8b2323;">p</span>&gt;
+  &lt;<span style="color: #0000ff;">p</span>&gt;B is smaller&lt;/<span style="color: #0000ff;">p</span>&gt;
 $(ELSE)
-  &lt;<span style="color: #8b2323;">p</span>&gt;A and B are equal&lt;/<span style="color: #8b2323;">p</span>&gt; $)
+  &lt;<span style="color: #0000ff;">p</span>&gt;A and B are equal&lt;/<span style="color: #0000ff;">p</span>&gt; $)
 </pre>
 
 
@@ -976,11 +1007,11 @@ condition, and the text block is executed only if<sup><a class="footref" name="f
 
 
 <pre class="src src-espresso">
-(<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">it</span>){
-  <span style="color: #8b0000;">if</span> (it != <span style="color: #cd0000;">null</span> &amp;&amp; it !== <span style="color: #cd0000;">false</span> &amp;&amp; !(it <span style="color: #8b0000;">instanceof</span> <span style="color: #4682b4;">Array</span> &amp;&amp; it.length == 0) &amp;&amp; !(it === <span style="color: #008b00;">""</span>)) {
-    <span style="color: #00008b;">// </span><span style="color: #00008b;">splice the block of code here
+(<span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">it</span>){
+  <span style="color: #a020f0;">if</span> (it != <span style="color: #5f9ea0;">null</span> &amp;&amp; it !== <span style="color: #5f9ea0;">false</span> &amp;&amp; !(it <span style="color: #a020f0;">instanceof</span> <span style="color: #228b22;">Array</span> &amp;&amp; it.length == 0) &amp;&amp; !(it === <span style="color: #bc8f8f;">""</span>)) {
+    <span style="color: #b22222;">// </span><span style="color: #b22222;">splice the block of code here
 </span>  }
-}).call(<span style="color: #cd0000;">this</span>, <span style="color: #cd0000;">this</span>.looongComputation());
+}).call(<span style="color: #5f9ea0;">this</span>, <span style="color: #5f9ea0;">this</span>.looongComputation());
 </pre>
 
 
@@ -996,7 +1027,7 @@ that you can actually name the variable:
 
 <pre class="src src-html">
 $(AWHEN (this.looongComputation() =&gt; that)
-  <span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">no more $it </span><span style="color: #00008b;">--&gt;</span>
+  <span style="color: #b22222;">&lt;!-- </span><span style="color: #b22222;">no more $it </span><span style="color: #b22222;">--&gt;</span>
   .. do something with $that
 $)
 </pre>
@@ -1060,7 +1091,7 @@ allowed:
 
 <pre class="src src-html">
 $(REPEAT (5 .. 10 =&gt; i)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"/page$i"</span>&gt;Page $i&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"/page$i"</span>&gt;Page $i&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 </pre>
 
 
@@ -1090,8 +1121,8 @@ contained in an array:
 
 <pre class="src src-html">
 $(MAP (link =&gt; links)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span>
-     <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$link.address|html"</span>
+     <span style="color: #b8860b;">title</span>=<span style="color: #bc8f8f;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 </pre>
 
 
@@ -1106,16 +1137,16 @@ object:
 
 
 <pre class="src src-html">
-$(MAP (link =&gt; [ { address : <span style="color: #008b00;">"http://www.google.com/"</span>,
-                   tooltip : <span style="color: #008b00;">"Search engine"</span>,
-                   text    : <span style="color: #008b00;">"Google"</span> },
+$(MAP (link =&gt; [ { address : <span style="color: #bc8f8f;">"http://www.google.com/"</span>,
+                   tooltip : <span style="color: #bc8f8f;">"Search engine"</span>,
+                   text    : <span style="color: #bc8f8f;">"Google"</span> },
 
-                 { address : <span style="color: #008b00;">"http://www.ymacs.org/"</span>,
-                   tooltip : <span style="color: #008b00;">"AJAX code editor"</span>,
-                   text    : <span style="color: #008b00;">"Ymacs"</span> }
+                 { address : <span style="color: #bc8f8f;">"http://www.ymacs.org/"</span>,
+                   tooltip : <span style="color: #bc8f8f;">"AJAX code editor"</span>,
+                   text    : <span style="color: #bc8f8f;">"Ymacs"</span> }
                ])
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span>
-     <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$link.address|html"</span>
+     <span style="color: #b8860b;">title</span>=<span style="color: #bc8f8f;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 </pre>
 
 
@@ -1133,8 +1164,8 @@ link.  We could write it like this:
 <pre class="src src-html">
 $(MAP (i, link =&gt; links)
   $(WHEN (i &gt; 0) | $)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>="$link.address|html"
-     <span style="color: #8b008b;">title</span>="$link.tooltip|html"&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>="$link.address|html"
+     <span style="color: #b8860b;">title</span>="$link.tooltip|html"&gt;$link.text|html&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 </pre>
 
 
@@ -1149,8 +1180,8 @@ or
 <pre class="src src-html">
 $(MAP (i, link =&gt; links)
   ${ i &gt; 0 ? "|" : "" }
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>="$link.address|html"
-     <span style="color: #8b008b;">title</span>="$link.tooltip|html"&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>="$link.address|html"
+     <span style="color: #b8860b;">title</span>="$link.tooltip|html"&gt;$link.text|html&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 </pre>
 
 
@@ -1172,7 +1203,7 @@ So using this style the first example would become:
 
 <pre class="src src-html">
 $(MAP (links)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$tooltip|html"</span>&gt;$text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$address|html"</span> <span style="color: #b8860b;">title</span>=<span style="color: #bc8f8f;">"$tooltip|html"</span>&gt;$text|html&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 </pre>
 
 
@@ -1189,7 +1220,7 @@ Just a last example showing the Perlism:
 
 
 <pre class="src src-html">
-$(FOREACH ([ <span style="color: #008b00;">"foo"</span>, <span style="color: #008b00;">"bar"</span>, <span style="color: #008b00;">"baz"</span> ]) &lt;<span style="color: #8b2323;">b</span>&gt;<span style="font-weight: bold;">$_</span>&lt;/<span style="color: #8b2323;">b</span>&gt; $)
+$(FOREACH ([ <span style="color: #bc8f8f;">"foo"</span>, <span style="color: #bc8f8f;">"bar"</span>, <span style="color: #bc8f8f;">"baz"</span> ]) &lt;<span style="color: #0000ff;">b</span>&gt;<span style="font-weight: bold;">$_</span>&lt;/<span style="color: #0000ff;">b</span>&gt; $)
 </pre>
 
 
@@ -1237,7 +1268,7 @@ hash that maps user IDs to some user objects (each of them having a
 
 <pre class="src src-html">
 $(MAPHASH (uid, obj =&gt; users)
-  User &lt;<span style="color: #8b2323;">b</span>&gt;<span style="font-weight: bold;">$uid</span>&lt;/<span style="color: #8b2323;">b</span>&gt; has name &lt;<span style="color: #8b2323;">b</span>&gt;<span style="font-weight: bold;">${ obj.getName() }</span>&lt;/<span style="color: #8b2323;">b</span>&gt;&lt;<span style="color: #8b2323;">br</span> /&gt; $)
+  User &lt;<span style="color: #0000ff;">b</span>&gt;<span style="font-weight: bold;">$uid</span>&lt;/<span style="color: #0000ff;">b</span>&gt; has name &lt;<span style="color: #0000ff;">b</span>&gt;<span style="font-weight: bold;">${ obj.getName() }</span>&lt;/<span style="color: #0000ff;">b</span>&gt;&lt;<span style="color: #0000ff;">br</span> /&gt; $)
 </pre>
 
 
@@ -1285,54 +1316,16 @@ The above will print numbers from 1 to 5.
 </div>
 
 <div id="outline-container-4.3.7" class="outline-4">
-<h4 id="sec-4.3.7">4.3.7 <code>LET</code> and <code>VAR</code> &mdash; define variables </h4>
+<h4 id="sec-4.3.7">4.3.7 <code>LET</code> &mdash; define variables </h4>
 <div id="text-4.3.7">
 
 
 <p>
-You can define new variables with <code>LET</code> and <code>VAR</code>.  They are not equivalent:
-<code>LET</code> introduces a new lexical scope, so the variables that you define are
-only available in its block of text.  <code>VAR</code> on the other hand does something
-similar to the standard JavaScript <code>var</code> keyword.  Note that they are <i>still not global variables</i>&mdash;they are local to the innermost function that
-contains the declaration, which in many cases is your template itself, but
-could be a <a href="#sec-4.3.9"><code>BLOCK</code> or <code>EXPORT</code></a> block too<sup><a class="footref" name="fnr.9" href="#fn.9">9</a></sup>.
-</p>
-<p>
-<code>VAR</code> does not accept a text argument, so it ends directly with a closing
-paren (no need for <code>$)</code>).  Example:
-</p>
-
-
-
-<pre class="example">
-$(VAR ((a =&gt; 10) (b =&gt; 20)))
-$a + $b = ${ a + b }
-</pre>
-
-
-
-
-<p>
-If variables with the same name were previously defined, they are
-replaced with the new ones.  Note that the effect of <code>VAR</code> can be
-obtained by using literal JavaScript:
-</p>
-
-
-
-<pre class="src src-espresso">
-$(
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">foo</span> = <span style="color: #008b00;">"text"</span>, <span style="color: #8b008b;">bar</span> = <span style="color: #cd0000;">this</span>.getSomething();
-)
-</pre>
-
-
-
-
-<p>
-<code>LET</code> introduces variables that are local to its block.  If variables with
-the same name already exist, they are shadowed while the <code>LET</code> block is
-in effect.  After the <code>LET</code> block ends, previous bindings come back to life.
+You can define new variables with <code>LET</code>.  It introduces a new lexical
+scope, so the variables that you define are only available in its
+block of text.  If variables with the same name already exist, they
+are shadowed while the <code>LET</code> block is in effect.  After the <code>LET</code>
+block ends, previous bindings come back to life.
 </p>
 
 
@@ -1353,8 +1346,8 @@ Since <code>LET</code> takes a block of text, it ends with the normal block term
 
 
 
-<pre class="example">
-$(VAR ((x =&gt; "outside")))
+<pre class="src src-espresso">
+$( <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">x</span> = <span style="color: #bc8f8f;">"outside"</span> <span style="color: #b22222;">/* </span><span style="color: #b22222;">literal JS block, described later */</span> )
 $(LET ((x =&gt; 10))
   $x is 10
   $(LET ((x =&gt; 20))
@@ -1362,17 +1355,18 @@ $(LET ((x =&gt; 10))
   $)
   $x is back 10
 $)
-$x is "outside"
+$x is <span style="color: #bc8f8f;">"outside"</span>
 </pre>
 
 
 
 
 <p>
-<code>LET</code> operates by introducing an anonymous function, so it is compatible
-with all browsers.  JavaScript 1.7 introduced a <code>let</code> statement for
-declaring block-scoped variables, and it's supported by Firefox, but
-unfortunately no other browser has it at the moment<sup><a class="footref" name="fnr.10" href="#fn.10">10</a></sup>.
+<code>LET</code> operates by introducing an anonymous function, so it's
+compatible with all browsers.  JavaScript 1.7 introduced a <code>let</code>
+statement for declaring block-scoped variables, and it's supported by
+Firefox, but unfortunately no other browser has it at the
+moment<sup><a class="footref" name="fnr.9" href="#fn.9">9</a></sup>.
 </p>
 </div>
 
@@ -1393,10 +1387,10 @@ contains <code>address</code>, <code>tooltip</code> and <code>text</code>, the f
 
 
 <pre class="src src-html">
-&lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt;
+&lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$link.address|html"</span> <span style="color: #b8860b;">title</span>=<span style="color: #bc8f8f;">"$link.tooltip|html"</span>&gt;$link.text|html&lt;/<span style="color: #0000ff;">a</span>&gt;
 
 $(WITH (link)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$tooltip|html"</span>&gt;$text|html&lt;/<span style="color: #8b2323;">a</span>&gt; $)
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$address|html"</span> <span style="color: #b8860b;">title</span>=<span style="color: #bc8f8f;">"$tooltip|html"</span>&gt;$text|html&lt;/<span style="color: #0000ff;">a</span>&gt; $)
 </pre>
 
 
@@ -1446,13 +1440,13 @@ with the block of text that the function should expand into:
 
 <pre class="src src-html">
 $(BLOCK display_link(link)
-  &lt;<span style="color: #8b2323;">a</span> <span style="color: #8b008b;">href</span>=<span style="color: #008b00;">"$link.address|html"</span> <span style="color: #8b008b;">title</span>=<span style="color: #008b00;">"$link.title|html"</span>&gt;$link.text|html&lt;/<span style="color: #8b2323;">a</span>&gt;
+  &lt;<span style="color: #0000ff;">a</span> <span style="color: #b8860b;">href</span>=<span style="color: #bc8f8f;">"$link.address|html"</span> <span style="color: #b8860b;">title</span>=<span style="color: #bc8f8f;">"$link.title|html"</span>&gt;$link.text|html&lt;/<span style="color: #0000ff;">a</span>&gt;
 $)
 
-<span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">call it literally </span><span style="color: #00008b;">--&gt;</span>
-${ display_link({ address: <span style="color: #008b00;">"/"</span>, title: <span style="color: #008b00;">"Home page"</span>, text: <span style="color: #008b00;">"Home"</span> }) }
+<span style="color: #b22222;">&lt;!-- </span><span style="color: #b22222;">call it literally </span><span style="color: #b22222;">--&gt;</span>
+${ display_link({ address: <span style="color: #bc8f8f;">"/"</span>, title: <span style="color: #bc8f8f;">"Home page"</span>, text: <span style="color: #bc8f8f;">"Home"</span> }) }
 
-<span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">or call it for an object </span><span style="color: #00008b;">--&gt;</span>
+<span style="color: #b22222;">&lt;!-- </span><span style="color: #b22222;">or call it for an object </span><span style="color: #b22222;">--&gt;</span>
 $(FOREACH (i IN links)
   ${ display_link(i) }
 $)
@@ -1474,7 +1468,7 @@ Combining <code>BLOCK</code> and <code>LET</code> or <code>WITH</code> we can de
 <pre class="src src-html">
 $(WITH ({ value: 0 })
   $(BLOCK counter()
-    &lt;<span style="color: #8b2323;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #8b2323;">p</span>&gt; $) $)
+    &lt;<span style="color: #0000ff;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #0000ff;">p</span>&gt; $) $)
 
 ${ counter() } -- now it's 1
 ${ counter() } -- now it's 2
@@ -1495,7 +1489,7 @@ to the <code>LET</code> block.  The following won't work:
 <pre class="src src-html">
 $(LET ((value =&gt; 0))
   $(BLOCK counter()
-    &lt;<span style="color: #8b2323;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #8b2323;">p</span>&gt; $) $)
+    &lt;<span style="color: #0000ff;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #0000ff;">p</span>&gt; $) $)
 
 ${ counter() } -- error, counter is not defined!
 </pre>
@@ -1511,14 +1505,14 @@ It looks like the following:
 
 
 <pre class="src src-espresso">
-(<span style="color: #8b0000;">function</span>(){
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">value</span> = 0;
-    <span style="color: #8b0000;">function</span> <span style="color: #8b2323;">counter</span>() {
-        output(<span style="color: #008b00;">"Counter is "</span> + (++value));
+(<span style="color: #a020f0;">function</span>(){
+    <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">value</span> = 0;
+    <span style="color: #a020f0;">function</span> <span style="color: #0000ff;">counter</span>() {
+        output(<span style="color: #bc8f8f;">"Counter is "</span> + (++value));
     };
 })();
 
-output( counter() ); <span style="color: #00008b;">// </span><span style="color: #00008b;">but there's no free lunch
+output( counter() ); <span style="color: #b22222;">// </span><span style="color: #b22222;">but there's no free lunch
 </span></pre>
 
 
@@ -1532,11 +1526,11 @@ use an outside variable for that:
 
 
 <pre class="src src-html">
-$(VAR (counter))
+$( var counter )
 $(LET ((value =&gt; 0))
-  $( counter = _counter /* export it */ )
+  $( counter = _counter <span style="color: #b22222;">&lt;!-- </span><span style="color: #b22222;">export it </span><span style="color: #b22222;">--&gt;</span> )
   $(BLOCK _counter()
-    &lt;<span style="color: #8b2323;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #8b2323;">p</span>&gt; $) $)
+    &lt;<span style="color: #0000ff;">p</span>&gt;Counter is ${ ++value }&lt;/<span style="color: #0000ff;">p</span>&gt; $) $)
 
 ${ counter() } -- now it works.
 </pre>
@@ -1554,31 +1548,31 @@ ${ counter() } -- now it works.
 
 
 <p>
-<code>BLOCK</code> can be used to define wrappers.  A wrapper is a function that
-receives a bit of text and puts something before and after it.  For example,
-to define a wrapper that creates a table we can say:
+<code>BLOCK</code>-s can be used as wrappers.  A wrapper is a function that
+receives a bit of text and puts something before and after it.  For
+example, to define a wrapper that creates a table we can say:
 </p>
 
 
 
 <pre class="src src-html">
-<span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">define our wrapper </span><span style="color: #00008b;">--&gt;</span>
+<span style="color: #b22222;">&lt;!-- </span><span style="color: #b22222;">define our wrapper </span><span style="color: #b22222;">--&gt;</span>
 $(BLOCK table(cols)
-  &lt;<span style="color: #8b2323;">table</span>&gt;
-    &lt;<span style="color: #8b2323;">thead</span>&gt;
-      &lt;<span style="color: #8b2323;">tr</span>&gt;
-        $(MAP (label =&gt; cols) &lt;<span style="color: #8b2323;">td</span>&gt;$label&lt;/<span style="color: #8b2323;">td</span>&gt; $)
-      &lt;/<span style="color: #8b2323;">tr</span>&gt;
-    &lt;/<span style="color: #8b2323;">thead</span>&gt;
-    &lt;<span style="color: #8b2323;">tbody</span>&gt;
+  &lt;<span style="color: #0000ff;">table</span>&gt;
+    &lt;<span style="color: #0000ff;">thead</span>&gt;
+      &lt;<span style="color: #0000ff;">tr</span>&gt;
+        $(MAP (label =&gt; cols) &lt;<span style="color: #0000ff;">td</span>&gt;$label&lt;/<span style="color: #0000ff;">td</span>&gt; $)
+      &lt;/<span style="color: #0000ff;">tr</span>&gt;
+    &lt;/<span style="color: #0000ff;">thead</span>&gt;
+    &lt;<span style="color: #0000ff;">tbody</span>&gt;
       $(CONTENT)
-    &lt;/<span style="color: #8b2323;">tbody</span>&gt;
-  &lt;/<span style="color: #8b2323;">table</span>&gt; $)
+    &lt;/<span style="color: #0000ff;">tbody</span>&gt;
+  &lt;/<span style="color: #0000ff;">table</span>&gt; $)
 
-<span style="color: #00008b;">&lt;!-- </span><span style="color: #00008b;">and here's how we use it </span><span style="color: #00008b;">--&gt;</span>
-$(WRAP table([ <span style="color: #008b00;">"Name"</span>, <span style="color: #008b00;">"Phone"</span>, <span style="color: #008b00;">"Email"</span> ])
-  &lt;<span style="color: #8b2323;">tr</span>&gt; &lt;<span style="color: #8b2323;">td</span>&gt;Foo&lt;/<span style="color: #8b2323;">td</span>&gt; &lt;<span style="color: #8b2323;">td</span>&gt;123-1234&lt;/<span style="color: #8b2323;">td</span>&gt; &lt;<span style="color: #8b2323;">td</span>&gt;foo@foo.com&lt;/<span style="color: #8b2323;">td</span>&gt; &lt;/<span style="color: #8b2323;">tr</span>&gt;
-  &lt;<span style="color: #8b2323;">tr</span>&gt; &lt;<span style="color: #8b2323;">td</span>&gt;Bar&lt;/<span style="color: #8b2323;">td</span>&gt; &lt;<span style="color: #8b2323;">td</span>&gt;1234-123&lt;/<span style="color: #8b2323;">td</span>&gt; &lt;<span style="color: #8b2323;">td</span>&gt;bar@bar.com&lt;/<span style="color: #8b2323;">td</span>&gt; &lt;/<span style="color: #8b2323;">tr</span>&gt;
+<span style="color: #b22222;">&lt;!-- </span><span style="color: #b22222;">and here's how we use it </span><span style="color: #b22222;">--&gt;</span>
+$(WRAP table([ <span style="color: #bc8f8f;">"Name"</span>, <span style="color: #bc8f8f;">"Phone"</span>, <span style="color: #bc8f8f;">"Email"</span> ])
+  &lt;<span style="color: #0000ff;">tr</span>&gt; &lt;<span style="color: #0000ff;">td</span>&gt;Foo&lt;/<span style="color: #0000ff;">td</span>&gt; &lt;<span style="color: #0000ff;">td</span>&gt;123-1234&lt;/<span style="color: #0000ff;">td</span>&gt; &lt;<span style="color: #0000ff;">td</span>&gt;foo@foo.com&lt;/<span style="color: #0000ff;">td</span>&gt; &lt;/<span style="color: #0000ff;">tr</span>&gt;
+  &lt;<span style="color: #0000ff;">tr</span>&gt; &lt;<span style="color: #0000ff;">td</span>&gt;Bar&lt;/<span style="color: #0000ff;">td</span>&gt; &lt;<span style="color: #0000ff;">td</span>&gt;1234-123&lt;/<span style="color: #0000ff;">td</span>&gt; &lt;<span style="color: #0000ff;">td</span>&gt;bar@bar.com&lt;/<span style="color: #0000ff;">td</span>&gt; &lt;/<span style="color: #0000ff;">tr</span>&gt;
 $)
 </pre>
 
@@ -1586,12 +1580,12 @@ $)
 
 
 <p>
-You can note that a wrapper is a normal function (<code>BLOCK</code>) and it can
-take arguments.  To send the arguments with a <code>WRAP</code> block, just make
-it look like a normal function call.  If there are no arguments, you
-still need to insert the parens <code>()</code>.  When it's calling your block,
-<code>WRAP</code> sends an additional hidden argument that contains the text
-which is expanded by <code>$(CONTENT)</code>.  For now this argument is a
+You can note that the wrapper is a normal function (<code>BLOCK</code>) and it
+can take arguments.  To send the arguments with a <code>WRAP</code> block, just
+make it look like a normal function call.  If there are no arguments,
+you still need to insert the parens <code>()</code>.  When it's calling your
+block, <code>WRAP</code> sends an additional hidden argument that contains the
+text which is expanded by <code>$(CONTENT)</code>.  For now this argument is a
 function that renders the text, and <code>$(CONTENT)</code> simply calls this
 function.
 </p>
@@ -1618,17 +1612,17 @@ Here's a quick example:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>();
-yajet.compile(<span style="color: #008b00;">"$(EXPORT foo(arg) foo got $arg $)"</span>);
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>();
+yajet.compile(<span style="color: #bc8f8f;">"$(EXPORT foo(arg) foo got $arg $)"</span>);
 
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">t1</span> = yajet.compile(<span style="color: #008b00;">"$(IMPORT (foo)) ${ foo('bar') }"</span>);
-alert(t1()); <span style="color: #00008b;">// </span><span style="color: #00008b;">displays "foo got bar"
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">t1</span> = yajet.compile(<span style="color: #bc8f8f;">"$(IMPORT (foo)) ${ foo('bar') }"</span>);
+alert(t1()); <span style="color: #b22222;">// </span><span style="color: #b22222;">displays "foo got bar"
 </span>
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">t2</span> = yajet.compile(<span style="color: #008b00;">"$(PROCESS foo('baz'))"</span>);
-alert(t2()); <span style="color: #00008b;">// </span><span style="color: #00008b;">displays "foo got baz"
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">t2</span> = yajet.compile(<span style="color: #bc8f8f;">"$(PROCESS foo('baz'))"</span>);
+alert(t2()); <span style="color: #b22222;">// </span><span style="color: #b22222;">displays "foo got baz"
 </span>
-<span style="color: #00008b;">// </span><span style="color: #00008b;">call the exported function directly
-</span>alert(yajet.process(<span style="color: #008b00;">"foo"</span>, <span style="color: #cd0000;">null</span>, [ <span style="color: #008b00;">"something"</span> ])); <span style="color: #00008b;">// </span><span style="color: #00008b;">displays "foo got something"
+<span style="color: #b22222;">// </span><span style="color: #b22222;">call the exported function directly
+</span>alert(yajet.process(<span style="color: #bc8f8f;">"foo"</span>, <span style="color: #5f9ea0;">null</span>, [ <span style="color: #bc8f8f;">"something"</span> ])); <span style="color: #b22222;">// </span><span style="color: #b22222;">displays "foo got something"
 </span></pre>
 
 
@@ -1684,10 +1678,10 @@ it's the same as described in <a href="#sec-4.3.10">WRAP</a>.
 <li>
 as you can see above, it is possible to call an exported block
 directly without using an intermediate template.  Use
-<code>yajet.process(exported_name, this_argument, [ more, args ])</code>.  The
-“this_argument” will be the value of the <b>this</b> keyword within the
-exported block, and the third is an array of more arguments that
-are passed to the function.
+<code>yajet.process(exported_name, self, [ more, args ])</code>.  The <code>self</code>
+argument will be the value of the <b>this</b> keyword within the
+exported block, and the last is an array of more arguments that are
+passed to the function.
 
 </li>
 </ul>
@@ -1696,8 +1690,97 @@ are passed to the function.
 </div>
 
 <div id="outline-container-4.3.12" class="outline-4">
-<h4 id="sec-4.3.12">4.3.12 Literal JavaScript with <code>$( ... )</code> </h4>
+<h4 id="sec-4.3.12">4.3.12 <code>LITERAL</code> &mdash; include literal text </h4>
 <div id="text-4.3.12">
+
+
+<p>
+With this directive you can include a literal block of text.  No
+constructs within it are expanded.  Example:
+</p>
+
+
+
+<pre class="example">
+$this.foo -- here it's replaced with the value of the variable
+$(LITERAL "STOP"
+  $this.foo -- here it's left untouched
+STOP)
+</pre>
+
+
+
+
+<p>
+The <code>LITERAL</code> directive takes one string as an argument.  That string
+immediately followed by a closing paren is expected to end the literal
+block of text.  In the above example we state that “STOP)” should end
+the text.  Note that the closing paren is implied, and required:
+</p>
+
+
+
+<pre class="example">
+$(LITERAL "FOO"
+  The following doesn't end the block:
+  FOO
+  but the following does:
+  FOO)
+</pre>
+
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-4.3.13" class="outline-4">
+<h4 id="sec-4.3.13">4.3.13 <code>SYNTAX</code> &mdash; temporarily change the reader character </h4>
+<div id="text-4.3.13">
+
+
+<p>
+When you need to display the current reader char literally, many times
+in a block of text, rather than typing it twice each time it's
+sometimes more convenient to temporarily change it to something
+different.  Example:
+</p>
+
+
+
+<pre class="src src-html">
+Price: $$ $this.price
+TAX:   $$ $this.tax
+This is a dollar sign: $$
+
+<span style="color: #b22222;">&lt;!-- </span><span style="color: #b22222;">here's another way: </span><span style="color: #b22222;">--&gt;</span>
+$(SYNTAX #
+  Price: $ #this.price
+  TAX:   $ #this.tax
+  This is a dollar sign: $
+#)
+
+$this.tax -- back to previous reader char
+</pre>
+
+
+
+
+<p>
+<code>SYNTAX</code> takes a single char argument (the first non-white-space
+character that follows the directive) and that char becomes the
+<code>reader_char</code> while its block of text is in effect.  Note that to end
+the block of text you need to include the normal block terminator, but
+using the new reader char&mdash;so we need <code>#)</code> instead of <code>$)</code> in the above sample.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-4.3.14" class="outline-4">
+<h4 id="sec-4.3.14">4.3.14 Literal JavaScript with <code>$( ... )</code> </h4>
+<div id="text-4.3.14">
 
 
 <p>
@@ -1763,9 +1846,9 @@ For example, a dumb implementation would translate <code>$(FOREACH (link =&gt; l
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = 0; i &lt; links.length; ++i) {
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = links[i];
-    <span style="color: #00008b;">// </span><span style="color: #00008b;">... do STUFF
+<span style="color: #a020f0;">for</span> (<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">i</span> = 0; i &lt; links.length; ++i) {
+    <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">link</span> = links[i];
+    <span style="color: #b22222;">// </span><span style="color: #b22222;">... do STUFF
 </span>}
 </pre>
 
@@ -1797,7 +1880,7 @@ sample would suffer from both problems:
 
 <pre class="example">
 $(FOREACH (link =&gt; this.getLinksFromServer())
-  $(VAR ((i =&gt; link.text.length)))
+  $( var i = link.text.length )
   $(WHEN (i &gt; 30)
     ... truncate text
   $)
@@ -1815,10 +1898,10 @@ The resulted code would be:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = 0; i &lt; <span style="color: #cd0000;">this</span>.getLinksFromServer().length; ++i) {
-  <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = <span style="color: #cd0000;">this</span>.getLinksFromServer()[i];
-  <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.text.length;
-  <span style="color: #8b0000;">if</span> (i &gt; 30) {
+<span style="color: #a020f0;">for</span> (<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">i</span> = 0; i &lt; <span style="color: #5f9ea0;">this</span>.getLinksFromServer().length; ++i) {
+  <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">link</span> = <span style="color: #5f9ea0;">this</span>.getLinksFromServer()[i];
+  <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">i</span> = link.text.length;
+  <span style="color: #a020f0;">if</span> (i &gt; 30) {
     ... truncate text
   }
   ...
@@ -1841,16 +1924,16 @@ What YAJET actually generates for the above case looks like this:
 
 
 <pre class="src src-espresso">
-(<span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">__GSY12</span>){
-  <span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">__GSY13</span> = __GSY12.length, <span style="color: #8b008b;">__GSY14</span> = 0; __GSY14 &lt; __GSY13; ++__GSY14) {
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">link</span> = __GSY12[__GSY14];
-    <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">i</span> = link.length;
-    <span style="color: #8b0000;">if</span> (i &gt; 30) {
+(<span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">__GSY12</span>){
+  <span style="color: #a020f0;">for</span> (<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">__GSY13</span> = __GSY12.length, <span style="color: #b8860b;">__GSY14</span> = 0; __GSY14 &lt; __GSY13; ++__GSY14) {
+    <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">link</span> = __GSY12[__GSY14];
+    <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">i</span> = link.length;
+    <span style="color: #a020f0;">if</span> (i &gt; 30) {
       ... truncate text
     }
     ...
   }
-}).call(<span style="color: #cd0000;">this</span>, <span style="color: #cd0000;">this</span>.getLinksFromServer());
+}).call(<span style="color: #5f9ea0;">this</span>, <span style="color: #5f9ea0;">this</span>.getLinksFromServer());
 </pre>
 
 
@@ -1899,29 +1982,29 @@ right thing:
 
 
 <pre class="src src-espresso">
-(<span style="color: #8b0000;">function</span> (<span style="color: #8b008b;">__GSY31</span>) {
-    <span style="color: #8b0000;">for</span> (<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">__GSY32</span> = __GSY31.length, <span style="color: #8b008b;">__GSY33</span> = 0; __GSY33 &lt; __GSY32; ++__GSY33) {
-        <span style="color: #8b0000;">try</span> {
-            <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">a</span> = __GSY31[__GSY33];
-            (<span style="color: #8b0000;">function</span> () {
-                <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">b</span> = a;
-                <span style="color: #8b0000;">if</span> (b &gt; 3) {
-                    <span style="color: #8b0000;">throw</span> __YAJET.X_BREK; <span style="color: #00008b;">// </span><span style="color: #00008b;">this is BREAK
+(<span style="color: #a020f0;">function</span> (<span style="color: #b8860b;">__GSY31</span>) {
+    <span style="color: #a020f0;">for</span> (<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">__GSY32</span> = __GSY31.length, <span style="color: #b8860b;">__GSY33</span> = 0; __GSY33 &lt; __GSY32; ++__GSY33) {
+        <span style="color: #a020f0;">try</span> {
+            <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">a</span> = __GSY31[__GSY33];
+            (<span style="color: #a020f0;">function</span> () {
+                <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">b</span> = a;
+                <span style="color: #a020f0;">if</span> (b &gt; 3) {
+                    <span style="color: #a020f0;">throw</span> __YAJET.X_BREK; <span style="color: #b22222;">// </span><span style="color: #b22222;">this is BREAK
 </span>                }
                 VUT(b);
-            }).call(<span style="color: #cd0000;">this</span>);
+            }).call(<span style="color: #5f9ea0;">this</span>);
         }
-        <span style="color: #8b0000;">catch</span> (ex) {
-            <span style="color: #8b0000;">if</span> (ex === __YAJET.X_CONT) { <span style="color: #00008b;">// </span><span style="color: #00008b;">here we handle CONTINUE
-</span>                <span style="color: #8b0000;">continue</span>;
+        <span style="color: #a020f0;">catch</span> (ex) {
+            <span style="color: #a020f0;">if</span> (ex === __YAJET.X_CONT) { <span style="color: #b22222;">// </span><span style="color: #b22222;">here we handle CONTINUE
+</span>                <span style="color: #a020f0;">continue</span>;
             }
-            <span style="color: #8b0000;">if</span> (ex === __YAJET.X_BREK) { <span style="color: #00008b;">// </span><span style="color: #00008b;">and here we handle BREAK
-</span>                <span style="color: #8b0000;">break</span>;
+            <span style="color: #a020f0;">if</span> (ex === __YAJET.X_BREK) { <span style="color: #b22222;">// </span><span style="color: #b22222;">and here we handle BREAK
+</span>                <span style="color: #a020f0;">break</span>;
             }
-            <span style="color: #8b0000;">throw</span> ex;
+            <span style="color: #a020f0;">throw</span> ex;
         }
     }
-}).call(<span style="color: #cd0000;">this</span>, [1, 2, 3, 4, 5]);
+}).call(<span style="color: #5f9ea0;">this</span>, [1, 2, 3, 4, 5]);
 </pre>
 
 
@@ -1958,11 +2041,11 @@ Let's start with an easy one:
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>({
     directives: {
-        <span style="color: #8b2323;">author</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
-            c.out(<span style="color: #008b00;">"OUT('Mihai Bazon &lt;<a href="mailto:mihai.bazon&#64;gmail.com">mihai.bazon&#64;gmail.com</a>&gt;');"</span>);
-            c.assert_skip(<span style="color: #008b00;">")"</span>);
+        <span style="color: #0000ff;">author</span>: <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">c</span>) {
+            c.out(<span style="color: #bc8f8f;">"OUT('Mihai Bazon &lt;<a href="mailto:mihai.bazon&#64;gmail.com">mihai.bazon&#64;gmail.com</a>&gt;');"</span>);
+            c.assert_skip(<span style="color: #bc8f8f;">")"</span>);
         }
     }
 });
@@ -1987,7 +2070,7 @@ In a template compiled with the above object instance, we can now type
 
 
 <pre class="src src-espresso">
-OUT(<span style="color: #008b00;">'Mihai Bazon &lt;<a href="mailto:mihai.bazon&#64;gmail.com">mihai.bazon&#64;gmail.com</a>&gt;'</span>);
+OUT(<span style="color: #bc8f8f;">'Mihai Bazon &lt;<a href="mailto:mihai.bazon&#64;gmail.com">mihai.bazon&#64;gmail.com</a>&gt;'</span>);
 </pre>
 
 
@@ -2082,8 +2165,8 @@ that it will return for instance "foo.bar|baz" as a single token.
 </li>
 <li>
 <code>read_valist()</code> &mdash; parse and return a variable list such as those
-used for <code>LET</code> or <code>VAR</code>.  A side effect is that this also outputs
-the <code>var</code> declaration.
+used for <code>LET</code>.  A side effect is that this also outputs the <code>var</code>
+declaration.
 </li>
 <li>
 <code>to_js_string(str)</code> &mdash; adds quotes and escapes special characters
@@ -2136,61 +2219,61 @@ standard JavaScript <code>switch</code> for this.
 
 
 <pre class="src src-espresso">
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">directives</span> = {
-    <span style="color: #008b00;">"switch"</span>: <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
-        <span style="color: #00008b;">// </span><span style="color: #00008b;">SWITCH expects one expression in parens:
-</span>        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">args</span> = c.read_balanced(<span style="color: #cd0000;">true</span>);
-        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">expr</span> = args[0]; <span style="color: #00008b;">// </span><span style="color: #00008b;">here is the argument
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">directives</span> = {
+    <span style="color: #bc8f8f;">"switch"</span>: <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">c</span>) {
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">SWITCH expects one expression in parens:
+</span>        <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">args</span> = c.read_balanced(<span style="color: #5f9ea0;">true</span>);
+        <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">expr</span> = args[0]; <span style="color: #b22222;">// </span><span style="color: #b22222;">here is the argument
 </span>
-        <span style="color: #00008b;">// </span><span style="color: #00008b;">save old meaning of CASE and DEFAULT, if any
-</span>        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">old_case</span> = c.directives[<span style="color: #008b00;">"case"</span>];
-        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">old_defa</span> = c.directives[<span style="color: #008b00;">"default"</span>];
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">save old meaning of CASE and DEFAULT, if any
+</span>        <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">old_case</span> = c.directives[<span style="color: #bc8f8f;">"case"</span>];
+        <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">old_defa</span> = c.directives[<span style="color: #bc8f8f;">"default"</span>];
 
-        <span style="color: #00008b;">// </span><span style="color: #00008b;">inject the CASE directive
-</span>        c.directives[<span style="color: #008b00;">"case"</span>] = <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
-            <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">args</span> = c.read_balanced(<span style="color: #cd0000;">true</span>);
-            <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">expr</span> = args[0];
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">inject the CASE directive
+</span>        c.directives[<span style="color: #bc8f8f;">"case"</span>] = <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">c</span>) {
+            <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">args</span> = c.read_balanced(<span style="color: #5f9ea0;">true</span>);
+            <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">expr</span> = args[0];
             c.set_output(save);
             c.block_open(
-                <span style="color: #008b00;">"case "</span> + expr + <span style="color: #008b00;">":"</span>,
-                <span style="color: #8b0000;">function</span>() {
-                    c.out(<span style="color: #008b00;">"break;"</span>);
+                <span style="color: #bc8f8f;">"case "</span> + expr + <span style="color: #bc8f8f;">":"</span>,
+                <span style="color: #a020f0;">function</span>() {
+                    c.out(<span style="color: #bc8f8f;">"break;"</span>);
                     c.set_output([]);
                 }
             );
         };
 
-        <span style="color: #00008b;">// </span><span style="color: #00008b;">and the DEFAULT directive
-</span>        c.directives[<span style="color: #008b00;">"default"</span>] = <span style="color: #8b0000;">function</span>(<span style="color: #8b008b;">c</span>) {
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">and the DEFAULT directive
+</span>        c.directives[<span style="color: #bc8f8f;">"default"</span>] = <span style="color: #a020f0;">function</span>(<span style="color: #b8860b;">c</span>) {
             c.set_output(save);
             c.block_open(
-                <span style="color: #008b00;">"default:"</span>,
-                <span style="color: #8b0000;">function</span>() {
-                    c.out(<span style="color: #008b00;">"break;"</span>);
+                <span style="color: #bc8f8f;">"default:"</span>,
+                <span style="color: #a020f0;">function</span>() {
+                    c.out(<span style="color: #bc8f8f;">"break;"</span>);
                     c.set_output([]);
                 }
             );
         };
 
-        <span style="color: #00008b;">// </span><span style="color: #00008b;">finally, open the switch block and prepare to close
-</span>        <span style="color: #00008b;">// </span><span style="color: #00008b;">and restore everything when the block ends.
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">finally, open the switch block and prepare to close
+</span>        <span style="color: #b22222;">// </span><span style="color: #b22222;">and restore everything when the block ends.
 </span>        c.block_open(
-            <span style="color: #00008b;">// </span><span style="color: #00008b;">open
-</span>            <span style="color: #008b00;">"switch ("</span> + expr + <span style="color: #008b00;">") {"</span>,
-            <span style="color: #00008b;">// </span><span style="color: #00008b;">close
-</span>            <span style="color: #8b0000;">function</span>() {
+            <span style="color: #b22222;">// </span><span style="color: #b22222;">open
+</span>            <span style="color: #bc8f8f;">"switch ("</span> + expr + <span style="color: #bc8f8f;">") {"</span>,
+            <span style="color: #b22222;">// </span><span style="color: #b22222;">close
+</span>            <span style="color: #a020f0;">function</span>() {
                 c.set_output(save);
-                c.directives[<span style="color: #008b00;">"case"</span>] = old_case;
-                c.directives[<span style="color: #008b00;">"default"</span>] = old_defa;
-                c.out(<span style="color: #008b00;">"}"</span>);
+                c.directives[<span style="color: #bc8f8f;">"case"</span>] = old_case;
+                c.directives[<span style="color: #bc8f8f;">"default"</span>] = old_defa;
+                c.out(<span style="color: #bc8f8f;">"}"</span>);
             }
         );
 
-        <span style="color: #00008b;">// </span><span style="color: #00008b;">any text between these directives is not interesting.
-</span>        <span style="color: #8b0000;">var</span> <span style="color: #8b008b;">save</span> = c.set_output([]);
+        <span style="color: #b22222;">// </span><span style="color: #b22222;">any text between these directives is not interesting.
+</span>        <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">save</span> = c.set_output([]);
     }
 };
-<span style="color: #8b0000;">var</span> <span style="color: #8b008b;">yajet</span> = <span style="color: #8b0000;">new</span> <span style="color: #4682b4;">YAJET</span>({
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">yajet</span> = <span style="color: #a020f0;">new</span> <span style="color: #228b22;">YAJET</span>({
     directives: directives
 });
 </pre>
@@ -2225,7 +2308,7 @@ some temporary one which we will discard, because otherwise the
 whitespace between <code>$(SWITCH (...)</code> and the first <code>$(CASE)</code> will be
 transformed into code, and it won't be valid JavaScript syntax.  And
 we need to be careful to set the output back to the saved value when
-needed<sup><a class="footref" name="fnr.11" href="#fn.11">11</a></sup>.
+needed<sup><a class="footref" name="fnr.10" href="#fn.10">10</a></sup>.
 </p>
 <p>
 This topic is advanced so I will stop here.  If you want to write your
@@ -2265,9 +2348,9 @@ following should <i>not</i> be a problem:
 
 
 <pre class="src src-espresso">
-$( <span style="color: #8b0000;">if</span> (<span style="color: #008b00;">/(a|b)/</span>.test(<span style="color: #008b00;">"bar"</span>)) {
+$( <span style="color: #a020f0;">if</span> (<span style="color: #bc8f8f;">/(a|b)/</span>.test(<span style="color: #bc8f8f;">"bar"</span>)) {
      matches();
-   } <span style="color: #8b0000;">else</span> {
+   } <span style="color: #a020f0;">else</span> {
      no_match();
    }
  )
@@ -2284,7 +2367,7 @@ miss the closing paren.  However, the following will break stuff:
 
 
 <pre class="src src-espresso">
-$( <span style="color: #8b0000;">if</span> (<span style="color: #008b00;">/\)/</span>.test(<span style="color: #008b00;">")"</span>)) { ... } )
+$( <span style="color: #a020f0;">if</span> (<span style="color: #bc8f8f;">/\)/</span>.test(<span style="color: #bc8f8f;">")"</span>)) { ... } )
 </pre>
 
 
@@ -2333,24 +2416,22 @@ good. ;-)
 
 
 <p>
-Currently YAJET keeps all whitespace in the generated source.  There is a
-directive that allows you to say “kill following whitespace” (<code>$-</code>, that is,
-the reader char followed by a minus sign) but it's not very convenient.
-What should probably be done is that it should, by default, eat all
-whitespace that occurs on lines which don't include literal text.  For
-example the following:
+Currently YAJET keeps all whitespace in the generated
+source<sup><a class="footref" name="fnr.11" href="#fn.11">11</a></sup>.  There is a directive that allows you to say
+“kill following whitespace” (<code>$-</code>, that is, the reader char followed
+by a minus sign) but it's not very convenient.  For example:
 </p>
 
 
 
 <pre class="src src-html">
-&lt;<span style="color: #8b2323;">p</span>&gt;
+&lt;<span style="color: #0000ff;">p</span>&gt;
 $(IF (true)
   foo
 $(ELSE)
   bar
 $)
-&lt;/<span style="color: #8b2323;">p</span>&gt;
+&lt;/<span style="color: #0000ff;">p</span>&gt;
 </pre>
 
 
@@ -2363,31 +2444,31 @@ results in this output:
 
 
 <pre class="src src-html">
-&lt;<span style="color: #8b2323;">p</span>&gt;
+&lt;<span style="color: #0000ff;">p</span>&gt;
 
   foo
 
-&lt;/<span style="color: #8b2323;">p</span>&gt;
+&lt;/<span style="color: #0000ff;">p</span>&gt;
 </pre>
 
 
 
 
 <p>
-Generally, it's not what one would expect.  What's worse, we can make it
-look better but it's totally unintuitive:
+Generally, it's not what one would expect.  We can make it look better
+with the “kill whitespace” directive, but it's totally unintuitive:
 </p>
 
 
 
 <pre class="src src-html">
-&lt;<span style="color: #8b2323;">p</span>&gt;$-
+&lt;<span style="color: #0000ff;">p</span>&gt;$-
 $(IF (true)
   foo$-
 $(ELSE)
   bar$-
 $)
-&lt;/<span style="color: #8b2323;">p</span>&gt;
+&lt;/<span style="color: #0000ff;">p</span>&gt;
 </pre>
 
 
@@ -2400,9 +2481,9 @@ This outputs better:
 
 
 <pre class="src src-html">
-&lt;<span style="color: #8b2323;">p</span>&gt;
+&lt;<span style="color: #0000ff;">p</span>&gt;
   foo
-&lt;/<span style="color: #8b2323;">p</span>&gt;
+&lt;/<span style="color: #0000ff;">p</span>&gt;
 </pre>
 
 
@@ -2532,26 +2613,25 @@ writing a html/text template.
 s&hellip;l&hellip;o&hellip;w&hellip; &ndash; so, while this makes for a nice syntax, you should not
 use it where speed is critical.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.9" href="#fnr.9">9</a></sup> <code>VAR</code> is only marginally useful.  I would remove it
-completely, but it's useful for exporting an inner function from a
-<code>LET</code> block.
-</p>
-<p class="footnote"><sup><a class="footnum" name="fn.10" href="#fnr.10">10</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
+<p class="footnote"><sup><a class="footnum" name="fn.9" href="#fnr.9">9</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
 keyword from JavaScript 1.7 compared to using an anonymous function, I
 decided not to add a browser check for this.  When more browsers will
 support it I'll change my mind.  But the template syntax will remain
 the same.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.11" href="#fnr.11">11</a></sup> The fact that JavaScript properly supports closures
+<p class="footnote"><sup><a class="footnum" name="fn.10" href="#fnr.10">10</a></sup> The fact that JavaScript properly supports closures
 plays a key role into all this, but <a href="http://mihai.bazon.net/blog/the-buzz-of-closures">I'm tired</a> of saying this all
 over. :-)
+</p>
+<p class="footnote"><sup><a class="footnum" name="fn.11" href="#fnr.11">11</a></sup> Speaking of it, most (all?) template engines do the
+same.
 </p>
 </div>
 </div>
 <div id="postamble"><p class="author"> Author: Mihai Bazon
 <a href="mailto:mihai.bazon@gmail.com">&lt;mihai.bazon@gmail.com&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-25 20:11:42 CEST</p>
+<p class="date"> Date: 2010-05-29 00:06:22 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>

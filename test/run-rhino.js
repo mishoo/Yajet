@@ -27,7 +27,8 @@ var TESTS = [
         "cond.txt",
         "blocks.txt",
         "exports.txt",
-        "imports.txt"
+        "imports.txt",
+        "literal.txt"
 ];
 
 for (var i = 0; i < TESTS.length; ++i) {
