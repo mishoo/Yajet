@@ -451,8 +451,7 @@ function YAJET(yajet_args){
                                                 expr += to_js_string(read_string());
                                         }
                                         else if (wantList && open.length == 1 &&
-                                                 ( skip(",") || skip(";") || skip("=>") || skip("..") ||
-                                                   (skip("IN") && expr.charCodeAt(expr.length - 1) == 32)) ) {
+                                                 ( skip(",") || skip(";") || skip("=>") || skip("..") ) ) {
                                                 ret.push(expr);
                                                 skip_ws();
                                                 expr = "";

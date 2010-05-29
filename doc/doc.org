@@ -332,12 +332,10 @@ use:
 - =“,”=
 - =“..”=
 - =“;”=
-- =“IN”= (case insensitive, but /must/ be preceded by whitespace)
 
 So the above example can also be written like this:
 
 #+BEGIN_SRC espresso
-${ this.getLabel() IN upcase, html }
 ${ this.getLabel() => upcase => html }
 ${ this.getLabel() => upcase, html }
 ${ this.getLabel() .. upcase; html }
@@ -798,7 +796,7 @@ $)
 ${ display_link({ address: "/", title: "Home page", text: "Home" }) }
 
 <!-- or call it for an object -->
-$(FOREACH (i IN links)
+$(FOREACH (i => links)
   ${ display_link(i) }
 $)
 #+END_SRC
