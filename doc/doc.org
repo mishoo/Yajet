@@ -1239,8 +1239,11 @@ just summarize the API that the context object exposes:
   exception like =assert=).
 - =skip(str)= --- if =rest()= starts with =str= or matches =str= (when
   it's a RegExp), skip the matched part.
-- =looking_at(str)= --- return =true= if =rest()= starts with =str= or
-  matches =str= (when it's a RegExp).
+- =looking_at(str)= --- return an object if =rest()= starts with =str=
+  or matches =str= (when it's a RegExp); returns undefined otherwise.
+  The object contains: "match" which is the full matched text,
+  "length" which is the length of the match and "groups" in the case
+  when =str= is a regexp (the result of =regexp.match=).
 - =block_open(open, close)= --- call =out(open)= to start a new block,
   and push =close= so that it gets output when =$)= is encountered.
   =close= is an optional argument (it defaults to "}" when not passed,
