@@ -94,14 +94,20 @@ Other than the boring variable interpolation, we have the following:
 
 - all loops can be controlled by =BREAK= or =CONTINUE=.
 
-- variable definition (=LET= and =WITH=).  =LET= and =WITH= introduce
-  new lexical scopes.
+- variable definition (=LET=) and dynamic scope manipulation (=WITH=).
 
 - components (=BLOCK= and =EXPORT=).  Useful to declare blocks that
-  can be called, multiple times, as a function.
+  can be called, multiple times, as a function.  =EXPORT= declares
+  functions that can be called from a different template.
 
 - components can be called as =WRAP=-pers.  They receive some content
-  and are able to output something before and after it.
+  and are able to output something before and after it.  The content
+  is processed as template.
+
+- various types of comments.
+
+- the ability to include literal text, or to temporarily modify the
+  reader character.
 
 - you can easily define custom directives.
 
@@ -111,11 +117,10 @@ Other than the boring variable interpolation, we have the following:
   is blazing fast.  Compilation speed is quite good too, but of
   course, you only need to compile a template /once/.
 
-- the code is way shorter than the documentation[fn:codesize] (~700
-  lines of code, 7K minified, 3K gzipped) and it's completely
-  self-contained (no library requirements, and it should not clash
-  with any library).  I think it's pretty small for the number of
-  features.
+- the code is way shorter than the documentation[fn:codesize] (10K
+  minified, 4.5K gzipped) and it's completely self-contained (no
+  library requirements, and it should not clash with any library).  I
+  think it's quite small for the number of features.
 
 [fn:codesize] This is a double-feature: we have good documentation and
 lots of features for small code. ;-)
@@ -177,10 +182,10 @@ its JavaScript console; Chrome is even slower than Firefox for the
 
 ** Reader char
 
-Template syntax is triggered by a special “reader char”.  By default this
-character is =$=, but you can use anything else by passing the =reader_char=
-constructor argument.  I personally would prefer to use some Unicode
-character, for instance:
+Template syntax is triggered by a single special character called the
+“reader char”.  By default this character is =$=, but you can use
+anything else by passing the =reader_char= constructor argument.  I
+personally would prefer to use some Unicode character, for instance:
 
 #+BEGIN_SRC espresso
 var yajet = new YAJET({ reader_char: "•" });
@@ -228,7 +233,7 @@ later).  Filters can be combined, for example: =$foo|upcase|html= will
 first make foo uppercase, then apply the html filter to the upcased
 string.
 
-*** Concessions
+*** Notes
 
 - In order to insert literally the reader character in the template
   output you have to put it twice, i.e. =$$=.

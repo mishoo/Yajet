@@ -1,0 +1,25 @@
+$this.foo
+$(LITERAL "/"
+  $foo $bar
+  $baz
+  $LITERAL
+  ${}/)
+$this.bar
+
+$(LITERAL "\n"
+  $foo $bar
+  $baz
+  $LITERAL
+  ${}
+)
+
+Temporarily change the reader char to slash:
+
+$(SYNTAX /
+  /(WITH (this)
+    /foo|upcase
+    /bar|upcase
+  /)
+/)
+
+Back to dollar: $this.foo

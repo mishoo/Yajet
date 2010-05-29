@@ -66,15 +66,6 @@ function YAJET(yajet_args){
                 return b;
         };
 
-        function digit(ch) {
-                return ch >= "0" && ch <= "9";
-        };
-
-        function letter(ch) {
-                ch = ch.toLowerCase();
-                return ch >= "a" && ch <= "z";
-        };
-
         var PARENS = {
                 "(" : ")",
                 "{" : "}",
@@ -547,17 +538,25 @@ function YAJET(yajet_args){
                         }
                 };
 
-                function read_simple_token() {
-                        var token = "", discard = 0;
-                        var ch = peek();
-                        while (letter(ch) || digit(ch) || ch == "_" || ch == "$" || ch == "|" || ch == ".") {
-                                token += ch;
-                                if (ch == "." || ch == "|" || ch == "$")
-                                        ++discard;
-                                else
-                                        discard = 0;
-                                ++THE_INDEX;
+                function read_simple_token(noDollar) {
+                        var token = "", discard = 0, ch, code;
+                        for (;;) {
                                 ch = peek();
+                                code = ch.charCodeAt(0);
+                                if ((code >= 65 && code <= 90) // uppercase letter
+                                    || (code >= 97 && code <= 122) // lowercase letter
+                                    || (code >= 48 && code <= 57)  // digit
+                                    || code == 95 // ch == "_"
+                                    || (code == 36 && !noDollar) // ch == "$"
+                                    || code == 124 // ch == "|"
+                                    || code == 46 // ch == "."
+                                   )
+                                {
+                                        token += ch;
+                                        (code == 36 || code == 124 || code == 46) ? ++discard : (discard = 0);
+                                        ++THE_INDEX;
+                                } else
+                                        break;
                         }
                         if (discard > 0) {
                                 THE_INDEX -= discard;
@@ -638,7 +637,7 @@ function YAJET(yajet_args){
                         }
                         else {
                                 skip_ws();
-                                var v = read_simple_token().split(/\s*\|\s*/);
+                                var v = read_simple_token(true).split(/\s*\|\s*/);
                                 var val = v.shift();
                                 while (v.length > 0) {
                                         val = "YAJET.filter(" + to_js_string(v.shift()) + ", " + val + ")";
@@ -725,8 +724,6 @@ function YAJET(yajet_args){
         this.process = function(tmpl, obj, args) {
                 if (args == null)
                         args = [];
-                else if (!(args instanceof Array))
-                        args = [ args ];
                 var func = TEMPLATES[tmpl];
                 if (!func)
                         EX_RUNTIME("No exported function: " + tmpl);
