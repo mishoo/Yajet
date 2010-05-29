@@ -75,7 +75,7 @@ $)
       $(REPEAT ( (function /*heavy_computation*/() { return 5 })() => i )
         Foo $i $)
 
-      $(LOOP (2..4 => i) Now $i! $)
+      $(REPEAT (2..4 => i) Now $i! $)
 
       $(WITH ({ foo: "ba\"r" })
         <p>Foo is $foo</p>
@@ -123,7 +123,7 @@ $)
       $(IF (foo.list)
         <ul>
           $(MAP (index => element IN foo.list)
-          <li>${index + 1}. ${element}</li>
+          <li>** ${index + 1}. ${element}</li>
           $)
         </ul>
       $)
@@ -265,16 +265,17 @@ var jst = new YAJET({
 });
 
 var template_code = document.getElementById("source").value;
-// template_code = template_code + template_code; // x2
-// template_code = template_code + template_code; // x4
-// template_code = template_code + template_code; // x8
-// template_code = template_code + template_code; // x16
+template_code = template_code + template_code; // x2
+template_code = template_code + template_code; // x4
+template_code = template_code + template_code; // x8
+template_code = template_code + template_code; // x16
 
     // so that we test compilation speed.
     // for now it's awfully slow.
 
     // Chrome compiles it 6 TIMES FASTER than Firefox.
 
+window.console && console.log("Template has %d characters", template_code.length);
 window.console && console.time("compile");
 var template = jst.compile(template_code);
 window.console && console.timeEnd("compile");

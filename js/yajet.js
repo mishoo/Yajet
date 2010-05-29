@@ -385,15 +385,12 @@ function YAJET(yajet_args){
                 };
 
                 function looking_at(ch) {
-                        if (ch instanceof RegExp) {
-                                var m = ch.exec(rest());
-                                if (m) return {
-                                        match: m[0],
-                                        length: m[0].length,
-                                        groups: m
-                                };
-                        }
-                        else return rest(ch.length) == ch ? {
+                        if (ch instanceof RegExp) return (ch = ch.exec(rest())) && {
+                                match: ch[0],
+                                length: ch[0].length,
+                                groups: ch
+                        };
+                        return rest(ch.length) == ch ? {
                                 match: ch,
                                 length: ch.length
                         } : null;
@@ -454,7 +451,8 @@ function YAJET(yajet_args){
                                                 expr += to_js_string(read_string());
                                         }
                                         else if (wantList && open.length == 1 &&
-                                                 ( skip(",") || skip(";") || skip("=>") || skip("..") || skip(/^\s+in\b/i)) ) {
+                                                 ( skip(",") || skip(";") || skip("=>") || skip("..") ||
+                                                   (skip("IN") && expr.charCodeAt(expr.length - 1) == 32)) ) {
                                                 ret.push(expr);
                                                 skip_ws();
                                                 expr = "";
