@@ -6,7 +6,7 @@ lang="en" xml:lang="en">
 <title>YAJET &ndash; JavaScript Template Engine</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2010-05-29 11:34:01 CEST"/>
+<meta name="generated" content="2010-05-30 10:45:08 CEST"/>
 <meta name="author" content="Mihai Bazon"/>
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
@@ -115,7 +115,12 @@ lang="en" xml:lang="en">
 </ul></li>
 </ul>
 </li>
-<li><a href="#sec-5">5 Correctness </a></li>
+<li><a href="#sec-5">5 Correctness </a>
+<ul>
+<li><a href="#sec-5.1">5.1 Loop control </a></li>
+<li><a href="#sec-5.2">5.2 The value of <code>this</code> </a></li>
+</ul>
+</li>
 <li><a href="#sec-6">6 Custom directives </a>
 <ul>
 <li><a href="#sec-6.1">6.1 A more involved example &mdash; <code>SWITCH</code> </a></li>
@@ -163,7 +168,7 @@ it rendered.
 I think that all template tools suck to some degree, and this has to
 be because they are bringing together two (or more) languages.  The
 syntax is always creepy.  YAJET is no exception from this fundamental
-rule, but still I think it's better than others.  It has a nice Lispy
+rule, but still I think it's better than others.  It has a nice lispy
 syntax for directives, that feels much better than the sheer ugliness
 that other template toolkits propose.  But it also strives to keep
 simple things simple:
@@ -821,10 +826,10 @@ ${ } }
 <p>
 I emphasize that the lack of support for partial expressions is a
 <i>feature</i>, not a limitation.  This will never be “fixed”.  To support
-constructs like the above but without encouraging poorly written
-templates we have a few special processing directives.  Let's call
-these the <code>$(BAR ... $)</code> construct.  To start with, here is how you
-would write the above code:
+constructs like the above but without encouraging bad style or awful
+syntax, we have a few special processing directives.  Let's call these
+the <code>$(BAR ... $)</code> construct.  To start with, here is how you would
+write the above code:
 </p>
 
 
@@ -839,12 +844,11 @@ $)
 
 
 <p>
-Instead of inserting arbitrary code unconditionally, we simply end a
-known construct.  The condition that you pass to <code>IF</code> must be proper
-JavaScript (you cannot pass a partial expression there) and, if your
-editor does a good job about matching parens, then you can quickly see
-where the block begins/ends by moving the cursor to the parens.  I
-prefer this style.
+All blocks end with a closing paren; no need for “{/IF}”, “.IF”,
+“END”, “&lt;? } ?&gt;” etc.  This has an incredible advantage<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>:
+if your editor can properly match parens, you can immediately see
+where a block starts or ends by just moving the caret to the
+ending/opening paren.
 </p>
 <p>
 Note that the processing instructions are not case-sensitive.  I prefer to
@@ -988,14 +992,14 @@ $)
 
 <p>
 The variable <code>$it</code> is created by the macro and takes the value of the
-condition, and the text block is executed only if<sup><a class="footref" name="fnr.6" href="#fn.6">6</a></sup>:
+condition, and the text block is executed only if<sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>:
 </p>
 <ul>
 <li>
 <code>$it</code> is not <code>null</code> and not <code>undefined</code>
 </li>
 <li>
-<code>$it</code> is not <code>false</code> <sup><a class="footref" name="fnr.7" href="#fn.7">7</a></sup>
+<code>$it</code> is not <code>false</code> <sup><a class="footref" name="fnr.8" href="#fn.8">8</a></sup>
 </li>
 <li>
 <code>$it</code> is not an empty array
@@ -1198,7 +1202,7 @@ no key or index variables.  In this case the special variable <code>$_</code> (w
 will call the Perlism) gets assigned to the current element, and <i>more</i>, the
 loop body is lexically scoped to each element using a JavaScript <code>with</code>
 block (I know, your mom told you not to play the <code>with</code> statement, but mine
-didn't<sup><a class="footref" name="fnr.8" href="#fn.8">8</a></sup> :-p).
+didn't<sup><a class="footref" name="fnr.9" href="#fn.9">9</a></sup> :-p).
 </p>
 <p>
 So using this style the first example would become:
@@ -1371,7 +1375,7 @@ $x is <span style="color: #bc8f8f;">"outside"</span>
 compatible with all browsers.  JavaScript 1.7 introduced a <code>let</code>
 statement for declaring block-scoped variables, and it's supported by
 Firefox, but unfortunately no other browser has it at the
-moment<sup><a class="footref" name="fnr.9" href="#fn.9">9</a></sup>.
+moment<sup><a class="footref" name="fnr.10" href="#fn.10">10</a></sup>.
 </p>
 </div>
 
@@ -1684,9 +1688,8 @@ it's the same as described in <a href="#sec-4.3.10">WRAP</a>.
 as you can see above, it is possible to call an exported block
 directly without using an intermediate template.  Use
 <code>yajet.process(exported_name, self, [ more, args ])</code>.  The <code>self</code>
-argument will be the value of the <b>this</b> keyword within the
-exported block, and the last is an array of more arguments that are
-passed to the function.
+argument is accessible as <b>this</b> within the block, and the last is
+an array of more arguments that are passed to the function.
 
 </li>
 </ul>
@@ -1947,19 +1950,47 @@ What YAJET actually generates for the above case looks like this:
 <p>
 The variables that aren't explicitly named in the template get unique
 names with the prefix <code>__GSY</code>, so you should be safe as long as you
-don't use the <code>__GSY</code> prefix yourself.  Hope you don't. :-)
+don't use the <code>__GSY</code> prefix yourself.  Also, there are a few other
+internal variables that YAJET has to use:
 </p>
-<p>
-Also, the loop block is embedded in a function, so that it doesn't
-affect outside variables.
+<ul>
+<li>
+<code>__EXPORTS</code> &ndash; an array where we store exported blocks
+</li>
+<li>
+<code>__BUF</code> &ndash; a string holding the output buffer
+</li>
+<li>
+<code>OUT</code> and <code>VUT</code>
+
+</li>
+</ul>
+
+<p>I prefixed those that I assumed won't be generally useful with two
+underscores.  <code>OUT</code> and <code>VUT</code> are not prefixed because they are needed
+for custom directives.  Both of them are functions that currently do
+the same thing<sup><a class="footref" name="fnr.11" href="#fn.11">11</a></sup>: they take one argument and if it's not <code>null</code>
+they insert it into the output.
 </p>
 
 <hr/>
 
 <p>
-Also because we're striving for correctness, I had to figure out what
-to do on <code>$(BREAK)</code> or <code>$(CONTINUE)</code> in certain situations.  For
-example imagine this loop:
+You can note in the code above that the loop block is embedded in a
+function, so that it doesn't affect outside variables.  Creating
+lambdas everywhere has other implications that we need to be careful
+about:
+</p>
+
+</div>
+
+<div id="outline-container-5.1" class="outline-3">
+<h3 id="sec-5.1">5.1 Loop control </h3>
+<div id="text-5.1">
+
+
+<p>
+Imagine this loop:
 </p>
 
 
@@ -2019,9 +2050,24 @@ right thing:
 So <code>BREAK</code> and <code>CONTINUE</code> are handled with exceptions, which has an
 interesting implication: if you <i>know</i> that some function will <i>only</i>
 be called from loops, <i>then</i> you can safely use <code>BREAK</code> and <code>CONTINUE</code>
-within it.  But only <i>if you know that</i>.  It's not always a good
-practice. ;-)
+within it.  But only <i>if you know that</i>. ;-)
 </p>
+</div>
+
+</div>
+
+<div id="outline-container-5.2" class="outline-3">
+<h3 id="sec-5.2">5.2 The value of <code>this</code> </h3>
+<div id="text-5.2">
+
+
+<p>
+Put simply, YAJET will “copy” <code>this</code> to all functions that it creates
+or calls itself, so that <code>this</code> will still refer to your template
+argument even if you're inside some loop or other automatically
+generated function.
+</p>
+</div>
 </div>
 
 </div>
@@ -2316,7 +2362,7 @@ some temporary one which we will discard, because otherwise the
 whitespace between <code>$(SWITCH (...)</code> and the first <code>$(CASE)</code> will be
 transformed into code, and it won't be valid JavaScript syntax.  And
 we need to be careful to set the output back to the saved value when
-needed<sup><a class="footref" name="fnr.10" href="#fn.10">10</a></sup>.
+needed<sup><a class="footref" name="fnr.12" href="#fn.12">12</a></sup>.
 </p>
 <p>
 This topic is advanced so I will stop here.  If you want to write your
@@ -2425,7 +2471,7 @@ good. ;-)
 
 <p>
 Currently YAJET keeps all whitespace in the generated
-source<sup><a class="footref" name="fnr.11" href="#fn.11">11</a></sup>.  There is a directive that allows you to say
+source<sup><a class="footref" name="fnr.13" href="#fn.13">13</a></sup>.  There is a directive that allows you to say
 “kill following whitespace” (<code>$-</code>, that is, the reader char followed
 by a minus sign) but it's not very convenient.  For example:
 </p>
@@ -2587,6 +2633,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
+
+
 </div>
 </div>
 <div id="footnotes">
@@ -2604,34 +2652,41 @@ for one-liners, but I vote against it for blocks bigger than a few
 lines.
 </p>
 <p class="footnote"><sup><a class="footnum" name="fn.4" href="#fnr.4">4</a></sup> <a href="http://beebole.com/pure/">Pure</a> comes first on Google when we search “JavaScript
-template engine”.  Have you notice how exaggeratedly creepy is the syntax for <a href="http://beebole.com/pure/documentation/iteration-with-directives/">rendering with directives</a>?
-I guess we truly live in a “worse is better” world, but I'm still trying to do The Right Thing.
+template engine”.  Have you notice how exaggeratedly creepy is the
+syntax for <a href="http://beebole.com/pure/documentation/iteration-with-directives/">rendering with directives</a>?  I guess we truly live in a
+“<a href="http://en.wikipedia.org/wiki/Worse_is_better">worse is better</a>” world, but I'm still trying to do The Right Thing.
 </p>
 <p class="footnote"><sup><a class="footnum" name="fn.5" href="#fnr.5">5</a></sup> This is a double-feature: we have good documentation and
 lots of features for small code. ;-)
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> Note that the JavaScript rules for falsity are
-different; an empty array will stand <code>true</code>, while the number 0 (zero)
-is <code>false</code>.  But I think these ones are more useful when you're
-writing a html/text template.
+<p class="footnote"><sup><a class="footnum" name="fn.6" href="#fnr.6">6</a></sup> Sarcasm intended.  I still can't figure out why all other
+template solutions insist on not using plain parens.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.7" href="#fnr.7">7</a></sup> BTW, did you know that in JavaScript the expression <b>(0 == false)</b> evaluates to <b>true</b> in conditionals?
+<p class="footnote"><sup><a class="footnum" name="fn.7" href="#fnr.7">7</a></sup> Note that the JavaScript rules for falsity are
+different, and I think less useful: an empty array will stand <code>true</code>,
+while the number 0 (zero) is <code>false</code>.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.8" href="#fnr.8">8</a></sup> Seriously though, everything under an <code>with</code> block is
+<p class="footnote"><sup><a class="footnum" name="fn.8" href="#fnr.8">8</a></sup> BTW, did you know that in JavaScript the expression <b>(0 == false)</b> evaluates to <b>true</b> in conditionals?
+</p>
+<p class="footnote"><sup><a class="footnum" name="fn.9" href="#fnr.9">9</a></sup> Seriously though, everything under an <code>with</code> block is
 s&hellip;l&hellip;o&hellip;w&hellip; &ndash; so, while this makes for a nice syntax, you should not
 use it where speed is critical.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.9" href="#fnr.9">9</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
+<p class="footnote"><sup><a class="footnum" name="fn.10" href="#fnr.10">10</a></sup> Since I'm not sure what are the benefits of the <code>let</code>
 keyword from JavaScript 1.7 compared to using an anonymous function, I
 decided not to add a browser check for this.  When more browsers will
 support it I'll change my mind.  But the template syntax will remain
 the same.
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.10" href="#fnr.10">10</a></sup> The fact that JavaScript properly supports closures
+<p class="footnote"><sup><a class="footnum" name="fn.11" href="#fnr.11">11</a></sup> <code>VUT</code> however might change in the future.  <code>OUT</code> is intended
+to output plain text, while <code>VUT</code> is meant to output the value of an
+expression.
+</p>
+<p class="footnote"><sup><a class="footnum" name="fn.12" href="#fnr.12">12</a></sup> The fact that JavaScript properly supports closures
 plays a key role into all this, but <a href="http://mihai.bazon.net/blog/the-buzz-of-closures">I'm tired</a> of saying this all
 over. :-)
 </p>
-<p class="footnote"><sup><a class="footnum" name="fn.11" href="#fnr.11">11</a></sup> Speaking of it, most (all?) template engines do the
+<p class="footnote"><sup><a class="footnum" name="fn.13" href="#fnr.13">13</a></sup> Speaking of it, most (all?) template engines do the
 same.
 </p>
 </div>
@@ -2639,7 +2694,7 @@ same.
 <div id="postamble"><p class="author"> Author: Mihai Bazon
 <a href="mailto:mihai.bazon@gmail.com">&lt;mihai.bazon@gmail.com&gt;</a>
 </p>
-<p class="date"> Date: 2010-05-29 11:34:01 CEST</p>
+<p class="date"> Date: 2010-05-30 10:45:08 CEST</p>
 <p>HTML generated by org-mode 6.21b in emacs 23</p>
 </div></body>
 </html>

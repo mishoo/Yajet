@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script src="../js/yajet.js"></script>
+    <script src="../js/jquery.yajet.js"></script>
+    <script>
+      $(document).ready(function(){
+
+        $("[yajet-template]").yajet({
+          a: 12,
+          b: 34
+        });
+
+        $("button").click(function(){
+          $("[yajet-template]").yajet({
+            a: Math.round(100 * Math.random()),
+            b: Math.round(100 * Math.random())
+          });
+        });
+
+      });
+    </script>
+  </head>
+  <body>
+
+    <div yajet-template="foo"></div>
+    <pre yajet-template="foo" yajet-escape-output="1"></pre>
+
+    <button>Recompute with other values</button>
+
+    <script type="text/x-yajet" name="foo*">
+      $(REPEAT (3..5 => i)
+        <b>$a</b> + <b>$b</b> + <b>${ 2*i }</b> = ${ a + b + 2 * i }<br /> $)
+      $(PROCESS bar("qwe", "asd"))
+    </script>
+
+    <script type="text/x-yajet" name="bar*" args="x, y">
+      $(WRAP section("Foo <Bar>")
+        We got x = $x and y = $y (then a = $a, b = $b) $)
+    </script>
+
+    <script type="text/x-yajet" name="section" args="title">
+      <div class="section">
+        <div class="title">$title|html</div>
+        <div class="body">$(CONTENT)</div>
+      </div>
+    </script>
+
+  </body>
+</html>

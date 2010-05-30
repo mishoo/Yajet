@@ -26,7 +26,7 @@ it rendered.
 I think that all template tools suck to some degree, and this has to
 be because they are bringing together two (or more) languages.  The
 syntax is always creepy.  YAJET is no exception from this fundamental
-rule, but still I think it's better than others.  It has a nice Lispy
+rule, but still I think it's better than others.  It has a nice lispy
 syntax for directives, that feels much better than the sheer ugliness
 that other template toolkits propose.  But it also strives to keep
 simple things simple:
@@ -74,8 +74,9 @@ any kind of text templates---it was not designed specifically for
 HTML, although that's mostly what I use it for.
 
 [fn:pure] [[http://beebole.com/pure/][Pure]] comes first on Google when we search “JavaScript
-template engine”.  Have you notice how exaggeratedly creepy is the syntax for [[http://beebole.com/pure/documentation/iteration-with-directives/][rendering with directives]]?
-I guess we truly live in a “worse is better” world, but I'm still trying to do The Right Thing.
+template engine”.  Have you notice how exaggeratedly creepy is the
+syntax for [[http://beebole.com/pure/documentation/iteration-with-directives/][rendering with directives]]?  I guess we truly live in a
+“[[http://en.wikipedia.org/wiki/Worse_is_better][worse is better]]” world, but I'm still trying to do The Right Thing.
 
 ** Features
 
@@ -410,10 +411,10 @@ ${ } }
 
 I emphasize that the lack of support for partial expressions is a
 /feature/, not a limitation.  This will never be “fixed”.  To support
-constructs like the above but without encouraging poorly written
-templates we have a few special processing directives.  Let's call
-these the =$(BAR ... $)= construct.  To start with, here is how you
-would write the above code:
+constructs like the above but without encouraging bad style or awful
+syntax, we have a few special processing directives.  Let's call these
+the =$(BAR ... $)= construct.  To start with, here is how you would
+write the above code:
 
 #+BEGIN_SRC html
 $(IF (link != null)
@@ -421,12 +422,14 @@ $(IF (link != null)
 $)
 #+END_SRC
 
-Instead of inserting arbitrary code unconditionally, we simply end a
-known construct.  The condition that you pass to =IF= must be proper
-JavaScript (you cannot pass a partial expression there) and, if your
-editor does a good job about matching parens, then you can quickly see
-where the block begins/ends by moving the cursor to the parens.  I
-prefer this style.
+All blocks end with a closing paren; no need for “{/IF}”, “.IF”,
+“END”, “<? } ?>” etc.  This has an incredible advantage[fn:sarcasm]:
+if your editor can properly match parens, you can immediately see
+where a block starts or ends by just moving the caret to the
+ending/opening paren.
+
+[fn:sarcasm] Sarcasm intended.  I still can't figure out why all other
+template solutions insist on not using plain parens.
 
 Note that the processing instructions are not case-sensitive.  I prefer to
 use UPPERCASE for them so that they stand out visually.
@@ -514,9 +517,8 @@ The variable =$it= is created by the macro and takes the value of the
 condition, and the text block is executed only if[fn:awhen-falsity]:
 
 [fn:awhen-falsity] Note that the JavaScript rules for falsity are
-different; an empty array will stand =true=, while the number 0 (zero)
-is =false=.  But I think these ones are more useful when you're
-writing a html/text template.
+different, and I think less useful: an empty array will stand =true=,
+while the number 0 (zero) is =false=.
 
 - =$it= is not =null= and not =undefined=
 - =$it= is not =false= [fn:falsity]
@@ -955,9 +957,8 @@ Some notes:
  - as you can see above, it is possible to call an exported block
    directly without using an intermediate template.  Use
    =yajet.process(exported_name, self, [ more, args ])=.  The =self=
-   argument will be the value of the *this* keyword within the
-   exported block, and the last is an array of more arguments that are
-   passed to the function.
+   argument is accessible as *this* within the block, and the last is
+   an array of more arguments that are passed to the function.
 
 *** =LITERAL= --- include literal text
 
@@ -1113,16 +1114,33 @@ What YAJET actually generates for the above case looks like this:
 
 The variables that aren't explicitly named in the template get unique
 names with the prefix =__GSY=, so you should be safe as long as you
-don't use the =__GSY= prefix yourself.  Hope you don't. :-)
+don't use the =__GSY= prefix yourself.  Also, there are a few other
+internal variables that YAJET has to use:
 
-Also, the loop block is embedded in a function, so that it doesn't
-affect outside variables.
+- =__EXPORTS= -- an array where we store exported blocks
+- =__BUF= -- a string holding the output buffer
+- =OUT= and =VUT=
 
-------
+I prefixed those that I assumed won't be generally useful with two
+underscores.  =OUT= and =VUT= are not prefixed because they are needed
+for custom directives.  Both of them are functions that currently do
+the same thing[fn:vut]: they take one argument and if it's not =null=
+they insert it into the output.
 
-Also because we're striving for correctness, I had to figure out what
-to do on =$(BREAK)= or =$(CONTINUE)= in certain situations.  For
-example imagine this loop:
+[fn:vut] =VUT= however might change in the future.  =OUT= is intended
+to output plain text, while =VUT= is meant to output the value of an
+expression.
+
+-----
+
+You can note in the code above that the loop block is embedded in a
+function, so that it doesn't affect outside variables.  Creating
+lambdas everywhere has other implications that we need to be careful
+about:
+
+** Loop control
+
+Imagine this loop:
 
 #+BEGIN_EXAMPLE
 $(MAP (a => [1, 2, 3, 4, 5])
@@ -1168,8 +1186,14 @@ right thing:
 So =BREAK= and =CONTINUE= are handled with exceptions, which has an
 interesting implication: if you /know/ that some function will /only/
 be called from loops, /then/ you can safely use =BREAK= and =CONTINUE=
-within it.  But only /if you know that/.  It's not always a good
-practice. ;-)
+within it.  But only /if you know that/. ;-)
+
+** The value of =this=
+
+Put simply, YAJET will “copy” =this= to all functions that it creates
+or calls itself, so that =this= will still refer to your template
+argument even if you're inside some loop or other automatically
+generated function.
 
 * Custom directives
 

@@ -1,6 +1,6 @@
 $(REPEAT (3) foo $)
 
-$(LOOP (5 .. 10 => i) <page $i> $)
+$(REPEAT (5 .. 10 => i) <page $i> $)
 
 $(REPEAT (10 => i) $(WHEN (i > 5) $(BREAK) $) $i $)
 
