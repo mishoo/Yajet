@@ -139,7 +139,7 @@ reuse the compiled function.
 
 See the code in the next section for an example of this.
 
-* A more complicated example
+* Another example
 
 #+BEGIN_SRC nxml
 <html>
