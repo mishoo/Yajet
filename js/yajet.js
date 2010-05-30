@@ -12,7 +12,7 @@ function YAJET(yajet_args){
                 with_scope  : false
         });
 
-        var TEMPLATES = {};
+        var TEMPLATES = this.TEMPLATES = {};
 
         // special constructs:
         //
@@ -228,6 +228,7 @@ function YAJET(yajet_args){
                                 var args = trim(read_balanced());
                                 if (args)
                                         args += ", ";
+                                name = "(typeof " + name + " == 'function' ? " + name + " : YAJET.TEMPLATES." + name + ")";
                                 block_open("VUT(" + name + ".call(this, " + args + "function(OUT, VUT){", "}));");
                         },
                         content: function() {
