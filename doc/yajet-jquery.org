@@ -1,0 +1,200 @@
+#+TITLE: YAJET -- JavaScript Template Engine (jQuery plugin)
+#+KEYWORDS: javascript, js, jquery, template, engine, compiler, macro, text, html
+#+DESCRIPTION: YAJET is Another JavaScript Emplate Tengine
+#+STYLE: <link rel="stylesheet" type="text/css" href="docstyle.css" />
+#+AUTHOR: Mihai Bazon
+#+EMAIL: mihai.bazon@gmail.com
+
+* The YAJET jQuery plugin
+
+Here are some short notes on the small interface for jQuery.  Please
+read the [[./yajet.html][full documentation]] for information about the features and
+syntax of the YAJET template engine.
+
+The jQuery plugin is just a thin wrapper that exposes a simple API.
+For example:
+
+#+BEGIN_SRC espresso
+$("[yajet-template]").yajet({
+    first_name: "John",
+    last_name: "Doe",
+    items: 5
+});
+#+END_SRC
+
+and the HTML code:
+
+#+BEGIN_SRC html
+<div yajet-template="user"></div>
+
+<script type="text/x-yajet" name="user">
+  $this.first_name $this.last_name
+  selected ${ this.items => plural("no items|one item|two items|# items")
+</script>
+#+END_SRC
+
+The “yajet” method looks for an attribute named “yajet-template”,
+executes the template given the arguments and inserts the output into
+the element.
+
+** Initialization
+
+An YAJET object instance is automatically constructed, if you didn't
+specify one, with all the default parameters.  If you need to do a
+custom initialization, you can do the following when the document is
+ready:
+
+#+BEGIN_SRC espresso
+$(document).ready(function(){
+  $.yajet.init({
+    reader_char: "#",
+    filters: { ...custom filters... }
+  });
+});
+#+END_SRC
+
+The argument that you pass to =$.yajet.init= is directly passed to the
+YAJET constructor.  See [[./yajet.html][the full YAJET documentation]] for more
+information on supported options.
+
+** Compiling templates
+
+The =init()= function will look for all =<script>= elements that have
+a type="text/x-yajet" attribute, and will compile them automatically.
+It interprets some additional attributes:
+
+- name="foo" --- if a name is given, the code within that <script> tag
+  will be EXPORT-ed.  If you don't specify a name attribute you should
+  EXPORT blocks yourself.
+
+- args="x, y" --- arguments for the EXPORT-ed block (only when you
+  passed =name=).
+
+As you can see in the first sample, you need to access template
+arguments via the =this= keyword.  To provide some convenience the
+plugin automatically wraps the blocks in "with(this){...}"  if you
+append an asterisk character to the name.  So the first sample could
+be:
+
+#+BEGIN_SRC html
+<div yajet-template="user"></div>
+
+<script type="text/x-yajet" name="user*">
+  $first_name $last_name
+  selected ${ items => plural("no items|one item|two items|# items")
+</script>
+#+END_SRC
+
+Just to be clear, it can also be written like this and it's perfectly
+equivalent:
+
+#+BEGIN_SRC html
+<script type="text/x-yajet">
+$(EXPORT user()
+  $(WITH (this)
+    $first_name $last_name
+    selected ${ items => plural("no items|one item|two items|# items")
+  $)
+$)
+</script>
+#+END_SRC
+
+Here I manually exported the block, and added the =WITH(this)=
+explicitly.  The difference is that in the last example I can write
+multiple =EXPORT= blocks; if you use the =name= attribute, then you
+should provide a different =<script>= for each block.
+
+** Using a different template source
+
+If you prefer to write the templates in some element other than
+=<script>=, you can call =$(selector).yajet_compile()= in order to
+compile them manually.  The YAJET plugin tries the following methods
+in order to fetch the template code:
+
+1. See if the first child is a comment or CDATA section, in which case
+   fetch its content.  This is the most convenient after =<script>=.
+
+2. Try =$(this).val()= and if it returns something use that instead.
+   This is useful when you pass the template in a hidden field or
+   textarea---it can be convenient when you're assembling the final
+   HTML on the server side, since you need to HTML-encode the
+   template.
+
+3. Otherwise use =$(this).html()=.  This is not safe because the
+   browser will mess with your code (if you need to use i.e. a < b,
+   then it won't work since the sign will have been converted to
+   “&lt;” already).  But for simple cases it might be convenient.
+
+** “Inline” templates
+
+It's sometimes convenient to include the template literally in the
+element where you want it to appear, rather than export it in a
+=<script>=.  In this case, just don't pass the “yajet-template”
+attribute and our plugin will figure out that you want to process the
+inline template.
+
+Note that the template of some element is compiled only once, the
+first time it's rendered.  On subsequent invocations our plugin will
+reuse the compiled function.
+
+See the code in the next section for an example of this.
+
+* A more complicated example
+
+#+BEGIN_SRC nxml
+<html>
+  <head>
+    <script src="... load jquery.js"></script>
+    <script src="... load yajet.js"></script>
+    <script src="... load yajet-jquery.js"></script>
+    <script>
+      var data = {
+        links: [
+	  { url: "/about", text: "About" },
+	  { url: "/download", text: "Download" },
+	  { url: "/contact", text: "Contact" }
+	]
+      };
+      $(document).ready({
+        $(".tmpl").yajet(data);
+      });
+    </script>
+  </head>
+  <body>
+    <div class="tmpl navigation" yajet-template="navigation"></div>
+
+    <!-- the following uses an inline template -->
+    <div class="tmpl">
+
+      $(WRAP section("Links")
+        <p>We have the following links:</p>
+        $(PROCESS navigation())
+	<p>Foo bar.</p> $)
+
+      $(WRAP section("Info")
+        <p>Blah blah</p> $)
+
+    </div>
+
+    <!-- templates follow -->
+    <script type="text/x-yajet" name="navigation*">
+      <ul>
+        $(FOREACH (links)
+          <li>
+	    <a href="$url|html">$text|html</a>
+	  </li> $)
+      </ul>
+    </script>
+
+    <script type="text/x-yajet" name="section" args="title">
+      <div class="section">
+        <div class="title">$title|html</div>
+	<div class="body">$(CONTENT)</div>
+      </div>
+    </script>
+  </body>
+</html>
+#+END_SRC
+
+For full information about the template syntax please read the [[./yajet.html][YAJET
+documentation]].

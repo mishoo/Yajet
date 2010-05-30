@@ -6,13 +6,13 @@
     <script>
       $(document).ready(function(){
 
-        $("[yajet-template]").yajet({
+        $("[yajet]").yajet({
           a: 12,
           b: 34
         });
 
         $("button").click(function(){
-          $("[yajet-template]").yajet({
+          $("[yajet]").yajet({
             a: Math.round(100 * Math.random()),
             b: Math.round(100 * Math.random())
           });
@@ -23,8 +23,13 @@
   </head>
   <body>
 
-    <div yajet-template="foo"></div>
-    <pre yajet-template="foo" yajet-escape-output="1"></pre>
+    <div yajet="1" yajet-template="foo"></div>
+    <pre yajet="1" yajet-template="foo" yajet-escape-output="1"></pre>
+
+    <p yajet="1"><!--
+      $(WRAP section("Test inline template")
+        We got <b>$this.a</b> and <b>$this.b</b>. $)
+    --></p>
 
     <button>Recompute with other values</button>
 
@@ -39,7 +44,7 @@
         We got x = $x and y = $y (then a = $a, b = $b) $)
     </script>
 
-    <script type="text/x-yajet" name="section" args="title">
+    <script type="text/x-yajet" name="section*" args="title">
       <div class="section">
         <div class="title">$title|html</div>
         <div class="body">$(CONTENT)</div>

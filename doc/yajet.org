@@ -950,9 +950,10 @@ Some notes:
    blocks as if they were local.  They can call each other if needed,
    they can $(WRAP) each other, etc.
 
- - if you need to call a function =EXPORT=-ed from another template as
-   a =WRAP=-per, you need to =$(IMPORT)= it first.  Other than this,
-   it's the same as described in [[WRAP]].
+ - You can use =WRAP= in a different template to call an exported
+   function as wrapper, without having to =IMPORT= it first.  Note
+   however that if some =BLOCK= or other function with the same name
+   exists in the current template, it will take precedence.
 
  - as you can see above, it is possible to call an exported block
    directly without using an intermediate template.  Use

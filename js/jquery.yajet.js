@@ -1,3 +1,10 @@
+//> YAJET -- Yet Another JavaScript Emplate Tengine
+//> Author: Mihai Bazon <mihai.bazon@gmail.com>
+//> Distributed under the BSD license.  Visit www.yajet.net for details.
+//> (c) Mihai Bazon 2010
+//>
+//> This file is not the full template engine; it's just the jQuery integration.
+
 (function($){
 
         var COMPILER;               // compiler instance
@@ -11,7 +18,7 @@
                                         with_scope: true
                                 }, args);
                                 COMPILER = new YAJET(args);
-                                $("script[type=text/x-yajet]").compile();
+                                $("script[type=text/x-yajet]").yajet_compile();
                         }
                 }
         };
@@ -20,23 +27,46 @@
                 init: init
         };
 
+        function getTemplate(el) {
+                var tmpl;
+                if (el.firstChild && el.firstChild.nodeType == 8 /* CDATA or comment */) {
+                        tmpl = el.firstChild.nodeValue.replace(/\[CDATA\[|\]\]?$/g, "");
+                } else {
+                        tmpl = $(el).val() || $(el).html();
+                }
+                return tmpl;
+        };
+
         $.fn.yajet = function(self, args) {
                 init();
                 return this.each(function(){
                         var J = $(this),
-                            html = COMPILER.process(J.attr("yajet-template"), self, args);
+                            tmpl = J.attr("yajet-template"),
+                            html;
+                        if (tmpl) {
+                                html = COMPILER.process(tmpl, self, args);
+                        } else {
+                                // inline template
+                                tmpl = J.data("yajet-template");
+                                if (!tmpl) {
+                                        tmpl = getTemplate(this);
+                                        tmpl = COMPILER.compile(tmpl);
+                                        J.data("yajet-template", tmpl);
+                                }
+                                html = tmpl(self);
+                        }
                         if (J.attr("yajet-escape-output"))
                                 html = COMPILER.filter("html", html);
                         J.html(html);
                 });
         };
 
-        $.fn.compile = function() {
+        $.fn.yajet_compile = function() {
                 init();
                 var full = "", rc = COMPILER.reader_char();
                 this.each(function(){
                         var J = $(this),
-                            code = J.text(),
+                            code = getTemplate(this),
                             name = J.attr("name"),
                             args;
                         if (name) {
