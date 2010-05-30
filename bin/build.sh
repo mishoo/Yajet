@@ -1,6 +1,6 @@
 #! /bin/bash
 
-DIRS='js jquery doc test'
+FILES='js jquery doc test license.txt'
 
 SCRIPT=`readlink -f $0`
 BASEDIR=`dirname $SCRIPT`
@@ -8,7 +8,7 @@ cd $BASEDIR/../
 
 TMPDIR=`mktemp -d`
 mkdir $TMPDIR/yajet
-cp -r $DIRS $TMPDIR/yajet
+cp -r $FILES $TMPDIR/yajet
 
 cd $TMPDIR/yajet/js
 yuicompressor yajet.js > yajet.min.js
