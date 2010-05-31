@@ -448,18 +448,24 @@ function YAJET(yajet_args){
 
                 function parse() {
                         while (THE_INDEX < THE_LENGTH) {
-                                var ch = next();
-                                if (ch == READER_CHAR) {
+                                var pos = THE_STRING.indexOf(READER_CHAR, THE_INDEX);
+                                if (pos < 0) {
+                                        THE_TEXT += rest();
+                                        break;
+                                }
+                                else {
+                                        if (pos > THE_INDEX)
+                                                THE_TEXT += rest(pos - THE_INDEX);
+                                        THE_INDEX = pos + 1;
+
                                         // double reader char means insert it literally
-                                        if (skip(ch)) {
-                                                THE_TEXT += ch;
+                                        if (skip(READER_CHAR)) {
+                                                THE_TEXT += READER_CHAR;
                                         }
                                         // a following sharp sign (#) means comment out the rest of the line
                                         else if (skip("#")) {
-                                                var pos = THE_STRING.indexOf("\n", THE_INDEX);
-                                                if (pos == -1)
-                                                        pos = THE_LENGTH;
-                                                THE_INDEX = pos;
+                                                if (0 == (THE_INDEX = THE_STRING.indexOf("\n", THE_INDEX) + 1))
+                                                        break;
                                         }
                                         // else: code follows
                                         else {
@@ -467,10 +473,8 @@ function YAJET(yajet_args){
                                                 read_code();
                                         }
                                 }
-                                else {
-                                        THE_TEXT += ch;
-                                }
                         }
+                        THE_INDEX = THE_LENGTH;
                         flush_text();
                 };
 
