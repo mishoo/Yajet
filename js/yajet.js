@@ -93,7 +93,7 @@ function YAJET(yajet_args){
                         "if": function() {
                                 block_open("if (" + read_balanced() + ") {");
                         },
-                        aif: function() {
+                        "aif": function() {
                                 // from http://common-lisp.net/project/anaphora/
                                 // "the anaphoric macro collection from hell".
                                 // But here it's somewhat extended.
@@ -108,18 +108,18 @@ function YAJET(yajet_args){
                                 block_open("(function(" + sym + ") { if (" + cond + ") {",
                                            "}}).call(this, " + args[0] + ");");
                         },
-                        unless: function() {
+                        "unless": function() {
                                 block_open("if (!(" + read_balanced() + ")) {");
                         },
                         "else": function() {
                                 out("} else {"); // shortcut, no need for block_close / block_open here
                                 assert_skip(")");
                         },
-                        elsif: function() {
+                        "elsif": function() {
                                 out("} else if (" + read_balanced() + ") {"); // again
                                 assert_skip(")");
                         },
-                        maphash: function() {
+                        "maphash": function() {
                                 var args = read_balanced(true);
                                 var key = args[0], val = args[1], hash = args[2], sym = gensym();
                                 block_open(
@@ -133,7 +133,7 @@ function YAJET(yajet_args){
                                         EX_LOOP_HANDLERS + "}}).call(this, " + hash + ");"
                                 );
                         },
-                        map: function() {
+                        "map": function() {
                                 var args = read_balanced(true), idx, key, arr, sym = gensym(), len = gensym();
                                 if (args.length == 3) {
                                         idx = args[0], key = args[1], arr = args[2];
@@ -162,7 +162,7 @@ function YAJET(yajet_args){
                                                 EX_LOOP_HANDLERS + "}).call(this, " + arr + ");"
                                 );
                         },
-                        repeat: function() {
+                        "repeat": function() {
                                 var args = read_balanced(true), count, start = 1, idx, sym = gensym();
                                 if (args.length == 3)
                                         start = args.shift();
@@ -195,7 +195,7 @@ function YAJET(yajet_args){
                         "with": function() {
                                 block_open("with (" + read_balanced() + ") {");
                         },
-                        block: function() {
+                        "block": function() {
                                 skip_ws();
                                 var name = read_simple_token();
                                 var args = trim(read_balanced());
@@ -215,14 +215,14 @@ function YAJET(yajet_args){
                                 assert_skip(")");
                                 out(map(imp, MAKE_IMPORT).join(";\n") + ";");
                         },
-                        process: function() {
+                        "process": function() {
                                 skip_ws();
                                 var name = read_simple_token();
                                 var args = read_balanced();
                                 assert_skip(")");
                                 out("VUT(YAJET.process(" + to_js_string(name) + ", this, [" + args + "]));");
                         },
-                        wrap: function() {
+                        "wrap": function() {
                                 skip_ws();
                                 var name = read_simple_token();
                                 var args = trim(read_balanced());
@@ -231,11 +231,11 @@ function YAJET(yajet_args){
                                 name = "(typeof " + name + " == 'function' ? " + name + " : YAJET.TEMPLATES." + name + ")";
                                 block_open("VUT(" + name + ".call(this, " + args + "function(OUT, VUT){", "}));");
                         },
-                        content: function() {
+                        "content": function() {
                                 out("if (arguments[arguments.length - 1] instanceof Function) arguments[arguments.length - 1].call(this, OUT, VUT);");
                                 assert_skip(")");
                         },
-                        literal: function() {
+                        "literal": function() {
                                 var end, pos, text;
                                 skip_ws();
                                 end = read_string() + ")";
@@ -247,7 +247,7 @@ function YAJET(yajet_args){
                                 THE_INDEX = pos + end.length;
                                 out("OUT(" + to_js_string(text) + ")");
                         },
-                        syntax: function() {
+                        "syntax": function() {
                                 var save = READER_CHAR;
                                 skip_ws();
                                 READER_CHAR = next();
@@ -256,9 +256,9 @@ function YAJET(yajet_args){
                 };
 
                 // aliases
-                directives.when = directives["if"];
-                directives.awhen = directives.aif;
-                directives.foreach = directives.map;
+                directives["when"] = directives["if"];
+                directives["awhen"] = directives["aif"];
+                directives["foreach"] = directives["map"];
 
                 var context = {
                         peek              : peek,
