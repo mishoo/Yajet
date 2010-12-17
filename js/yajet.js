@@ -356,7 +356,7 @@ function YAJET(yajet_args){
                                 if (end) {
                                         var pos = THE_STRING.indexOf(end, THE_INDEX);
                                         if (pos == -1)
-                                                throw EX_PARSE('Unterminated "' + ch + '" at ' + rest());
+                                                EX_PARSE('Unterminated "' + ch + '" at ' + rest());
                                         THE_INDEX = pos + end.length;
                                 }
                         }
@@ -500,7 +500,15 @@ function YAJET(yajet_args){
                                             case "f": ch = "\f"; break;
                                             case "n": ch = "\n"; break;
                                             case "t": ch = "\t"; break;
-                                            case "r": continue; // no carriage return, thank you.
+                                            case "r": ch = "\r"; break;
+                                            case "x":
+                                                ++THE_INDEX;
+                                                ch = parseInt(rest(2), 16);
+                                                if (isNaN(ch))
+                                                        EX_PARSE("Expecting an Unicode character code at: " + THE_INDEX);
+                                                ch = String.fromCharCode(ch);
+                                                THE_INDEX += 2;
+                                                break;
                                             case "u":
                                                 ++THE_INDEX;
                                                 ch = parseInt(rest(4), 16);
@@ -617,7 +625,7 @@ function YAJET(yajet_args){
                         }
                         else {
                                 skip_ws();
-                                var v = read_simple_token(true).split(/\s*\|\s*/);
+                                var v = read_simple_token(true).split("|");
                                 var val = v.shift();
                                 while (v.length > 0) {
                                         val = "YAJET.filter(" + to_js_string(v.shift()) + ", " + val + ")";

@@ -11,8 +11,8 @@ mkdir $TMPDIR/yajet
 cp -r $FILES $TMPDIR/yajet
 
 cd $TMPDIR/yajet/js
-yuicompressor yajet.js > yajet.min.js
-yuicompressor jquery.yajet.js > jquery.yajet.min.js
+uglifyjs yajet.js > yajet.min.js
+uglifyjs jquery.yajet.js > jquery.yajet.min.js
 
 cd $TMPDIR
 tar zcf /tmp/yajet.tar.gz yajet
